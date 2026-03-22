@@ -17,10 +17,14 @@ import {
   Save,
   Loader2,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  MessageSquare,
+  Send,
+  Image as ImageIcon,
+  ExternalLink
 } from 'lucide-react';
 import { cn, formatCurrency, formatUSDT } from '../lib/utils';
-import type { Order, PaymentMethod, AppSettings, UserProfile, KYCSubmission } from '../types';
+import type { Order, PaymentMethod, AppSettings, UserProfile, KYCSubmission, SupportChat, SupportMessage } from '../types';
 
 import Modal from '../components/Modal';
 
@@ -34,14 +38,14 @@ export default function Admin() {
     { id: 'kyc', label: 'KYC Review', icon: ShieldCheck, path: '/admin/kyc' },
     { id: 'disputes', label: 'Disputes', icon: AlertTriangle, path: '/admin/disputes' },
     { id: 'merchants', label: 'Merchants', icon: ShieldCheck, path: '/admin/merchants' },
-    { id: 'rates', label: 'Rates', icon: TrendingUp, path: '/admin/rates' },
     { id: 'payments', label: 'Payments', icon: CreditCard, path: '/admin/payments' },
     { id: 'users', label: 'Users', icon: Users, path: '/admin/users' },
+    { id: 'support', label: 'Support', icon: MessageSquare, path: '/admin/support' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/admin/settings' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-12">
+    <div className="min-h-screen bg-[#050505] pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Admin Sidebar */}
@@ -49,7 +53,7 @@ export default function Admin() {
             <div className="card p-6 sticky top-24">
               <div className="flex items-center gap-3 mb-8 px-2">
                 <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
-                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-[0.2em]">Admin Terminal</h2>
+                <h2 className="text-sm font-bold text-white uppercase tracking-[0.2em]">Admin Terminal</h2>
               </div>
               <nav className="space-y-1">
                 {menuItems.map((item) => (
@@ -59,8 +63,8 @@ export default function Admin() {
                     className={cn(
                       "w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all text-sm font-bold uppercase tracking-wider",
                       (currentPath === item.id || (currentPath === 'admin' && item.id === 'dashboard'))
-                        ? "bg-brand text-white shadow-md" 
-                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                        ? "bg-brand text-white shadow-lg shadow-brand/20" 
+                        : "text-gray-500 hover:bg-white/5 hover:text-white"
                     )}
                   >
                     <item.icon className="w-4 h-4" />
@@ -79,9 +83,9 @@ export default function Admin() {
             <Route path="kyc" element={<AdminKYC />} />
             <Route path="disputes" element={<AdminDisputes />} />
             <Route path="merchants" element={<AdminMerchants />} />
-            <Route path="rates" element={<AdminRates />} />
             <Route path="payments" element={<AdminPayments />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="support" element={<AdminSupport />} />
             <Route path="settings" element={<AdminSettings />} />
           </Routes>
         </div>
@@ -124,26 +128,26 @@ function AdminDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-display font-bold text-gray-900">System Overview</h2>
+        <h2 className="text-2xl font-display font-bold text-white">System Overview</h2>
         <p className="text-sm text-gray-500 mt-1">Real-time protocol metrics and network status.</p>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="card p-6">
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Total Orders</div>
-          <div className="text-3xl font-bold text-gray-900">{stats.totalOrders}</div>
+          <div className="text-3xl font-bold text-white">{stats.totalOrders}</div>
         </div>
         <div className="card p-6">
           <div className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2">Pending Orders</div>
-          <div className="text-3xl font-bold text-gray-900">{stats.pendingOrders}</div>
+          <div className="text-3xl font-bold text-white">{stats.pendingOrders}</div>
         </div>
         <div className="card p-6">
           <div className="text-[10px] font-bold text-brand uppercase tracking-widest mb-2">Total Users</div>
-          <div className="text-3xl font-bold text-gray-900">{stats.totalUsers}</div>
+          <div className="text-3xl font-bold text-white">{stats.totalUsers}</div>
         </div>
         <div className="card p-6">
           <div className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-2">Total Volume</div>
-          <div className="text-3xl font-bold text-gray-900">{formatCurrency(stats.totalVolume)}</div>
+          <div className="text-3xl font-bold text-white">{formatCurrency(stats.totalVolume)}</div>
         </div>
       </div>
     </div>
@@ -153,6 +157,7 @@ function AdminDashboard() {
 function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -171,24 +176,44 @@ function AdminOrders() {
   };
 
   const updateStatus = async (id: string, status: string) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', id);
-    
-    if (!error) fetchOrders();
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status })
+        .eq('id', id);
+      
+      if (error) throw error;
+
+      fetchOrders();
+      if (selectedOrder?.id === id) {
+        setSelectedOrder(prev => prev ? { ...prev, status } : null);
+      }
+    } catch (error: any) {
+      console.error('Error updating order status:', error);
+      alert(error.message || 'Failed to update order status.');
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'text-amber-500 border-amber-500/20 bg-amber-500/10';
+      case 'approved': return 'text-green-500 border-green-500/20 bg-green-500/10';
+      case 'paid': return 'text-brand border-brand/20 bg-brand/10';
+      case 'completed': return 'text-green-400 border-green-400/20 bg-green-400/10';
+      default: return 'text-red-500 border-red-500/20 bg-red-500/10';
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-display font-bold text-gray-900">Order Management</h2>
+          <h2 className="text-2xl font-display font-bold text-white">Order Management</h2>
           <p className="text-sm text-gray-500 mt-1">Review and process settlement requests.</p>
         </div>
         <button 
           onClick={fetchOrders} 
-          className="text-[10px] font-bold text-brand uppercase tracking-widest hover:text-indigo-700"
+          className="text-[10px] font-bold text-brand uppercase tracking-widest hover:text-brand/80"
         >
           Refresh Ledger
         </button>
@@ -197,7 +222,7 @@ function AdminOrders() {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-white/5 border-b border-white/5">
               <tr>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">User / Type</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Amount</th>
@@ -206,29 +231,30 @@ function AdminOrders() {
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-white/5">
               {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={order.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
-                    <div className="font-bold text-sm text-gray-900">{order.user_email}</div>
+                    <div className="font-bold text-sm text-white">{order.user_email}</div>
                     <div className={cn(
                       "text-[10px] font-bold uppercase tracking-widest",
-                      order.type === 'buy' ? "text-green-600" : "text-brand"
+                      order.type === 'buy' ? "text-green-500" : "text-brand"
                     )}>
                       {order.type} USDT
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-bold text-gray-900">{formatUSDT(order.amount_usdt)}</div>
+                    <div className="font-bold text-white">{formatUSDT(order.amount_usdt)}</div>
                     <div className="text-xs text-gray-500">{formatCurrency(order.amount_inr)}</div>
                   </td>
                   <td className="px-6 py-4">
                     <span className={cn(
                       "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border",
-                      order.status === 'pending' ? "text-amber-600 border-amber-200 bg-amber-50" :
-                      order.status === 'approved' ? "text-green-600 border-green-200 bg-green-50" :
-                      order.status === 'paid' ? "text-brand border-indigo-200 bg-indigo-50" :
-                      "text-red-600 border-red-200 bg-red-50"
+                      order.status === 'pending' ? "text-amber-500 border-amber-500/20 bg-amber-500/10" :
+                      order.status === 'approved' ? "text-green-500 border-green-500/20 bg-green-500/10" :
+                      order.status === 'paid' ? "text-brand border-brand/20 bg-brand/10" :
+                      order.status === 'completed' ? "text-green-400 border-green-400/20 bg-green-400/10" :
+                      "text-red-500 border-red-500/20 bg-red-500/10"
                     )}>
                       {order.status}
                     </span>
@@ -242,14 +268,14 @@ function AdminOrders() {
                         <>
                           <button
                             onClick={() => updateStatus(order.id, 'approved')}
-                            className="p-2 bg-green-50 hover:bg-green-100 text-green-600 rounded-lg transition-colors"
+                            className="p-2 bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded-lg transition-colors"
                             title="Approve"
                           >
                             <CheckCircle2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => updateStatus(order.id, 'rejected')}
-                            className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+                            className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors"
                             title="Reject"
                           >
                             <XCircle className="w-4 h-4" />
@@ -259,13 +285,16 @@ function AdminOrders() {
                       {order.status === 'approved' && order.type === 'sell' && (
                         <button
                           onClick={() => updateStatus(order.id, 'paid')}
-                          className="p-2 bg-indigo-50 hover:bg-indigo-100 text-brand rounded-lg transition-colors"
+                          className="p-2 bg-brand/10 hover:bg-brand/20 text-brand rounded-lg transition-colors"
                           title="Mark as Paid"
                         >
                           <CreditCard className="w-4 h-4" />
                         </button>
                       )}
-                      <button className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-400 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => setSelectedOrder(order)}
+                        className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 rounded-lg transition-colors"
+                      >
                         <Eye className="w-4 h-4" />
                       </button>
                     </div>
@@ -276,88 +305,116 @@ function AdminOrders() {
           </table>
         </div>
       </div>
-    </div>
-  );
-}
 
-function AdminRates() {
-  const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [loading, setLoading] = useState(false);
+      {selectedOrder && (
+        <Modal 
+          isOpen={!!selectedOrder} 
+          onClose={() => setSelectedOrder(null)}
+          title="Order Details"
+        >
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-white">Order Details</h3>
+                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-1">ID: {selectedOrder.id}</p>
+              </div>
+              <div className={cn(
+                "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
+                getStatusColor(selectedOrder.status)
+              )}>
+                {selectedOrder.status}
+              </div>
+            </div>
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
+            <div className="grid grid-cols-2 gap-8">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">User Email</p>
+                <p className="font-bold text-white">{selectedOrder.user_email}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Type</p>
+                <p className={cn(
+                  "font-bold uppercase",
+                  selectedOrder.type === 'buy' ? "text-green-500" : "text-brand"
+                )}>{selectedOrder.type} USDT</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">USDT Amount</p>
+                <p className="text-xl font-bold text-white">{formatUSDT(selectedOrder.amount_usdt)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">INR Amount</p>
+                <p className="text-xl font-bold text-white">{formatCurrency(selectedOrder.amount_inr)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Rate</p>
+                <p className="font-bold text-white">{formatCurrency(selectedOrder.rate)} / USDT</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Created At</p>
+                <p className="font-bold text-white">{new Date(selectedOrder.created_at).toLocaleString()}</p>
+              </div>
+            </div>
 
-  const fetchSettings = async () => {
-    const { data } = await supabase.from('app_settings').select('*').single();
-    if (data) setSettings(data);
-  };
+            {selectedOrder.transaction_hash && (
+              <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Transaction Hash (TXID)</p>
+                <div className="flex items-center justify-between">
+                  <code className="text-xs font-mono text-white break-all">{selectedOrder.transaction_hash}</code>
+                  <a 
+                    href={`https://tronscan.org/#/transaction/${selectedOrder.transaction_hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 text-brand hover:bg-brand/10 rounded-lg transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            )}
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!settings) return;
-    setLoading(true);
-    const { error } = await supabase
-      .from('app_settings')
-      .update({
-        buy_rate: settings.buy_rate,
-        sell_rate: settings.sell_rate
-      })
-      .eq('id', settings.id);
-    
-    if (!error) {
-      setSuccess('Rates updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
-    }
-    setLoading(false);
-  };
+            {selectedOrder.payment_screenshot_url && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Payment Proof</p>
+                <div className="aspect-video rounded-xl overflow-hidden border border-white/10 bg-white/5">
+                  <img 
+                    src={selectedOrder.payment_screenshot_url} 
+                    alt="Payment Proof" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            )}
 
-  const [success, setSuccess] = useState<string | null>(null);
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-display font-bold text-gray-900">Rate Management</h2>
-        <p className="text-sm text-gray-500 mt-1">Configure global USDT exchange rates.</p>
-      </div>
-
-      {success && (
-        <div className="p-4 rounded-xl bg-green-50 border border-green-100 text-green-600 text-xs font-bold uppercase tracking-widest">
-          {success}
-        </div>
+            <div className="flex gap-4 pt-4">
+              {selectedOrder.status === 'pending' && (
+                <>
+                  <button
+                    onClick={() => updateStatus(selectedOrder.id, 'approved')}
+                    className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-600/20"
+                  >
+                    Approve Order
+                  </button>
+                  <button
+                    onClick={() => updateStatus(selectedOrder.id, 'rejected')}
+                    className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-600/20"
+                  >
+                    Reject Order
+                  </button>
+                </>
+              )}
+              {selectedOrder.status === 'approved' && selectedOrder.type === 'sell' && (
+                <button
+                  onClick={() => updateStatus(selectedOrder.id, 'paid')}
+                  className="w-full py-3 bg-brand hover:bg-brand/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand/20"
+                >
+                  Mark as Paid
+                </button>
+              )}
+            </div>
+          </div>
+        </Modal>
       )}
-
-      <div className="card p-8 max-w-md">
-        <form onSubmit={handleUpdate} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Buy Rate (INR per USDT)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={settings?.buy_rate || ''}
-              onChange={(e) => setSettings(s => s ? { ...s, buy_rate: parseFloat(e.target.value) } : null)}
-              className="input-field text-2xl font-bold"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sell Rate (INR per USDT)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={settings?.sell_rate || ''}
-              onChange={(e) => setSettings(s => s ? { ...s, sell_rate: parseFloat(e.target.value) } : null)}
-              className="input-field text-2xl font-bold"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full py-4 text-sm"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /><span>Save Protocol Rates</span></>}
-          </button>
-        </form>
-      </div>
     </div>
   );
 }
@@ -384,26 +441,42 @@ function AdminPayments() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from('payment_methods').insert([newMethod]);
-    if (!error) {
+    try {
+      const { error } = await supabase.from('payment_methods').insert([newMethod]);
+      if (error) throw error;
+      
       setIsAdding(false);
       setNewMethod({ type: 'upi', account_name: '', is_active: true });
       fetchMethods();
+    } catch (error: any) {
+      console.error('Error adding payment method:', error);
+      alert(error.message || 'Failed to add payment method.');
     }
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from('payment_methods').update({ is_active: !current }).eq('id', id);
-    fetchMethods();
+    try {
+      const { error } = await supabase.from('payment_methods').update({ is_active: !current }).eq('id', id);
+      if (error) throw error;
+      fetchMethods();
+    } catch (error: any) {
+      console.error('Error toggling payment method status:', error);
+      alert(error.message || 'Failed to update payment method status.');
+    }
   };
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const deleteMethod = async (id: string) => {
-    const { error } = await supabase.from('payment_methods').delete().eq('id', id);
-    if (!error) {
+    try {
+      const { error } = await supabase.from('payment_methods').delete().eq('id', id);
+      if (error) throw error;
+      
       setDeletingId(null);
       fetchMethods();
+    } catch (error: any) {
+      console.error('Error deleting payment method:', error);
+      alert(error.message || 'Failed to delete payment method.');
     }
   };
 
@@ -411,12 +484,12 @@ function AdminPayments() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-display font-bold text-gray-900">Payment Methods</h2>
+          <h2 className="text-2xl font-display font-bold text-white">Payment Methods</h2>
           <p className="text-sm text-gray-500 mt-1">Manage supported settlement gateways.</p>
         </div>
         <button 
           onClick={() => setIsAdding(true)}
-          className="btn-primary px-6 py-2.5 text-xs"
+          className="btn-primary px-6 py-2.5 text-xs shadow-lg shadow-brand/20"
         >
           <Plus className="w-4 h-4" />
           <span>Add Gateway</span>
@@ -430,8 +503,8 @@ function AdminPayments() {
       >
         <p className="text-gray-500 mb-8">Are you sure you want to remove this payment gateway? This action will affect all active settlement routes.</p>
         <div className="flex gap-4">
-          <button onClick={() => setDeletingId(null)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold text-gray-600 transition-all">Cancel</button>
-          <button onClick={() => deletingId && deleteMethod(deletingId)} className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-white transition-all">Delete Gateway</button>
+          <button onClick={() => setDeletingId(null)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-gray-400 transition-all">Cancel</button>
+          <button onClick={() => deletingId && deleteMethod(deletingId)} className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-white transition-all shadow-lg shadow-red-600/20">Delete Gateway</button>
         </div>
       </Modal>
 
@@ -500,8 +573,8 @@ function AdminPayments() {
             </div>
           )}
           <div className="flex gap-4 pt-4">
-            <button type="button" onClick={() => setIsAdding(false)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold text-gray-600 transition-all">Cancel</button>
-            <button type="submit" className="flex-1 py-3 btn-primary rounded-xl font-bold">Add Gateway</button>
+            <button type="button" onClick={() => setIsAdding(false)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-gray-400 transition-all">Cancel</button>
+            <button type="submit" className="flex-1 py-3 btn-primary rounded-xl font-bold shadow-lg shadow-brand/20">Add Gateway</button>
           </div>
         </form>
       </Modal>
@@ -510,7 +583,7 @@ function AdminPayments() {
         {methods.map((method) => (
           <div key={method.id} className="card p-6 relative group border-transparent hover:border-brand/20 transition-all">
             <div className="flex items-center justify-between mb-6">
-              <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-brand">
+              <div className="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center text-brand">
                 <CreditCard className="w-6 h-6" />
               </div>
               <div className="flex items-center space-x-2">
@@ -518,14 +591,14 @@ function AdminPayments() {
                   onClick={() => toggleActive(method.id, method.is_active)}
                   className={cn(
                     "px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border transition-all",
-                    method.is_active ? "text-green-600 border-green-200 bg-green-50" : "text-gray-400 border-gray-200 bg-gray-50"
+                    method.is_active ? "text-green-500 border-green-500/20 bg-green-500/10" : "text-gray-500 border-white/5 bg-white/5"
                   )}
                 >
                   {method.is_active ? 'Active' : 'Inactive'}
                 </button>
                 <button
                   onClick={() => setDeletingId(method.id)}
-                  className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                  className="p-2 text-gray-500 hover:text-red-500 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -533,7 +606,7 @@ function AdminPayments() {
             </div>
             <div className="space-y-1">
               <div className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">{method.type}</div>
-              <div className="font-bold text-lg text-gray-900">{method.account_name}</div>
+              <div className="font-bold text-lg text-white">{method.account_name}</div>
               {method.upi_id && <div className="text-sm text-gray-500 font-mono">{method.upi_id}</div>}
               {method.account_number && (
                 <div className="text-sm text-gray-500 font-mono">
@@ -551,6 +624,11 @@ function AdminPayments() {
 function AdminUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [userPaymentMethods, setUserPaymentMethods] = useState<any[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
 
   useEffect(() => {
     fetchUsers();
@@ -562,65 +640,117 @@ function AdminUsers() {
     setLoading(false);
   };
 
-  const toggleStatus = async (id: string, current: boolean) => {
-    await supabase.from('profiles').update({ is_disabled: !current }).eq('id', id);
-    fetchUsers();
+  const fetchUserPaymentMethods = async (userId: string) => {
+    const { data } = await supabase.from('user_payment_methods').select('*').eq('user_id', userId);
+    if (data) setUserPaymentMethods(data);
+  };
+
+  const handleManageUser = (user: UserProfile) => {
+    setSelectedUser(user);
+    setEditForm(user);
+    fetchUserPaymentMethods(user.id);
+    setIsEditing(true);
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    try {
+      setIsSaving(true);
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editForm.full_name,
+          balance_usdt: editForm.balance_usdt,
+          is_admin: editForm.is_admin,
+          is_verified_merchant: editForm.is_verified_merchant,
+          is_disabled: editForm.is_disabled,
+          kyc_status: editForm.kyc_status
+        })
+        .eq('id', selectedUser.id);
+
+      if (error) throw error;
+
+      setIsEditing(false);
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      alert(error.message || 'Failed to update user. Please check your permissions.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const togglePaymentMethod = async (methodId: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('user_payment_methods')
+      .update({ is_active: !currentStatus })
+      .eq('id', methodId);
+    
+    if (!error && selectedUser) {
+      fetchUserPaymentMethods(selectedUser.id);
+    }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-display font-bold text-gray-900">User Management</h2>
+        <h2 className="text-2xl font-display font-bold text-white">User Management</h2>
         <p className="text-sm text-gray-500 mt-1">Monitor and manage protocol participants.</p>
       </div>
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-white/5 border-b border-white/5">
               <tr>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">User</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Balance</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Role</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Joined</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-white/5">
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={user.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
-                    <div className="font-bold text-gray-900">{user.full_name || 'No Name'}</div>
+                    <div className="font-bold text-white">{user.full_name || 'No Name'}</div>
                     <div className="text-xs text-gray-500">{user.email}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border",
-                      user.is_admin ? "text-purple-600 border-purple-200 bg-purple-50" : "text-gray-400 border-gray-200 bg-gray-50"
-                    )}>
-                      {user.is_admin ? 'Admin' : 'User'}
-                    </span>
+                    <div className="font-bold text-white">{formatUSDT(user.balance_usdt)}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-1">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border",
+                        user.is_admin ? "text-purple-400 border-purple-400/20 bg-purple-400/10" : "text-gray-500 border-white/5 bg-white/5"
+                      )}>
+                        {user.is_admin ? 'Admin' : 'User'}
+                      </span>
+                      {user.is_verified_merchant && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border text-brand border-brand/20 bg-brand/10">
+                          Merchant
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className={cn(
                       "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border",
-                      !user.is_disabled ? "text-green-600 border-green-200 bg-green-50" : "text-red-600 border-red-200 bg-red-50"
+                      !user.is_disabled ? "text-green-500 border-green-500/20 bg-green-500/10" : "text-red-500 border-red-500/20 bg-red-500/10"
                     )}>
                       {!user.is_disabled ? 'Active' : 'Disabled'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-xs text-gray-500">
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </td>
                   <td className="px-6 py-4 text-right">
                     <button
-                      onClick={() => toggleStatus(user.id, user.is_disabled)}
-                      className={cn(
-                        "text-[10px] font-bold uppercase tracking-widest hover:underline",
-                        user.is_disabled ? "text-green-600" : "text-red-600"
-                      )}
+                      onClick={() => handleManageUser(user)}
+                      className="text-[10px] font-bold uppercase tracking-widest text-brand hover:underline"
                     >
-                      {user.is_disabled ? 'Enable' : 'Disable'}
+                      Manage
                     </button>
                   </td>
                 </tr>
@@ -629,6 +759,139 @@ function AdminUsers() {
           </table>
         </div>
       </div>
+
+      {isEditing && selectedUser && (
+        <Modal
+          isOpen={true}
+          onClose={() => setIsEditing(false)}
+          title={`Manage User: ${selectedUser.email}`}
+        >
+          <div className="space-y-8 max-h-[70vh] overflow-y-auto pr-2">
+            <form onSubmit={handleUpdateUser} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Full Name</label>
+                  <input
+                    type="text"
+                    value={editForm.full_name || ''}
+                    onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                    className="input-field"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Balance (USDT)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editForm.balance_usdt || 0}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setEditForm({ ...editForm, balance_usdt: isNaN(val) ? 0 : val });
+                    }}
+                    className="input-field font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">KYC Status</label>
+                  <select
+                    value={editForm.kyc_status || 'unverified'}
+                    onChange={(e) => setEditForm({ ...editForm, kyc_status: e.target.value as any })}
+                    className="input-field"
+                  >
+                    <option value="unverified">Unverified</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-4 pt-4">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={editForm.is_admin || false}
+                      onChange={(e) => setEditForm({ ...editForm, is_admin: e.target.checked })}
+                      className="w-5 h-5 rounded-lg border-white/10 bg-white/5 text-brand focus:ring-brand"
+                    />
+                    <span className="text-sm font-bold text-gray-400 uppercase tracking-wider group-hover:text-white">Administrator</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={editForm.is_verified_merchant || false}
+                      onChange={(e) => setEditForm({ ...editForm, is_verified_merchant: e.target.checked })}
+                      className="w-5 h-5 rounded-lg border-white/10 bg-white/5 text-brand focus:ring-brand"
+                    />
+                    <span className="text-sm font-bold text-gray-400 uppercase tracking-wider group-hover:text-white">Verified Merchant</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={editForm.is_disabled || false}
+                      onChange={(e) => setEditForm({ ...editForm, is_disabled: e.target.checked })}
+                      className="w-5 h-5 rounded-lg border-white/10 bg-white/5 text-red-500 focus:ring-red-500"
+                    />
+                    <span className="text-sm font-bold text-red-500 uppercase tracking-wider group-hover:text-red-400">Account Disabled</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-gray-400 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="flex-1 py-3 bg-brand hover:bg-brand/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+              </div>
+            </form>
+
+            <div className="space-y-4 pt-4 border-t border-white/5">
+              <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">User Payment Methods</h4>
+              <div className="grid grid-cols-1 gap-4">
+                {userPaymentMethods.length === 0 ? (
+                  <p className="text-sm text-gray-500 italic">No payment methods added by user.</p>
+                ) : (
+                  userPaymentMethods.map((method) => (
+                    <div key={method.id} className="p-4 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{method.type}</div>
+                        <div className="font-bold text-white">{method.account_name}</div>
+                        <div className="text-xs text-gray-500 font-mono">
+                          {method.upi_id || method.account_number}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => togglePaymentMethod(method.id, method.is_active)}
+                        className={cn(
+                          "px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border transition-all",
+                          method.is_active ? "text-green-500 border-green-500/20 bg-green-500/10" : "text-gray-500 border-white/5 bg-white/5"
+                        )}
+                      >
+                        {method.is_active ? 'Active' : 'Inactive'}
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -636,6 +899,7 @@ function AdminUsers() {
 function AdminSettings() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -649,59 +913,102 @@ function AdminSettings() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings) return;
-    setLoading(true);
-    const { error } = await supabase
-      .from('app_settings')
-      .update(settings)
-      .eq('id', settings.id);
     
-    if (!error) {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('app_settings')
+        .update({
+          buy_rate: settings.buy_rate,
+          sell_rate: settings.sell_rate,
+          platform_fee: settings.platform_fee,
+          admin_wallet_address: settings.admin_wallet_address,
+          support_contact: settings.support_contact,
+          homepage_headline: settings.homepage_headline,
+          homepage_subheadline: settings.homepage_subheadline
+        })
+        .eq('id', settings.id);
+      
+      if (error) throw error;
+
       setSuccess('Settings updated successfully!');
       setTimeout(() => setSuccess(null), 3000);
+    } catch (error: any) {
+      console.error('Error updating settings:', error);
+      alert(error.message || 'Failed to update settings.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
-
-  const [success, setSuccess] = useState<string | null>(null);
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-display font-bold text-gray-900">Protocol Settings</h2>
-        <p className="text-sm text-gray-500 mt-1">Configure global application parameters.</p>
+        <h2 className="text-2xl font-display font-bold text-white">Protocol Settings</h2>
+        <p className="text-sm text-gray-500 mt-1">Configure global application parameters and rates.</p>
       </div>
 
       {success && (
-        <div className="p-4 rounded-xl bg-green-50 border border-green-100 text-green-600 text-xs font-bold uppercase tracking-widest">
+        <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 text-xs font-bold uppercase tracking-widest">
           {success}
         </div>
       )}
 
-      <div className="card p-8 max-w-3xl">
+      <div className="card p-8 max-w-4xl">
         <form onSubmit={handleUpdate} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="md:col-span-2 space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Admin Settlement Wallet (TRC20)</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Buy Rate (INR per USDT)</label>
               <input
-                type="text"
-                value={settings?.admin_wallet_address || ''}
-                onChange={(e) => setSettings(s => s ? { ...s, admin_wallet_address: e.target.value } : null)}
-                className="input-field font-mono text-sm"
-                placeholder="T..."
+                type="number"
+                step="0.01"
+                value={settings?.buy_rate || 0}
+                onChange={(e) => setSettings(s => s ? { ...s, buy_rate: parseFloat(e.target.value) } : null)}
+                className="input-field"
               />
             </div>
-            <div className="md:col-span-2 space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Support Gateway (Email/Telegram)</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sell Rate (INR per USDT)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={settings?.sell_rate || 0}
+                onChange={(e) => setSettings(s => s ? { ...s, sell_rate: parseFloat(e.target.value) } : null)}
+                className="input-field"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Platform Fee (%)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={settings?.platform_fee || 0}
+                onChange={(e) => setSettings(s => s ? { ...s, platform_fee: parseFloat(e.target.value) } : null)}
+                className="input-field"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Support Contact (Email/Telegram)</label>
               <input
                 type="text"
                 value={settings?.support_contact || ''}
                 onChange={(e) => setSettings(s => s ? { ...s, support_contact: e.target.value } : null)}
                 className="input-field"
-                placeholder="@support_handle"
+                placeholder="e.g. @support_bot"
               />
             </div>
             <div className="md:col-span-2 space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Landing Headline</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Admin USDT Wallet (TRC20)</label>
+              <input
+                type="text"
+                value={settings?.admin_wallet_address || ''}
+                onChange={(e) => setSettings(s => s ? { ...s, admin_wallet_address: e.target.value } : null)}
+                className="input-field font-mono"
+                placeholder="Enter TRC20 address"
+              />
+            </div>
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Homepage Headline</label>
               <input
                 type="text"
                 value={settings?.homepage_headline || ''}
@@ -710,28 +1017,247 @@ function AdminSettings() {
               />
             </div>
             <div className="md:col-span-2 space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Landing Subheadline</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Homepage Subheadline</label>
               <textarea
-                rows={3}
                 value={settings?.homepage_subheadline || ''}
                 onChange={(e) => setSettings(s => s ? { ...s, homepage_subheadline: e.target.value } : null)}
-                className="input-field resize-none"
+                className="input-field min-h-[100px]"
               />
             </div>
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full py-4 text-sm"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /><span>Update Protocol Configuration</span></>}
-          </button>
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-8 py-3 bg-brand hover:bg-brand/90 text-white font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-brand/20"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              <span>Save Protocol Settings</span>
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
 }
 
+function AdminSupport() {
+  const [chats, setChats] = useState<SupportChat[]>([]);
+  const [selectedChat, setSelectedChat] = useState<SupportChat | null>(null);
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    fetchChats();
+    
+    // Subscribe to new chats or updates
+    const subscription = supabase
+      .channel('support_chats_list')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_chats' }, () => {
+        fetchChats();
+      })
+      .subscribe();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (selectedChat) {
+      fetchMessages(selectedChat.id);
+      // Subscribe to new messages
+      const subscription = supabase
+        .channel(`chat:${selectedChat.id}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_messages', filter: `chat_id=eq.${selectedChat.id}` }, (payload) => {
+          setMessages(prev => [...prev, payload.new as SupportMessage]);
+        })
+        .subscribe();
+      
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [selectedChat]);
+
+  const fetchChats = async () => {
+    const { data } = await supabase
+      .from('support_chats')
+      .select('*')
+      .order('last_message_at', { ascending: false });
+    if (data) setChats(data);
+    setLoading(false);
+  };
+
+  const fetchMessages = async (chatId: string) => {
+    const { data } = await supabase
+      .from('support_messages')
+      .select('*')
+      .eq('chat_id', chatId)
+      .order('created_at', { ascending: true });
+    if (data) setMessages(data);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedChat || !newMessage.trim()) return;
+
+    setSending(true);
+    const { error } = await supabase.from('support_messages').insert({
+      chat_id: selectedChat.id,
+      sender_id: 'admin', // In a real app, use the admin's actual ID
+      content: newMessage,
+      is_admin_reply: true
+    });
+
+    if (!error) {
+      setNewMessage('');
+      // Update last message in chat
+      await supabase.from('support_chats').update({
+        last_message: newMessage,
+        last_message_at: new Date().toISOString()
+      }).eq('id', selectedChat.id);
+    }
+    setSending(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedChat) return;
+
+    // Mock image upload - in a real app, use supabase.storage
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      const { error } = await supabase.from('support_messages').insert({
+        chat_id: selectedChat.id,
+        sender_id: 'admin',
+        content: 'Sent an image',
+        image_url: base64String,
+        is_admin_reply: true
+      });
+      if (!error) {
+        await supabase.from('support_chats').update({
+          last_message: 'Sent an image',
+          last_message_at: new Date().toISOString()
+        }).eq('id', selectedChat.id);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="h-[calc(100vh-12rem)] flex gap-6">
+      {/* Chat List */}
+      <div className="w-80 flex-shrink-0 card flex flex-col overflow-hidden">
+        <div className="p-4 border-b border-white/5 bg-white/5">
+          <h3 className="text-sm font-bold text-white uppercase tracking-widest">Support Inbox</h3>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin text-brand mx-auto" /></div>
+          ) : chats.length === 0 ? (
+            <div className="p-8 text-center text-gray-500 text-xs">No active support chats.</div>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {chats.map((chat) => (
+                <button
+                  key={chat.id}
+                  onClick={() => setSelectedChat(chat)}
+                  className={cn(
+                    "w-full p-4 text-left transition-all hover:bg-white/5",
+                    selectedChat?.id === chat.id && "bg-brand/10 border-l-4 border-brand"
+                  )}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-sm font-bold text-white truncate max-w-[120px]">{chat.user_email}</span>
+                    <span className="text-[10px] text-gray-400">{new Date(chat.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 truncate">{chat.last_message || 'New conversation'}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Chat Window */}
+      <div className="flex-1 card flex flex-col overflow-hidden">
+        {selectedChat ? (
+          <>
+            <div className="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-bold text-white">{selectedChat.user_email}</h3>
+                <p className="text-[10px] text-gray-400 uppercase tracking-widest">Active Session</p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={cn(
+                    "flex flex-col max-w-[80%]",
+                    msg.is_admin_reply ? "ml-auto items-end" : "mr-auto items-start"
+                  )}
+                >
+                  <div className={cn(
+                    "p-3 rounded-2xl text-sm",
+                    msg.is_admin_reply 
+                      ? "bg-brand text-white rounded-tr-none" 
+                      : "bg-white/5 text-white rounded-tl-none border border-white/10"
+                  )}>
+                    {msg.image_url && (
+                      <img src={msg.image_url} className="max-w-full rounded-lg mb-2 cursor-pointer" onClick={() => window.open(msg.image_url)} />
+                    )}
+                    {msg.content}
+                  </div>
+                  <span className="text-[10px] text-gray-400 mt-1">
+                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5 bg-white/5 flex gap-2">
+              <label className="p-2 text-gray-400 hover:text-brand cursor-pointer transition-colors">
+                <ImageIcon className="w-5 h-5" />
+                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+              </label>
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type your response..."
+                className="flex-1 bg-[#050505] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-brand"
+              />
+              <button
+                type="submit"
+                disabled={sending || !newMessage.trim()}
+                className="p-2 bg-brand text-white rounded-xl hover:bg-brand/90 disabled:opacity-50 transition-all shadow-lg shadow-brand/20"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </form>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-12">
+            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center text-gray-500 mb-4">
+              <MessageSquare className="w-10 h-10" />
+            </div>
+            <h3 className="text-lg font-display font-bold text-white">No Chat Selected</h3>
+            <p className="text-sm text-gray-500 max-w-xs mx-auto mt-2">
+              Select a conversation from the inbox to start mediating and providing support.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 function AdminKYC() {
   const [submissions, setSubmissions] = useState<KYCSubmission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -755,30 +1281,37 @@ function AdminKYC() {
   };
 
   const handleReview = async (id: string, userId: string, status: 'approved' | 'rejected') => {
-    const { error } = await supabase
-      .from('kyc_submissions')
-      .update({ status, admin_feedback: feedback })
-      .eq('id', id);
-    
-    if (!error) {
-      await supabase.from('profiles').update({ kyc_status: status }).eq('id', userId);
+    try {
+      const { error } = await supabase
+        .from('kyc_submissions')
+        .update({ status, admin_feedback: feedback })
+        .eq('id', id);
+      
+      if (error) throw error;
+
+      const { error: profileError } = await supabase.from('profiles').update({ kyc_status: status }).eq('id', userId);
+      if (profileError) throw profileError;
+
       setFeedback('');
       setSelectedDoc(null);
       fetchSubmissions();
+    } catch (error: any) {
+      console.error('Error reviewing KYC:', error);
+      alert(error.message || 'Failed to update KYC status.');
     }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-display font-bold text-gray-900">Identity Verification</h2>
+        <h2 className="text-2xl font-display font-bold text-white">Identity Verification</h2>
         <p className="text-sm text-gray-500 mt-1">Review and validate user KYC submissions.</p>
       </div>
       
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-white/5 border-b border-white/5">
               <tr>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">User / Type</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
@@ -786,19 +1319,19 @@ function AdminKYC() {
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-white/5">
               {submissions.map((sub) => (
-                <tr key={sub.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={sub.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
-                    <div className="font-bold text-sm text-gray-900">{sub.user_email}</div>
+                    <div className="font-bold text-sm text-white">{sub.user_email}</div>
                     <div className="text-[9px] font-bold uppercase tracking-widest text-brand">{sub.document_type.replace('_', ' ')}</div>
                   </td>
                   <td className="px-6 py-4">
                     <span className={cn(
                       "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border",
-                      sub.status === 'pending' ? "text-yellow-600 border-yellow-200 bg-yellow-50" :
-                      sub.status === 'approved' ? "text-green-600 border-green-200 bg-green-50" :
-                      "text-red-600 border-red-200 bg-red-50"
+                      sub.status === 'pending' ? "text-yellow-500 border-yellow-500/20 bg-yellow-500/10" :
+                      sub.status === 'approved' ? "text-green-500 border-green-500/20 bg-green-500/10" :
+                      "text-red-500 border-red-500/20 bg-red-500/10"
                     )}>
                       {sub.status}
                     </span>
@@ -832,12 +1365,12 @@ function AdminKYC() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Front Side</p>
-                  <img src={submissions.find(s => s.id === selectedDoc)?.document_front_url} className="w-full rounded-xl border border-gray-100 shadow-sm" />
+                  <img src={submissions.find(s => s.id === selectedDoc)?.document_front_url} className="w-full rounded-xl border border-white/10 shadow-sm" />
                 </div>
                 {submissions.find(s => s.id === selectedDoc)?.document_back_url && (
                   <div className="space-y-2">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Back Side</p>
-                    <img src={submissions.find(s => s.id === selectedDoc)?.document_back_url} className="w-full rounded-xl border border-gray-100 shadow-sm" />
+                    <img src={submissions.find(s => s.id === selectedDoc)?.document_back_url} className="w-full rounded-xl border border-white/10 shadow-sm" />
                   </div>
                 )}
               </div>
@@ -855,13 +1388,13 @@ function AdminKYC() {
               <div className="flex gap-4">
                 <button
                   onClick={() => handleReview(selectedDoc, submissions.find(s => s.id === selectedDoc)!.user_id, 'rejected')}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-white transition-all"
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-white transition-all shadow-lg shadow-red-600/20"
                 >
                   Reject
                 </button>
                 <button
                   onClick={() => handleReview(selectedDoc, submissions.find(s => s.id === selectedDoc)!.user_id, 'approved')}
-                  className="flex-1 py-3 bg-green-600 hover:bg-green-700 rounded-xl font-bold text-white transition-all"
+                  className="flex-1 py-3 bg-green-600 hover:bg-green-700 rounded-xl font-bold text-white transition-all shadow-lg shadow-green-600/20"
                 >
                   Approve
                 </button>
@@ -896,23 +1429,27 @@ function AdminDisputes() {
   };
 
   const resolveDispute = async (orderId: string, winnerId: string) => {
-    const { error } = await supabase
-      .from('p2p_orders')
-      .update({ 
-        dispute_status: 'resolved',
-        status: 'completed' // Or 'cancelled' depending on decision
-      })
-      .eq('id', orderId);
-    
-    if (!error) {
+    try {
+      const { error } = await supabase
+        .from('p2p_orders')
+        .update({ 
+          dispute_status: 'resolved',
+          status: 'completed' // Or 'cancelled' depending on decision
+        })
+        .eq('id', orderId);
+      
+      if (error) throw error;
       fetchDisputes();
+    } catch (error: any) {
+      console.error('Error resolving dispute:', error);
+      alert(error.message || 'Failed to resolve dispute.');
     }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-display font-bold text-gray-900">Dispute Resolution</h2>
+        <h2 className="text-2xl font-display font-bold text-white">Dispute Resolution</h2>
         <p className="text-sm text-gray-500 mt-1">Mediate and resolve order conflicts.</p>
       </div>
       
@@ -920,14 +1457,14 @@ function AdminDisputes() {
         <div className="py-20 text-center"><Loader2 className="w-8 h-8 animate-spin text-brand mx-auto" /></div>
       ) : disputes.length === 0 ? (
         <div className="card p-12 text-center">
-          <AlertTriangle className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+          <AlertTriangle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
           <p className="text-gray-400 font-medium">No active disputes requiring attention.</p>
         </div>
       ) : (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-gray-50 border-b border-gray-100">
+              <thead className="bg-white/5 border-b border-white/5">
                 <tr>
                   <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Order ID</th>
                   <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Parties</th>
@@ -935,15 +1472,15 @@ function AdminDisputes() {
                   <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-white/5">
                 {disputes.map((d) => (
-                  <tr key={d.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={d.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4 font-mono text-[10px] text-gray-500">{d.id.slice(0, 8)}...</td>
                     <td className="px-6 py-4">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-600">Buyer: {d.buyer.email}</div>
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-orange-600">Seller: {d.seller.email}</div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-brand">Buyer: {d.buyer.email}</div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-orange-500">Seller: {d.seller.email}</div>
                     </td>
-                    <td className="px-6 py-4 text-xs text-gray-600 italic">"{d.dispute_reason}"</td>
+                    <td className="px-6 py-4 text-xs text-gray-400 italic">"{d.dispute_reason}"</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         <Link to={`/p2p/orders/${d.id}`} className="p-2 text-gray-400 hover:text-brand transition-colors">
@@ -951,13 +1488,13 @@ function AdminDisputes() {
                         </Link>
                         <button 
                           onClick={() => resolveDispute(d.id, d.buyer_id)}
-                          className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all"
+                          className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-green-600/20"
                         >
                           Award Buyer
                         </button>
                         <button 
                           onClick={() => resolveDispute(d.id, d.seller_id)}
-                          className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all"
+                          className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-red-600/20"
                         >
                           Award Seller
                         </button>
@@ -995,27 +1532,31 @@ function AdminMerchants() {
   };
 
   const toggleMerchantStatus = async (userId: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_verified_merchant: !currentStatus })
-      .eq('id', userId);
-    
-    if (!error) {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_verified_merchant: !currentStatus })
+        .eq('id', userId);
+      
+      if (error) throw error;
       fetchMerchants();
+    } catch (error: any) {
+      console.error('Error toggling merchant status:', error);
+      alert(error.message || 'Failed to update merchant status.');
     }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-display font-bold text-gray-900">Merchant Verification</h2>
+        <h2 className="text-2xl font-display font-bold text-white">Merchant Verification</h2>
         <p className="text-sm text-gray-500 mt-1">Manage verified protocol merchants.</p>
       </div>
       
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-white/5 border-b border-white/5">
               <tr>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">User</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Stats</th>
@@ -1023,21 +1564,21 @@ function AdminMerchants() {
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Actions</th>
               </tr>
             </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-white/5">
             {merchants.map((m) => (
-              <tr key={m.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={m.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-6 py-4">
-                  <div className="font-bold text-gray-900">{m.email}</div>
-                  <div className="text-[10px] text-gray-400 font-mono">ID: {m.id.slice(0, 8)}...</div>
+                  <div className="font-bold text-white">{m.email}</div>
+                  <div className="text-[10px] text-gray-500 font-mono">ID: {m.id.slice(0, 8)}...</div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm font-bold text-gray-900">{m.trades_completed} Trades</div>
+                  <div className="text-sm font-bold text-white">{m.trades_completed} Trades</div>
                   <div className="text-xs text-gray-500">{m.completion_rate}% Completion</div>
                 </td>
                 <td className="px-6 py-4">
                   <span className={cn(
                     "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border",
-                    m.is_verified_merchant ? "text-brand border-brand/20 bg-indigo-50" : "text-gray-400 border-gray-200 bg-gray-50"
+                    m.is_verified_merchant ? "text-brand border-brand/20 bg-brand/10" : "text-gray-500 border-white/5 bg-white/5"
                   )}>
                     {m.is_verified_merchant ? 'Verified' : 'Standard'}
                   </span>
@@ -1047,7 +1588,7 @@ function AdminMerchants() {
                     onClick={() => toggleMerchantStatus(m.id, m.is_verified_merchant)}
                     className={cn(
                       "text-[10px] font-bold uppercase tracking-widest hover:underline",
-                      m.is_verified_merchant ? "text-red-600" : "text-brand"
+                      m.is_verified_merchant ? "text-red-500" : "text-brand"
                     )}
                   >
                     {m.is_verified_merchant ? 'Revoke Status' : 'Verify Merchant'}

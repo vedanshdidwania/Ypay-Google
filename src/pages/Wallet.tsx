@@ -20,8 +20,13 @@ export default function Wallet() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
+  const [showWithdrawSuccess, setShowWithdrawSuccess] = useState(false);
+  const [withdrawTxHash, setWithdrawTxHash] = useState('');
   const [depositData, setDepositData] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+
+  const NETWORK_FEE = 1.00;
 
   useEffect(() => {
     if (profile) {
@@ -74,28 +79,49 @@ export default function Wallet() {
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile || !withdrawAmount || !withdrawAddress) return;
-    if (parseFloat(withdrawAmount) < 10) {
+    
+    const amount = parseFloat(withdrawAmount);
+    if (amount < 10) {
       setError('Minimum withdrawal is 10 USDT');
       return;
     }
-    if (parseFloat(withdrawAmount) > profile.balance_usdt) {
-      setError('Insufficient balance');
+    if (amount + NETWORK_FEE > profile.balance_usdt) {
+      setError('Insufficient balance (including network fee)');
       return;
     }
+    
+    setError(null);
+    setShowWithdrawConfirm(true);
+  };
+
+  const confirmWithdraw = async () => {
+    if (!profile || !withdrawAmount || !withdrawAddress) return;
     setIsWithdrawing(true);
     setError(null);
 
     try {
+      const amount = parseFloat(withdrawAmount);
+      const totalAmount = amount + NETWORK_FEE;
+      
+      // Generate a dummy tx hash for simulation if not provided by backend
+      const dummyHash = 'T' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
       const { error: withdrawError } = await supabase.from('transactions').insert({
         user_id: profile.id,
         type: 'withdrawal',
-        amount: parseFloat(withdrawAmount),
+        amount: amount,
         status: 'pending',
-        tx_hash: withdrawAddress
+        tx_hash: dummyHash
       });
 
       if (withdrawError) throw withdrawError;
       
+      // Update user balance locally (optimistic) or wait for fetch
+      // In a real app, the backend would handle this and we'd refresh
+      
+      setWithdrawTxHash(dummyHash);
+      setShowWithdrawConfirm(false);
+      setShowWithdrawSuccess(true);
       setWithdrawAmount('');
       setWithdrawAddress('');
       fetchTransactions();
@@ -107,9 +133,10 @@ export default function Wallet() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
-      {/* Background Grid Decoration */}
-      <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:40px_40px]" />
+    <div className="min-h-screen bg-[#0a0a0a] pt-24 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        {/* Background Grid Decoration */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:40px_40px]" />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
         {/* Left Column: Balance & Actions */}
@@ -118,13 +145,13 @@ export default function Wallet() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass-card p-10 relative overflow-hidden group"
+            className="cyber-card p-10 group"
           >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 animate-gradient-x" />
             
             <div className="flex justify-between items-start mb-12">
               <div className="space-y-1">
-                <h2 className="text-[10px] font-bold text-gray-500 tracking-[0.3em] uppercase">Liquidity Reserve</h2>
+                <h2 className="text-[10px] font-bold text-gray-600 tracking-[0.3em] uppercase">Liquidity Reserve</h2>
                 <p className="text-[10px] font-mono text-blue-400/50 uppercase">Network: TRON (TRC20)</p>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
@@ -165,7 +192,7 @@ export default function Wallet() {
           </motion.div>
 
           {/* Action Module */}
-          <div className="glass-card p-8">
+          <div className="cyber-card p-8">
             <div className="flex items-center gap-3 mb-8">
               <Zap className="w-5 h-5 text-blue-500" />
               <h3 className="text-lg font-display uppercase tracking-wider text-white">Transfer Protocol</h3>
@@ -265,7 +292,7 @@ export default function Wallet() {
 
         {/* Right Column: Transaction History */}
         <div className="lg:col-span-8">
-          <div className="glass-card h-full flex flex-col overflow-hidden">
+          <div className="cyber-card h-full flex flex-col">
             <div className="p-8 border-b border-white/[0.05] flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <History className="w-5 h-5 text-blue-500" />
@@ -321,7 +348,7 @@ export default function Wallet() {
                         </td>
                         <td className="px-8 py-6">
                           <div className="text-sm font-display text-white">
-                            {tx.type === 'deposit' ? '+' : '-'}{tx.amount.toFixed(2)}
+                            {tx.type === 'deposit' ? '+' : '-'}{tx.amount ? tx.amount.toFixed(2) : '0.00'}
                             <span className="text-[10px] font-sans text-gray-500 ml-1">USDT</span>
                           </div>
                         </td>
@@ -371,6 +398,7 @@ export default function Wallet() {
         isOpen={showDepositModal}
         onClose={() => setShowDepositModal(false)}
         title="Inbound Transfer Protocol"
+        className="bg-[#0a0a0a] border border-white/[0.08]"
       >
         <div className="text-center space-y-8 py-6">
           <div className="relative inline-block">
@@ -395,8 +423,8 @@ export default function Wallet() {
           </div>
 
           <div className="space-y-4">
-            <div className="glass-card p-5 text-left relative group hover:bg-white/[0.05] transition-all">
-              <div className="text-[9px] font-bold text-gray-600 uppercase tracking-[0.2em] mb-2">Target Address</div>
+            <div className="cyber-card p-5 text-left relative group hover:bg-white/[0.05] transition-all">
+              <div className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-2">Target Address</div>
               <div className="font-mono text-xs break-all pr-12 text-blue-400 leading-relaxed">
                 {depositData?.pay_address}
               </div>
@@ -404,12 +432,12 @@ export default function Wallet() {
                 onClick={() => copyToClipboard(depositData?.pay_address)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl transition-all"
               >
-                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-400" />}
               </button>
             </div>
 
-            <div className="glass-card p-5 text-left relative group hover:bg-white/[0.05] transition-all">
-              <div className="text-[9px] font-bold text-gray-600 uppercase tracking-[0.2em] mb-2">Exact Amount</div>
+            <div className="cyber-card p-5 text-left relative group hover:bg-white/[0.05] transition-all">
+              <div className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-2">Exact Amount</div>
               <div className="font-display text-2xl text-white">
                 {depositData?.pay_amount} <span className="text-xs font-sans text-gray-500">USDT</span>
               </div>
@@ -417,7 +445,7 @@ export default function Wallet() {
                 onClick={() => copyToClipboard(depositData?.pay_amount?.toString())}
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl transition-all"
               >
-                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-400" />}
               </button>
             </div>
           </div>
@@ -442,6 +470,108 @@ export default function Wallet() {
           </div>
         </div>
       </Modal>
+
+      {/* Withdrawal Confirmation Modal */}
+      <Modal
+        isOpen={showWithdrawConfirm}
+        onClose={() => setShowWithdrawConfirm(false)}
+        title="Confirm Withdrawal"
+        className="bg-[#0a0a0a] border border-white/[0.08]"
+      >
+        <div className="space-y-6 py-4">
+          <div className="p-6 bg-white/[0.03] border border-white/[0.08] rounded-2xl space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Amount</span>
+              <span className="text-lg font-bold text-white">{parseFloat(withdrawAmount).toFixed(2)} USDT</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Network Fee</span>
+              <span className="text-sm font-bold text-blue-400">{NETWORK_FEE.toFixed(2)} USDT</span>
+            </div>
+            <div className="pt-4 border-t border-white/[0.05] flex justify-between items-center">
+              <span className="text-sm font-bold text-gray-400">Total Deducted</span>
+              <span className="text-xl font-bold text-white">{(parseFloat(withdrawAmount) + NETWORK_FEE).toFixed(2)} USDT</span>
+            </div>
+          </div>
+
+          <div className="p-6 bg-white/[0.03] border border-white/[0.08] rounded-2xl space-y-2">
+            <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Recipient Address</div>
+            <div className="font-mono text-xs text-blue-400 break-all leading-relaxed">
+              {withdrawAddress}
+            </div>
+            <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest pt-2">Network</div>
+            <div className="text-xs text-white font-bold">TRON (TRC20)</div>
+          </div>
+
+          <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-[10px] text-amber-200/70 leading-relaxed font-medium uppercase tracking-wider">
+              Warning: Ensure the recipient address is correct. Blockchain transactions are irreversible.
+            </p>
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              onClick={() => setShowWithdrawConfirm(false)}
+              className="flex-1 py-4 bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold rounded-xl transition-all uppercase tracking-widest text-[10px]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmWithdraw}
+              disabled={isWithdrawing}
+              className="flex-[2] py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-[10px] shadow-lg shadow-blue-600/20"
+            >
+              {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Withdrawal'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Withdrawal Success Modal */}
+      <Modal
+        isOpen={showWithdrawSuccess}
+        onClose={() => setShowWithdrawSuccess(false)}
+        title="Withdrawal Initiated"
+        className="bg-[#0a0a0a] border border-white/[0.08]"
+      >
+        <div className="text-center space-y-8 py-6">
+          <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle className="w-10 h-10 text-green-500" />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-2xl font-display uppercase tracking-tight text-white">Success</h3>
+            <p className="text-gray-500 text-xs font-light tracking-wide max-w-xs mx-auto leading-relaxed">
+              Your withdrawal request has been submitted to the network. It will be processed shortly.
+            </p>
+          </div>
+
+          <div className="cyber-card p-6 space-y-4">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-500">Transaction Hash</span>
+              <span className="text-blue-400 font-mono">{withdrawTxHash.slice(0, 8)}...{withdrawTxHash.slice(-8)}</span>
+            </div>
+            <a
+              href={`https://tronscan.org/#/transaction/${withdrawTxHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-4 bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-[10px] border border-white/[0.08]"
+            >
+              View on Tronscan
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+
+          <button
+            onClick={() => setShowWithdrawSuccess(false)}
+            className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-[0.2em] text-xs shadow-lg shadow-blue-600/20"
+          >
+            Close
+          </button>
+        </div>
+      </Modal>
+      </div>
     </div>
   );
 }

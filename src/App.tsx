@@ -17,6 +17,7 @@ import P2P from './pages/P2P';
 import Wallet from './pages/Wallet';
 import KYC from './pages/KYC';
 import Navbar from './components/Navbar';
+import Support from './components/Support';
 import { AlertTriangle } from 'lucide-react';
 
 const ConfigWarning = () => (
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="/sell" element={<PrivateRoute><Sell /></PrivateRoute>} />
             <Route path="/admin/*" element={<PrivateRoute adminOnly><Admin /></PrivateRoute>} />
           </Routes>
+          <Support />
         </div>
       </Router>
     </AuthProvider>

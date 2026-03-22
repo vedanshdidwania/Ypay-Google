@@ -57,13 +57,21 @@ export default function Auth() {
       >
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
-              <img src="/logo.png" alt="Ypay Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl overflow-hidden border border-gray-100">
+              <img 
+                src="/logo.png" 
+                alt="Y" 
+                className="w-full h-full object-cover" 
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=Y&background=4F46E5&color=fff&bold=true';
+                }}
+              />
             </div>
           </div>
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-2">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
-            <p className="text-gray-400">
+            <p className="text-gray-500">
               {isLogin ? 'Enter your credentials to access your account' : 'Join Ypay and start trading USDT instantly'}
             </p>
           </div>
@@ -77,7 +85,7 @@ export default function Auth() {
           <form onSubmit={handleAuth} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-400 ml-1">Full Name</label>
+                <label className="text-sm font-medium text-gray-500 ml-1">Full Name</label>
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
@@ -85,7 +93,7 @@ export default function Auth() {
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
                     placeholder="John Doe"
                   />
                 </div>
@@ -93,7 +101,7 @@ export default function Auth() {
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-400 ml-1">Email Address</label>
+              <label className="text-sm font-medium text-gray-500 ml-1">Email Address</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <input
@@ -101,14 +109,14 @@ export default function Auth() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
                   placeholder="name@example.com"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-400 ml-1">Password</label>
+              <label className="text-sm font-medium text-gray-500 ml-1">Password</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <input
@@ -116,7 +124,7 @@ export default function Auth() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
                   placeholder="••••••••"
                 />
               </div>

@@ -12,6 +12,7 @@ export function formatCurrency(amount: number) {
   }).format(amount);
 }
 
-export function formatUSDT(amount: number) {
+export function formatUSDT(amount: number | undefined | null) {
+  if (amount === undefined || amount === null || isNaN(amount)) return '0.00 USDT';
   return `${amount.toFixed(2)} USDT`;
 }

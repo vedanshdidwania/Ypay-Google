@@ -5,16 +5,16 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
   
-  --color-brand: #4F46E5; /* Indigo 600 */
-  --color-brand-light: #EEF2FF; /* Indigo 50 */
-  --color-surface: #FFFFFF;
-  --color-background: #F9FAFB; /* Gray 50 */
-  --color-border: #E5E7EB; /* Gray 200 */
+  --color-brand: #6366F1; /* Indigo 500 */
+  --color-brand-light: rgba(99, 102, 241, 0.1);
+  --color-surface: #111111;
+  --color-background: #050505;
+  --color-border: rgba(255, 255, 255, 0.08);
 }
 
 @layer base {
   body {
-    @apply bg-background text-gray-900 font-sans antialiased;
+    @apply bg-background text-white font-sans antialiased;
   }
 }
 
@@ -22,37 +22,45 @@
   .card {
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-radius: 1rem; /* 16px - rounded-2xl */
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* shadow-sm */
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     overflow: hidden;
   }
   
   .glass-card {
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 1rem;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    background-color: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.5rem;
     overflow: hidden;
+  }
+
+  .cyber-card {
+    background-color: #111111;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    position: relative;
   }
   
   .btn-primary {
-    @apply bg-brand text-white px-6 py-3 rounded-xl font-semibold transition-all hover:bg-indigo-700 active:scale-95 shadow-sm flex items-center justify-center gap-2;
+    @apply bg-brand text-white px-6 py-3 rounded-xl font-semibold transition-all hover:bg-brand/90 active:scale-95 shadow-lg shadow-brand/20 flex items-center justify-center gap-2;
   }
   
   .btn-secondary {
-    @apply bg-white border border-border text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all hover:bg-gray-50 active:scale-95 flex items-center justify-center gap-2;
+    @apply bg-white/5 border border-white/10 text-white px-6 py-3 rounded-xl font-semibold transition-all hover:bg-white/10 active:scale-95 flex items-center justify-center gap-2;
   }
 
   .input-field {
-    @apply w-full bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-gray-900 placeholder:text-gray-400;
+    @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-white placeholder:text-gray-500;
   }
 
   .nav-link {
-    @apply px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all;
+    @apply px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all;
   }
 
   .nav-link-active {
-    @apply px-4 py-2 rounded-lg text-sm font-medium text-brand bg-brand-light transition-all;
+    @apply px-4 py-2 rounded-lg text-sm font-medium text-brand bg-brand/10 transition-all;
   }
 }
 
