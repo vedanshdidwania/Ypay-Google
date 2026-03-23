@@ -115,9 +115,14 @@ export default function Wallet() {
       });
 
       if (withdrawError) throw withdrawError;
-      
-      // Update user balance locally (optimistic) or wait for fetch
-      // In a real app, the backend would handle this and we'd refresh
+
+      // Deduct balance from profile
+      const { error: balanceError } = await supabase
+        .from('profiles')
+        .update({ balance_usdt: profile.balance_usdt - totalAmount })
+        .eq('id', profile.id);
+
+      if (balanceError) throw balanceError;
       
       setWithdrawTxHash(dummyHash);
       setShowWithdrawConfirm(false);

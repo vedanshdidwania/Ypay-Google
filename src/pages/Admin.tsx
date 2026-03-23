@@ -119,7 +119,7 @@ function AdminDashboard() {
 
     if (ordersRes.data) {
       const pending = ordersRes.data.filter(o => o.status === 'pending').length;
-      const volume = ordersRes.data.reduce((acc, o) => acc + o.amount_inr, 0);
+      const volume = ordersRes.data.reduce((acc, o) => acc + (o.amount_inr || 0), 0);
       setStats({
         totalOrders: ordersRes.data.length,
         pendingOrders: pending,
@@ -433,7 +433,7 @@ function AdminPayments() {
     is_active: true,
     bank_name: '',
     account_number: '',
-    ifsc_code: '',
+    ifsc: '',
     upi_id: ''
   });
 
@@ -460,7 +460,7 @@ function AdminPayments() {
         is_active: true,
         bank_name: '',
         account_number: '',
-        ifsc_code: '',
+        ifsc: '',
         upi_id: ''
       });
       fetchMethods();
@@ -584,8 +584,8 @@ function AdminPayments() {
                 <input 
                   type="text"
                   required
-                  value={newMethod.ifsc_code || ''}
-                  onChange={(e) => setNewMethod({ ...newMethod, ifsc_code: e.target.value.toUpperCase() })}
+                  value={newMethod.ifsc || ''}
+                  onChange={(e) => setNewMethod({ ...newMethod, ifsc: e.target.value.toUpperCase() })}
                   className="input-field font-mono uppercase"
                   placeholder="HDFC0001234"
                 />
@@ -948,7 +948,7 @@ function AdminP2PChats() {
         .on('postgres_changes', { 
           event: 'INSERT', 
           schema: 'public', 
-          table: 'p2p_messages',
+          table: 'chat_messages',
           filter: `order_id=eq.${selectedOrder.id}`
         }, (payload) => {
           setMessages(prev => [...prev, payload.new]);
@@ -964,11 +964,13 @@ function AdminP2PChats() {
   const fetchActiveOrders = async () => {
     try {
       const { data, error } = await supabase
-        .from('p2p_orders')
+        .from('orders')
         .select(`
           *,
-          buyer:profiles!p2p_orders_buyer_id_fkey(email, full_name),
-          seller:profiles!p2p_orders_seller_id_fkey(email, full_name)
+          user_profile:profiles(email, full_name),
+          ad:ads(
+            ad_profile:profiles(email, full_name)
+          )
         `)
         .in('status', ['pending', 'paid', 'disputed'])
         .order('created_at', { ascending: false });
@@ -984,7 +986,7 @@ function AdminP2PChats() {
 
   const fetchMessages = async (orderId: string) => {
     const { data } = await supabase
-      .from('p2p_messages')
+      .from('chat_messages')
       .select('*')
       .eq('order_id', orderId)
       .order('created_at', { ascending: true });
@@ -998,10 +1000,10 @@ function AdminP2PChats() {
 
     try {
       setSending(true);
-      const { error } = await supabase.from('p2p_messages').insert({
+      const { error } = await supabase.from('chat_messages').insert({
         order_id: selectedOrder.id,
         sender_id: 'admin',
-        content: `[ADMIN]: ${newMessage}`
+        message: `[ADMIN]: ${newMessage}`
       });
 
       if (error) throw error;
@@ -1045,8 +1047,10 @@ function AdminP2PChats() {
                       {order.status}
                     </span>
                   </div>
-                  <p className="text-xs font-bold text-white truncate">{order.buyer?.full_name} ↔ {order.seller?.full_name}</p>
-                  <p className="text-[10px] text-gray-500 mt-1">{formatUSDT(order.amount_usdt)} USDT • ₹{order.amount_fiat.toLocaleString()}</p>
+                  <p className="text-xs font-bold text-white truncate">
+                    {order.user_profile?.full_name} ↔ {order.ad?.ad_profile?.full_name}
+                  </p>
+                  <p className="text-[10px] text-gray-500 mt-1">{formatUSDT(order.amount_usdt)} USDT • ₹{order.amount_inr.toLocaleString()}</p>
                 </button>
               ))}
             </div>
@@ -1062,7 +1066,7 @@ function AdminP2PChats() {
               <div>
                 <h3 className="text-sm font-bold text-white">Trade Chat: #{selectedOrder.id.slice(0, 8)}</h3>
                 <p className="text-[10px] text-gray-400 uppercase tracking-widest">
-                  {selectedOrder.buyer?.email} (Buyer) ↔ {selectedOrder.seller?.email} (Seller)
+                  {selectedOrder.user_profile?.email} (User) ↔ {selectedOrder.ad?.ad_profile?.email} (Ad Creator)
                 </p>
               </div>
             </div>
@@ -1074,24 +1078,24 @@ function AdminP2PChats() {
                   className={cn(
                     "flex flex-col max-w-[80%]",
                     msg.sender_id === 'admin' ? "mx-auto items-center" : 
-                    msg.sender_id === selectedOrder.buyer_id ? "mr-auto items-start" : "ml-auto items-end"
+                    msg.sender_id === selectedOrder.user_id ? "mr-auto items-start" : "ml-auto items-end"
                   )}
                 >
                   <div className={cn(
                     "p-3 rounded-2xl text-sm",
                     msg.sender_id === 'admin' ? "bg-white/10 text-brand border border-brand/20" :
-                    msg.sender_id === selectedOrder.buyer_id 
+                    msg.sender_id === selectedOrder.user_id 
                       ? "bg-white/5 text-white rounded-tl-none border border-white/10" 
                       : "bg-brand text-white rounded-tr-none"
                   )}>
                     <p className="text-[8px] font-bold uppercase tracking-widest mb-1 opacity-50">
                       {msg.sender_id === 'admin' ? 'System Admin' : 
-                       msg.sender_id === selectedOrder.buyer_id ? 'Buyer' : 'Seller'}
+                       msg.sender_id === selectedOrder.user_id ? 'User' : 'Ad Creator'}
                     </p>
                     {msg.image_url && (
                       <img src={msg.image_url} className="max-w-full rounded-lg mb-2" />
                     )}
-                    {msg.content}
+                    {msg.message}
                   </div>
                   <span className="text-[10px] text-gray-400 mt-1">
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -1866,10 +1870,19 @@ function AdminDisputes() {
 
   const fetchDisputes = async () => {
     const { data } = await supabase
-      .from('p2p_orders')
-      .select('*, buyer:profiles!buyer_id(email), seller:profiles!seller_id(email)')
-      .eq('dispute_status', 'open')
-      .order('disputed_at', { ascending: false });
+      .from('p2p_disputes')
+      .select(`
+        *,
+        order:orders(
+          *,
+          user_profile:profiles(email, full_name),
+          ad:ads(
+            ad_profile:profiles(email, full_name)
+          )
+        )
+      `)
+      .eq('status', 'open')
+      .order('created_at', { ascending: false });
     
     if (data) {
       setDisputes(data);
@@ -1877,17 +1890,29 @@ function AdminDisputes() {
     setLoading(false);
   };
 
-  const resolveDispute = async (orderId: string, winnerId: string) => {
+  const resolveDispute = async (disputeId: string, orderId: string, winnerId: string) => {
     try {
-      const { error } = await supabase
-        .from('p2p_orders')
+      // 1. Update dispute status
+      const { error: disputeError } = await supabase
+        .from('p2p_disputes')
         .update({ 
-          dispute_status: 'resolved',
+          status: 'resolved',
+          admin_feedback: `Resolved in favor of user ${winnerId}`
+        })
+        .eq('id', disputeId);
+      
+      if (disputeError) throw disputeError;
+
+      // 2. Update order status
+      const { error: orderError } = await supabase
+        .from('orders')
+        .update({ 
           status: 'completed' // Or 'cancelled' depending on decision
         })
         .eq('id', orderId);
       
-      if (error) throw error;
+      if (orderError) throw orderError;
+
       fetchDisputes();
     } catch (error: any) {
       console.error('Error resolving dispute:', error);
@@ -1924,28 +1949,28 @@ function AdminDisputes() {
               <tbody className="divide-y divide-white/5">
                 {disputes.map((d) => (
                   <tr key={d.id} className="hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 font-mono text-[10px] text-gray-500">{d.id.slice(0, 8)}...</td>
+                    <td className="px-6 py-4 font-mono text-[10px] text-gray-500">{d.order_id.slice(0, 8)}...</td>
                     <td className="px-6 py-4">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-brand">Buyer: {d.buyer.email}</div>
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-orange-500">Seller: {d.seller.email}</div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-brand">User: {d.order?.user_profile?.email}</div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-orange-500">Ad Creator: {d.order?.ad?.ad_profile?.email}</div>
                     </td>
-                    <td className="px-6 py-4 text-xs text-gray-400 italic">"{d.dispute_reason}"</td>
+                    <td className="px-6 py-4 text-xs text-gray-400 italic">"{d.reason}"</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <Link to={`/p2p/orders/${d.id}`} className="p-2 text-gray-400 hover:text-brand transition-colors">
+                        <Link to={`/p2p/orders/${d.order_id}`} className="p-2 text-gray-400 hover:text-brand transition-colors">
                           <Eye className="w-4 h-4" />
                         </Link>
                         <button 
-                          onClick={() => resolveDispute(d.id, d.buyer_id)}
+                          onClick={() => resolveDispute(d.id, d.order_id, d.order?.user_id)}
                           className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-green-600/20"
                         >
-                          Award Buyer
+                          Award User
                         </button>
                         <button 
-                          onClick={() => resolveDispute(d.id, d.seller_id)}
+                          onClick={() => resolveDispute(d.id, d.order_id, d.order?.ad?.user_id)}
                           className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-red-600/20"
                         >
-                          Award Seller
+                          Award Ad Creator
                         </button>
                       </div>
                     </td>

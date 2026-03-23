@@ -100,10 +100,13 @@ async function startServer() {
           .single();
 
         if (tx && tx.status !== "completed") {
-          // Update transaction status
+          // Update transaction status with real blockchain hash if available
           await supabase
             .from("transactions")
-            .update({ status: "completed" })
+            .update({ 
+              status: "completed",
+              tx_hash: req.body.pay_hash || tx.tx_hash
+            })
             .eq("id", tx.id);
 
           // Update user balance

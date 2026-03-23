@@ -24,13 +24,17 @@ import { motion } from 'framer-motion';
 
 interface Order {
   id: string;
+  user_id: string;
+  ad_id: string;
+  type: 'buy' | 'sell';
   amount_usdt: number;
-  amount_fiat: number;
-  price: number;
+  amount_inr: number;
+  rate: number;
   status: string;
   created_at: string;
-  buyer_id: string;
-  seller_id: string;
+  ad?: {
+    user_id: string;
+  };
 }
 
 export default function Dashboard() {
@@ -66,11 +70,27 @@ export default function Dashboard() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch my ads to get their IDs
+      const { data: myAds } = await supabase
+        .from('ads')
+        .select('id')
+        .eq('user_id', user?.id);
+      
+      const myAdIds = myAds?.map(ad => ad.id) || [];
+      
+      let query = supabase
         .from('orders')
-        .select('*')
-        .or(`buyer_id.eq.${user?.id},seller_id.eq.${user?.id}`)
-        .order('created_at', { ascending: false });
+        .select('*, ad:ads(*)');
+      
+      if (myAdIds.length > 0) {
+        // Use a single query with .or() for both conditions
+        query = query.or(`user_id.eq.${user?.id},ad_id.in.(${myAdIds.join(',')})`);
+      } else {
+        query = query.eq('user_id', user?.id);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setOrders(data || []);
@@ -273,59 +293,64 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {orders.map((order) => (
-                      <motion.div
-                        key={order.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="card p-6 hover:border-brand/30 transition-all group"
-                      >
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                          <div className="flex items-center gap-4">
-                            <div className={cn(
-                              "w-12 h-12 rounded-xl flex items-center justify-center border",
-                              order.buyer_id === user?.id 
-                                ? "bg-green-500/10 border-green-500/20 text-green-400" 
-                                : "bg-brand/10 border-brand/20 text-brand"
-                            )}>
-                              {order.buyer_id === user?.id ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-3 mb-1">
-                                <span className="font-bold text-white">
-                                  {order.buyer_id === user?.id ? 'Buy' : 'Sell'} USDT
-                                </span>
-                                <span className={cn(
-                                  "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border",
-                                  getStatusColor(order.status)
-                                )}>
-                                  {order.status}
-                                </span>
+                    {orders.map((order) => {
+                      const buyerId = order.type === 'buy' ? order.user_id : order.ad?.user_id;
+                      const isBuyer = user?.id === buyerId;
+                      
+                      return (
+                        <motion.div
+                          key={order.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="card p-6 hover:border-brand/30 transition-all group"
+                        >
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="flex items-center gap-4">
+                              <div className={cn(
+                                "w-12 h-12 rounded-xl flex items-center justify-center border",
+                                isBuyer 
+                                  ? "bg-green-500/10 border-green-500/20 text-green-400" 
+                                  : "bg-brand/10 border-brand/20 text-brand"
+                              )}>
+                                {isBuyer ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
                               </div>
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <Clock className="w-3 h-3" />
-                                {new Date(order.created_at).toLocaleDateString()}
-                                <span>•</span>
-                                <span>ID: {order.id.slice(0, 8)}</span>
+                              <div>
+                                <div className="flex items-center gap-3 mb-1">
+                                  <span className="font-bold text-white">
+                                    {isBuyer ? 'Buy' : 'Sell'} USDT
+                                  </span>
+                                  <span className={cn(
+                                    "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border",
+                                    getStatusColor(order.status)
+                                  )}>
+                                    {order.status}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(order.created_at).toLocaleDateString()}
+                                  <span>•</span>
+                                  <span>ID: {order.id.slice(0, 8)}</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          <div className="flex items-center justify-between md:justify-end gap-12">
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-white">{formatUSDT(order.amount_usdt)}</p>
-                              <p className="text-xs font-medium text-gray-500">{formatCurrency(order.amount_fiat)}</p>
+                            <div className="flex items-center justify-between md:justify-end gap-12">
+                              <div className="text-right">
+                                <p className="text-lg font-bold text-white">{formatUSDT(order.amount_usdt)}</p>
+                                <p className="text-xs font-medium text-gray-500">{formatCurrency(order.amount_inr)}</p>
+                              </div>
+                              <Link
+                                to={`/p2p/order/${order.id}`}
+                                className="p-3 bg-white/5 text-gray-500 hover:text-brand hover:bg-brand/10 rounded-xl transition-all border border-white/5"
+                              >
+                                <ExternalLink className="w-5 h-5" />
+                              </Link>
                             </div>
-                            <Link
-                              to={`/p2p/order/${order.id}`}
-                              className="p-3 bg-white/5 text-gray-500 hover:text-brand hover:bg-brand/10 rounded-xl transition-all border border-white/5"
-                            >
-                              <ExternalLink className="w-5 h-5" />
-                            </Link>
                           </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

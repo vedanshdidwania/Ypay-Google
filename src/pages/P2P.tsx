@@ -78,13 +78,20 @@ export default function P2P() {
   }, [filterType, user]);
 
   const fetchFavorites = async () => {
+    if (!user) return;
     try {
       const { data, error } = await supabase
         .from('merchant_favorites')
         .select('merchant_id')
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
       
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST116' || error.message.includes('relation "merchant_favorites" does not exist')) {
+          console.warn('merchant_favorites table not found');
+          return;
+        }
+        throw error;
+      }
       setFavorites(data.map(f => f.merchant_id));
     } catch (error) {
       console.error('Error fetching favorites:', error);
@@ -188,6 +195,11 @@ export default function P2P() {
   const handleStartTrade = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedAd) return;
+    
+    if (user.id === selectedAd.user_id) {
+      alert("You cannot trade with your own advertisement.");
+      return;
+    }
 
     const amount = parseFloat(tradeAmount);
     if (amount < selectedAd.min_limit || amount > selectedAd.max_limit) {
@@ -200,15 +212,15 @@ export default function P2P() {
       const usdtAmount = amount / selectedAd.price;
       
       const { data, error } = await supabase
-        .from('p2p_orders')
+        .from('orders')
         .insert({
           ad_id: selectedAd.id,
-          buyer_id: filterType === 'buy' ? user.id : selectedAd.user_id,
-          seller_id: filterType === 'buy' ? selectedAd.user_id : user.id,
-          amount_fiat: amount,
+          user_id: user.id,
+          type: filterType,
+          amount_inr: amount,
           amount_usdt: usdtAmount,
-          price: selectedAd.price,
-          payment_window: paymentWindow,
+          rate: selectedAd.price,
+          payment_window: selectedAd.payment_window || 15,
           status: 'pending'
         })
         .select()
@@ -234,7 +246,8 @@ export default function P2P() {
           user_profile:profiles(full_name, trades_completed, completion_rate, is_verified_merchant)
         `)
         .eq('status', 'active')
-        .eq('type', filterType === 'buy' ? 'sell' : 'buy') // If I want to BUY, I see SELL ads
+        .eq('type', filterType === 'buy' ? 'sell' : 'buy')
+        .neq('user_id', user?.id)
         .order('price', { ascending: filterType === 'buy' });
 
       if (error) throw error;

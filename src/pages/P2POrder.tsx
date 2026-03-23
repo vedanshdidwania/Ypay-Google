@@ -22,26 +22,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface P2POrder {
   id: string;
+  user_id: string;
   ad_id: string;
-  buyer_id: string;
-  seller_id: string;
-  amount_fiat: number;
+  type: 'buy' | 'sell';
+  amount_inr: number;
   amount_usdt: number;
-  price: number;
+  rate: number;
   status: 'pending' | 'paid' | 'completed' | 'cancelled' | 'disputed';
-  payment_window: number;
+  payment_window?: number;
   created_at: string;
-  payment_screenshot?: string;
-  buyer_profile?: { full_name: string; email: string };
-  seller_profile?: { full_name: string; email: string };
-  ad?: { payment_methods: string[] };
+  payment_screenshot_url?: string;
+  user_profile?: { id: string; full_name: string; email: string };
+  ad?: { 
+    user_id: string;
+    payment_methods: string[];
+    ad_profile?: { id: string; full_name: string; email: string };
+  };
 }
 
 interface Message {
   id: string;
   order_id: string;
   sender_id: string;
-  content: string;
+  message: string;
   image_url?: string;
   created_at: string;
 }
@@ -70,7 +73,8 @@ export default function P2POrder() {
   useEffect(() => {
     if (order && order.status === 'pending') {
       const start = new Date(order.created_at).getTime();
-      const end = start + (order.payment_window * 60 * 1000);
+      const window = order.payment_window || 15;
+      const end = start + (window * 60 * 1000);
       
       const timer = setInterval(() => {
         const now = new Date().getTime();
@@ -93,12 +97,14 @@ export default function P2POrder() {
   const fetchOrder = async () => {
     try {
       const { data, error } = await supabase
-        .from('p2p_orders')
+        .from('orders')
         .select(`
           *,
-          buyer_profile:profiles!p2p_orders_buyer_id_fkey(full_name, email),
-          seller_profile:profiles!p2p_orders_seller_id_fkey(full_name, email),
-          ad:ads(payment_methods)
+          user_profile:profiles(id, full_name, email),
+          ad:ads(
+            *,
+            ad_profile:profiles(id, full_name, email)
+          )
         `)
         .eq('id', id)
         .single();
@@ -114,7 +120,7 @@ export default function P2POrder() {
 
   const fetchMessages = async () => {
     const { data } = await supabase
-      .from('p2p_messages')
+      .from('chat_messages')
       .select('*')
       .eq('order_id', id)
       .order('created_at', { ascending: true });
@@ -124,11 +130,11 @@ export default function P2POrder() {
 
   const subscribeToMessages = () => {
     const channel = supabase
-      .channel(`p2p_messages:${id}`)
+      .channel(`chat_messages:${id}`)
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
-        table: 'p2p_messages',
+        table: 'chat_messages',
         filter: `order_id=eq.${id}`
       }, (payload) => {
         setMessages(prev => [...prev, payload.new as Message]);
@@ -142,11 +148,11 @@ export default function P2POrder() {
 
   const subscribeToOrder = () => {
     const channel = supabase
-      .channel(`p2p_order:${id}`)
+      .channel(`order:${id}`)
       .on('postgres_changes', { 
         event: 'UPDATE', 
         schema: 'public', 
-        table: 'p2p_orders',
+        table: 'orders',
         filter: `id=eq.${id}`
       }, (payload) => {
         setOrder(prev => prev ? { ...prev, ...payload.new } : null);
@@ -164,10 +170,10 @@ export default function P2POrder() {
 
     try {
       setSending(true);
-      const { error } = await supabase.from('p2p_messages').insert({
+      const { error } = await supabase.from('chat_messages').insert({
         order_id: id,
         sender_id: user.id,
-        content: newMessage
+        message: newMessage
       });
 
       if (error) throw error;
@@ -187,10 +193,10 @@ export default function P2POrder() {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64String = reader.result as string;
-        await supabase.from('p2p_messages').insert({
+        await supabase.from('chat_messages').insert({
           order_id: id,
           sender_id: user.id,
-          content: 'Sent an image',
+          message: 'Sent an image',
           image_url: base64String
         });
       };
@@ -205,7 +211,7 @@ export default function P2POrder() {
 
     try {
       const { error } = await supabase
-        .from('p2p_orders')
+        .from('orders')
         .update({ status: 'paid' })
         .eq('id', id);
 
@@ -220,14 +226,12 @@ export default function P2POrder() {
 
     try {
       const { error } = await supabase
-        .from('p2p_orders')
+        .from('orders')
         .update({ status: 'completed' })
         .eq('id', id);
 
       if (error) throw error;
       
-      // In a real app, this would trigger a database function or edge function 
-      // to handle the actual USDT transfer between user balances.
       alert('Funds released successfully! Trade completed.');
     } catch (error) {
       console.error('Error releasing funds:', error);
@@ -239,7 +243,7 @@ export default function P2POrder() {
 
     try {
       const { error } = await supabase
-        .from('p2p_orders')
+        .from('orders')
         .update({ status: 'cancelled' })
         .eq('id', id);
 
@@ -251,7 +255,7 @@ export default function P2POrder() {
 
   const handleAutoCancel = async () => {
     await supabase
-      .from('p2p_orders')
+      .from('orders')
       .update({ status: 'cancelled' })
       .eq('id', id)
       .eq('status', 'pending');
@@ -263,7 +267,7 @@ export default function P2POrder() {
 
     try {
       const { error } = await supabase
-        .from('p2p_orders')
+        .from('orders')
         .update({ status: 'disputed' })
         .eq('id', id);
 
@@ -299,9 +303,11 @@ export default function P2POrder() {
     );
   }
 
-  const isBuyer = user?.id === order.buyer_id;
-  const isSeller = user?.id === order.seller_id;
-  const otherParty = isBuyer ? order.seller_profile : order.buyer_profile;
+  const buyerId = order.type === 'buy' ? order.user_id : order.ad?.user_id;
+  const sellerId = order.type === 'sell' ? order.user_id : order.ad?.user_id;
+  const isBuyer = user?.id === buyerId;
+  const isSeller = user?.id === sellerId;
+  const otherParty = user?.id === order.user_id ? order.ad?.ad_profile : order.user_profile;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -346,7 +352,7 @@ export default function P2POrder() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount to {isBuyer ? 'Pay' : 'Receive'}</p>
-                  <p className="text-2xl font-display font-bold text-white">₹{order.amount_fiat.toLocaleString()}</p>
+                  <p className="text-2xl font-display font-bold text-white">₹{order.amount_inr.toLocaleString()}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">USDT to {isBuyer ? 'Receive' : 'Send'}</p>
@@ -354,7 +360,7 @@ export default function P2POrder() {
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Price</p>
-                  <p className="text-2xl font-display font-bold text-white">₹{order.price.toFixed(2)}</p>
+                  <p className="text-2xl font-display font-bold text-white">₹{order.rate.toFixed(2)}</p>
                 </div>
               </div>
 
@@ -481,7 +487,7 @@ export default function P2POrder() {
                     {msg.image_url && (
                       <img src={msg.image_url} className="max-w-full rounded-lg mb-2" />
                     )}
-                    {msg.content}
+                    {msg.message}
                   </div>
                   <span className="text-[10px] text-gray-500 mt-1">
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

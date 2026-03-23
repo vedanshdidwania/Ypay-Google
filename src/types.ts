@@ -51,22 +51,21 @@ export interface Ad {
 
 export interface Order {
   id: string;
+  user_id: string;
   ad_id: string;
-  buyer_id: string;
-  seller_id: string;
+  type: OrderType;
   amount_usdt: number;
-  amount_fiat: number;
-  price: number;
+  amount_inr: number;
+  rate: number;
   status: OrderStatus;
-  dispute_status: 'none' | 'open' | 'resolved';
-  dispute_reason?: string;
-  disputed_at?: string;
-  payment_proof_url?: string;
+  payment_method_id?: string;
+  payment_screenshot_url?: string;
+  transaction_hash?: string;
+  admin_feedback?: string;
   created_at: string;
   updated_at: string;
-  buyer_email?: string; // Joined
-  seller_email?: string; // Joined
-  ad?: Ad; // Joined
+  user_profile?: UserProfile;
+  ad?: Ad & { ad_profile?: UserProfile };
 }
 
 export interface Transaction {

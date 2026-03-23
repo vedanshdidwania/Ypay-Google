@@ -66,7 +66,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/p2p/*" element={<P2P />} />
+            <Route path="/p2p" element={<P2P />} />
             <Route path="/p2p/order/:id" element={<PrivateRoute><P2POrder /></PrivateRoute>} />
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />

@@ -48,6 +48,7 @@ CREATE TABLE ads (
 CREATE TABLE orders (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  ad_id UUID REFERENCES ads(id) ON DELETE CASCADE,
   type TEXT NOT NULL, -- buy, sell
   amount_usdt NUMERIC NOT NULL,
   amount_inr NUMERIC NOT NULL,
@@ -57,6 +58,7 @@ CREATE TABLE orders (
   payment_screenshot_url TEXT,
   transaction_hash TEXT,
   admin_feedback TEXT,
+  payment_window INTEGER DEFAULT 15,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
@@ -93,6 +95,7 @@ CREATE TABLE chat_messages (
   order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
   sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   message TEXT NOT NULL,
+  image_url TEXT,
   is_read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
@@ -191,8 +194,17 @@ CREATE POLICY "Admins can manage all ads" ON ads FOR ALL USING (public.is_admin(
 
 -- Orders
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can read own orders" ON orders FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can read own orders" ON orders FOR SELECT USING (
+  auth.uid() = user_id OR 
+  EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid()) OR 
+  public.is_admin()
+);
 CREATE POLICY "Users can create orders" ON orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own orders" ON orders FOR UPDATE USING (
+  auth.uid() = user_id OR 
+  EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid()) OR 
+  public.is_admin()
+);
 CREATE POLICY "Admins can manage all orders" ON orders FOR ALL USING (public.is_admin());
 
 -- App Settings
@@ -208,10 +220,10 @@ CREATE POLICY "Admins can manage payment methods" ON payment_methods FOR ALL USI
 -- Chat Messages
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read messages for their orders" ON chat_messages FOR SELECT USING (
-  EXISTS (SELECT 1 FROM orders WHERE id = order_id AND user_id = auth.uid()) OR public.is_admin()
+  EXISTS (SELECT 1 FROM orders WHERE id = order_id AND (user_id = auth.uid() OR EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid()))) OR public.is_admin()
 );
 CREATE POLICY "Users can send messages for their orders" ON chat_messages FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM orders WHERE id = order_id AND user_id = auth.uid()) OR public.is_admin()
+  EXISTS (SELECT 1 FROM orders WHERE id = order_id AND (user_id = auth.uid() OR EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid()))) OR public.is_admin()
 );
 
 -- Notifications
@@ -254,6 +266,26 @@ CREATE POLICY "Users can read messages for their chats" ON support_messages FOR 
 CREATE POLICY "Users can send messages for their chats" ON support_messages FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM support_chats WHERE id = chat_id AND user_id = auth.uid()) OR public.is_admin()
 );
+
+-- Create p2p_disputes table
+CREATE TABLE p2p_disputes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
+  raised_by UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  reason TEXT NOT NULL,
+  status TEXT DEFAULT 'open', -- open, resolved
+  admin_feedback TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+ALTER TABLE p2p_disputes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can read own disputes" ON p2p_disputes FOR SELECT USING (
+  raised_by = auth.uid() OR 
+  EXISTS (SELECT 1 FROM orders WHERE id = order_id AND (user_id = auth.uid() OR EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid()))) OR 
+  public.is_admin()
+);
+CREATE POLICY "Users can create disputes" ON p2p_disputes FOR INSERT WITH CHECK (raised_by = auth.uid());
+CREATE POLICY "Admins can manage all disputes" ON p2p_disputes FOR ALL USING (public.is_admin());
 
 -- Enable Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE support_messages;
