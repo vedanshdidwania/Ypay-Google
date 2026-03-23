@@ -134,7 +134,7 @@ export default function Navbar() {
                         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Account</p>
                         <p className="text-sm font-medium text-white truncate">{user.email}</p>
                       </div>
-                      <Link to="/dashboard" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
+                      <Link to="/dashboard?tab=settings" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
                         <UserIcon className="w-4 h-4" />
                         Profile Settings
                       </Link>

@@ -16,12 +16,15 @@ import {
   ChevronRight,
   AlertCircle,
   Heart,
-  TrendingUp
+  TrendingUp,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../lib/useAuth';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 interface Ad {
   id: string;
@@ -45,10 +48,15 @@ interface Ad {
 
 export default function P2P() {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<'buy' | 'sell'>('buy');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
+  const [tradeAmount, setTradeAmount] = useState('');
+  const [paymentWindow, setPaymentWindow] = useState(15);
+  const [isTrading, setIsTrading] = useState(false);
   const [rate, setRate] = useState(89.00);
   const [favorites, setFavorites] = useState<string[]>([]);
 
@@ -159,6 +167,63 @@ export default function P2P() {
     }
   };
 
+  const handleDeleteAd = async (adId: string) => {
+    if (!confirm('Are you sure you want to delete this advertisement?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('ads')
+        .update({ status: 'inactive' })
+        .eq('id', adId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+      fetchAds();
+    } catch (error) {
+      console.error('Error deleting ad:', error);
+      alert('Failed to delete advertisement.');
+    }
+  };
+
+  const handleStartTrade = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !selectedAd) return;
+
+    const amount = parseFloat(tradeAmount);
+    if (amount < selectedAd.min_limit || amount > selectedAd.max_limit) {
+      alert(`Amount must be between ${selectedAd.min_limit} and ${selectedAd.max_limit}`);
+      return;
+    }
+
+    try {
+      setIsTrading(true);
+      const usdtAmount = amount / selectedAd.price;
+      
+      const { data, error } = await supabase
+        .from('p2p_orders')
+        .insert({
+          ad_id: selectedAd.id,
+          buyer_id: filterType === 'buy' ? user.id : selectedAd.user_id,
+          seller_id: filterType === 'buy' ? selectedAd.user_id : user.id,
+          amount_fiat: amount,
+          amount_usdt: usdtAmount,
+          price: selectedAd.price,
+          payment_window: paymentWindow,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      navigate(`/p2p/order/${data.id}`);
+    } catch (error: any) {
+      console.error('Error starting trade:', error);
+      alert(error.message || 'Failed to initiate trade.');
+    } finally {
+      setIsTrading(false);
+    }
+  };
   const fetchAds = async () => {
     try {
       setLoading(true);
@@ -344,11 +409,25 @@ export default function P2P() {
                   </div>
 
                   {/* Action */}
-                  <div className="flex justify-end">
-                    <button className={cn(
-                      "btn-primary w-full md:w-auto px-10",
-                      filterType === 'buy' ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
-                    )}>
+                  <div className="flex items-center gap-2 justify-end">
+                    {ad.user_id === user?.id && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAd(ad.id);
+                        }}
+                        className="p-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl transition-all border border-red-500/20"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => setSelectedAd(ad)}
+                      className={cn(
+                        "btn-primary w-full md:w-auto px-10",
+                        filterType === 'buy' ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                      )}
+                    >
                       {filterType === 'buy' ? 'Buy USDT' : 'Sell USDT'}
                     </button>
                   </div>
@@ -477,6 +556,121 @@ export default function P2P() {
                       className="btn-primary w-full py-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? 'Publishing...' : 'Publish Advertisement'}
+                    </button>
+                  </form>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Trade Modal */}
+        <AnimatePresence>
+          {selectedAd && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedAd(null)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-lg bg-[#111111] rounded-3xl shadow-2xl overflow-hidden border border-white/10"
+              >
+                <div className="p-8">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h3 className="text-xl font-display font-bold text-white">
+                        {filterType === 'buy' ? 'Buy' : 'Sell'} USDT
+                      </h3>
+                      <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">
+                        Trade with {selectedAd.user_profile?.full_name || 'Merchant'}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => setSelectedAd(null)}
+                      className="p-2 hover:bg-white/5 rounded-xl transition-colors"
+                    >
+                      <X className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </div>
+
+                  <form className="space-y-6" onSubmit={handleStartTrade}>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount (INR)</label>
+                      <div className="relative">
+                        <input 
+                          type="number" 
+                          required
+                          min={selectedAd.min_limit}
+                          max={selectedAd.max_limit}
+                          value={tradeAmount}
+                          onChange={(e) => setTradeAmount(e.target.value)}
+                          className="input-field text-xl font-bold" 
+                          placeholder={`${selectedAd.min_limit} - ${selectedAd.max_limit}`}
+                        />
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-gray-500">INR</div>
+                      </div>
+                      <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">
+                        <span>Receive: {tradeAmount ? (parseFloat(tradeAmount) / selectedAd.price).toFixed(2) : '0.00'} USDT</span>
+                        <span>Price: ₹{selectedAd.price.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Payment Window</label>
+                      <div className="grid grid-cols-2 gap-4">
+                        {[15, 30, 45, 60].map((min) => (
+                          <button
+                            key={min}
+                            type="button"
+                            onClick={() => setPaymentWindow(min)}
+                            className={cn(
+                              "px-4 py-3 rounded-xl border text-sm font-bold transition-all",
+                              paymentWindow === min 
+                                ? "bg-brand/10 border-brand text-brand shadow-lg shadow-brand/10" 
+                                : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                            )}
+                          >
+                            {min} Minutes
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-brand/5 border border-brand/10 rounded-2xl">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-brand shrink-0 mt-0.5" />
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                          By clicking the button below, you agree to the merchant's terms and our escrow protocol. 
+                          Funds will be locked in escrow until the trade is completed or cancelled.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      disabled={isTrading || !tradeAmount}
+                      className={cn(
+                        "btn-primary w-full py-4 text-sm flex items-center justify-center gap-2",
+                        filterType === 'buy' ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                      )}
+                    >
+                      {isTrading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Initiating Trade...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>{filterType === 'buy' ? 'Buy USDT' : 'Sell USDT'}</span>
+                          <ArrowRight className="w-5 h-5" />
+                        </>
+                      )}
                     </button>
                   </form>
                 </div>

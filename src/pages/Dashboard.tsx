@@ -19,7 +19,7 @@ import {
 import { useAuth } from '../lib/useAuth';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 interface Order {
@@ -35,9 +35,27 @@ interface Order {
 
 export default function Dashboard() {
   const { user, profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<'orders' | 'settings'>('orders');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<'orders' | 'settings'>(
+    (searchParams.get('tab') as 'orders' | 'settings') || 'orders'
+  );
+
+  useEffect(() => {
+    const tab = searchParams.get('tab') as 'orders' | 'settings';
+    if (tab && (tab === 'orders' || tab === 'settings')) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [trc20Address, setTrc20Address] = useState(profile?.trc20_address || '');
+
+  useEffect(() => {
+    if (profile) {
+      setTrc20Address(profile.trc20_address || '');
+    }
+  }, [profile]);
 
   useEffect(() => {
     if (user) {
@@ -60,6 +78,25 @@ export default function Dashboard() {
       console.error('Error fetching orders:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!user) return;
+    try {
+      setSaving(true);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ trc20_address: trc20Address })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      alert('Settings saved successfully!');
+    } catch (error: any) {
+      console.error('Error saving settings:', error);
+      alert(error.message || 'Failed to save settings.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -344,6 +381,8 @@ export default function Dashboard() {
                       <input 
                         type="text" 
                         placeholder="Enter TRC20 Address"
+                        value={trc20Address}
+                        onChange={(e) => setTrc20Address(e.target.value)}
                         className="input-field font-mono"
                       />
                     </div>
@@ -353,8 +392,12 @@ export default function Dashboard() {
                         Ensure your TRC20 address is correct. Automated settlements are irreversible once executed on the blockchain.
                       </p>
                     </div>
-                    <button className="btn-primary w-full md:w-auto px-12">
-                      Save Changes
+                    <button 
+                      onClick={handleSaveSettings}
+                      disabled={saving}
+                      className="btn-primary w-full md:w-auto px-12 disabled:opacity-50"
+                    >
+                      {saving ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
                 </div>

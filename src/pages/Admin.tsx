@@ -37,10 +37,12 @@ export default function Admin() {
     { id: 'orders', label: 'Orders', icon: ShoppingBag, path: '/admin/orders' },
     { id: 'kyc', label: 'KYC Review', icon: ShieldCheck, path: '/admin/kyc' },
     { id: 'disputes', label: 'Disputes', icon: AlertTriangle, path: '/admin/disputes' },
+    { id: 'withdrawals', label: 'Withdrawals', icon: CreditCard, path: '/admin/withdrawals' },
     { id: 'merchants', label: 'Merchants', icon: ShieldCheck, path: '/admin/merchants' },
     { id: 'payments', label: 'Payments', icon: CreditCard, path: '/admin/payments' },
     { id: 'users', label: 'Users', icon: Users, path: '/admin/users' },
     { id: 'support', label: 'Support', icon: MessageSquare, path: '/admin/support' },
+    { id: 'p2p-chats', label: 'P2P Chats', icon: MessageSquare, path: '/admin/p2p-chats' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/admin/settings' },
   ];
 
@@ -82,10 +84,12 @@ export default function Admin() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="kyc" element={<AdminKYC />} />
             <Route path="disputes" element={<AdminDisputes />} />
+            <Route path="withdrawals" element={<AdminWithdrawals />} />
             <Route path="merchants" element={<AdminMerchants />} />
             <Route path="payments" element={<AdminPayments />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="support" element={<AdminSupport />} />
+            <Route path="p2p-chats" element={<AdminP2PChats />} />
             <Route path="settings" element={<AdminSettings />} />
           </Routes>
         </div>
@@ -426,7 +430,11 @@ function AdminPayments() {
   const [newMethod, setNewMethod] = useState<Partial<PaymentMethod>>({
     type: 'upi',
     account_name: '',
-    is_active: true
+    is_active: true,
+    bank_name: '',
+    account_number: '',
+    ifsc_code: '',
+    upi_id: ''
   });
 
   useEffect(() => {
@@ -446,7 +454,15 @@ function AdminPayments() {
       if (error) throw error;
       
       setIsAdding(false);
-      setNewMethod({ type: 'upi', account_name: '', is_active: true });
+      setNewMethod({ 
+        type: 'upi', 
+        account_name: '', 
+        is_active: true,
+        bank_name: '',
+        account_number: '',
+        ifsc_code: '',
+        upi_id: ''
+      });
       fetchMethods();
     } catch (error: any) {
       console.error('Error adding payment method:', error);
@@ -539,37 +555,53 @@ function AdminPayments() {
               placeholder="e.g. John Doe"
             />
           </div>
-          {newMethod.type !== 'bank' ? (
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Payment ID / Number</label>
-              <input 
-                type="text"
-                value={newMethod.upi_id || ''}
-                onChange={(e) => setNewMethod({ ...newMethod, upi_id: e.target.value })}
-                className="input-field font-mono"
-                placeholder="john@upi or 9876543210"
-              />
-            </div>
-          ) : (
+          {newMethod.type === 'bank' ? (
             <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Bank Name</label>
+                <input 
+                  type="text"
+                  required
+                  value={newMethod.bank_name || ''}
+                  onChange={(e) => setNewMethod({ ...newMethod, bank_name: e.target.value })}
+                  className="input-field"
+                  placeholder="e.g. HDFC Bank"
+                />
+              </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Account Number</label>
                 <input 
                   type="text"
+                  required
                   value={newMethod.account_number || ''}
                   onChange={(e) => setNewMethod({ ...newMethod, account_number: e.target.value })}
                   className="input-field font-mono"
+                  placeholder="0000 0000 0000 0000"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">IFSC Code</label>
                 <input 
                   type="text"
-                  value={newMethod.ifsc || ''}
-                  onChange={(e) => setNewMethod({ ...newMethod, ifsc: e.target.value })}
+                  required
+                  value={newMethod.ifsc_code || ''}
+                  onChange={(e) => setNewMethod({ ...newMethod, ifsc_code: e.target.value.toUpperCase() })}
                   className="input-field font-mono uppercase"
+                  placeholder="HDFC0001234"
                 />
               </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Payment ID / Number</label>
+              <input 
+                type="text"
+                required
+                value={newMethod.upi_id || ''}
+                onChange={(e) => setNewMethod({ ...newMethod, upi_id: e.target.value })}
+                className="input-field font-mono"
+                placeholder={newMethod.type === 'upi' ? "john@upi" : "9876543210"}
+              />
             </div>
           )}
           <div className="flex gap-4 pt-4">
@@ -896,6 +928,210 @@ function AdminUsers() {
   );
 }
 
+function AdminP2PChats() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    fetchActiveOrders();
+  }, []);
+
+  useEffect(() => {
+    if (selectedOrder) {
+      fetchMessages(selectedOrder.id);
+      const channel = supabase
+        .channel(`admin_p2p_messages:${selectedOrder.id}`)
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'p2p_messages',
+          filter: `order_id=eq.${selectedOrder.id}`
+        }, (payload) => {
+          setMessages(prev => [...prev, payload.new]);
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [selectedOrder]);
+
+  const fetchActiveOrders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('p2p_orders')
+        .select(`
+          *,
+          buyer:profiles!p2p_orders_buyer_id_fkey(email, full_name),
+          seller:profiles!p2p_orders_seller_id_fkey(email, full_name)
+        `)
+        .in('status', ['pending', 'paid', 'disputed'])
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setOrders(data);
+    } catch (error) {
+      console.error('Error fetching active orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMessages = async (orderId: string) => {
+    const { data } = await supabase
+      .from('p2p_messages')
+      .select('*')
+      .eq('order_id', orderId)
+      .order('created_at', { ascending: true });
+    
+    if (data) setMessages(data);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrder || !newMessage.trim()) return;
+
+    try {
+      setSending(true);
+      const { error } = await supabase.from('p2p_messages').insert({
+        order_id: selectedOrder.id,
+        sender_id: 'admin',
+        content: `[ADMIN]: ${newMessage}`
+      });
+
+      if (error) throw error;
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="h-[calc(100vh-12rem)] flex gap-6">
+      {/* Order List */}
+      <div className="w-80 flex-shrink-0 card flex flex-col overflow-hidden">
+        <div className="p-4 border-b border-white/5 bg-white/5">
+          <h3 className="text-sm font-bold text-white uppercase tracking-widest">Active Trades</h3>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin text-brand mx-auto" /></div>
+          ) : orders.length === 0 ? (
+            <div className="p-8 text-center text-gray-500 text-xs">No active trades found.</div>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {orders.map((order) => (
+                <button
+                  key={order.id}
+                  onClick={() => setSelectedOrder(order)}
+                  className={cn(
+                    "w-full p-4 text-left transition-all hover:bg-white/5",
+                    selectedOrder?.id === order.id && "bg-brand/10 border-l-4 border-brand"
+                  )}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-[10px] font-bold text-brand uppercase tracking-widest">#{order.id.slice(0, 8)}</span>
+                    <span className={cn(
+                      "text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full",
+                      order.status === 'disputed' ? "bg-red-500/10 text-red-500" : "bg-yellow-500/10 text-yellow-500"
+                    )}>
+                      {order.status}
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-white truncate">{order.buyer?.full_name} ↔ {order.seller?.full_name}</p>
+                  <p className="text-[10px] text-gray-500 mt-1">{formatUSDT(order.amount_usdt)} USDT • ₹{order.amount_fiat.toLocaleString()}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Chat Window */}
+      <div className="flex-1 card flex flex-col overflow-hidden">
+        {selectedOrder ? (
+          <>
+            <div className="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-bold text-white">Trade Chat: #{selectedOrder.id.slice(0, 8)}</h3>
+                <p className="text-[10px] text-gray-400 uppercase tracking-widest">
+                  {selectedOrder.buyer?.email} (Buyer) ↔ {selectedOrder.seller?.email} (Seller)
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={cn(
+                    "flex flex-col max-w-[80%]",
+                    msg.sender_id === 'admin' ? "mx-auto items-center" : 
+                    msg.sender_id === selectedOrder.buyer_id ? "mr-auto items-start" : "ml-auto items-end"
+                  )}
+                >
+                  <div className={cn(
+                    "p-3 rounded-2xl text-sm",
+                    msg.sender_id === 'admin' ? "bg-white/10 text-brand border border-brand/20" :
+                    msg.sender_id === selectedOrder.buyer_id 
+                      ? "bg-white/5 text-white rounded-tl-none border border-white/10" 
+                      : "bg-brand text-white rounded-tr-none"
+                  )}>
+                    <p className="text-[8px] font-bold uppercase tracking-widest mb-1 opacity-50">
+                      {msg.sender_id === 'admin' ? 'System Admin' : 
+                       msg.sender_id === selectedOrder.buyer_id ? 'Buyer' : 'Seller'}
+                    </p>
+                    {msg.image_url && (
+                      <img src={msg.image_url} className="max-w-full rounded-lg mb-2" />
+                    )}
+                    {msg.content}
+                  </div>
+                  <span className="text-[10px] text-gray-400 mt-1">
+                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5 bg-white/5 flex gap-2">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Send a message as Admin..."
+                className="flex-1 bg-[#050505] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-brand"
+              />
+              <button
+                type="submit"
+                disabled={sending || !newMessage.trim()}
+                className="p-2 bg-brand text-white rounded-xl hover:bg-brand/90 disabled:opacity-50 transition-all shadow-lg shadow-brand/20"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </form>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-12">
+            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center text-gray-500 mb-4">
+              <MessageSquare className="w-10 h-10" />
+            </div>
+            <h3 className="text-lg font-display font-bold text-white">No Trade Selected</h3>
+            <p className="text-sm text-gray-500 max-w-xs mx-auto mt-2">
+              Select an active trade from the list to monitor the conversation and intervene if necessary.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 function AdminSettings() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(false);
@@ -1255,6 +1491,219 @@ function AdminSupport() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+function AdminWithdrawals() {
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<any | null>(null);
+  const [feedback, setFeedback] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    fetchWithdrawals();
+  }, []);
+
+  const fetchWithdrawals = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('withdrawals')
+        .select('*, profiles(email, full_name)')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setWithdrawals(data);
+    } catch (error) {
+      console.error('Error fetching withdrawals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReview = async (status: 'approved' | 'rejected') => {
+    if (!selectedWithdrawal) return;
+
+    try {
+      setIsProcessing(true);
+      const { error } = await supabase
+        .from('withdrawals')
+        .update({ 
+          status, 
+          admin_feedback: feedback,
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', selectedWithdrawal.id);
+      
+      if (error) throw error;
+
+      // If rejected, refund the user's balance
+      if (status === 'rejected') {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('balance')
+          .eq('id', selectedWithdrawal.user_id)
+          .single();
+        
+        if (profile) {
+          await supabase
+            .from('profiles')
+            .update({ balance: profile.balance + selectedWithdrawal.amount })
+            .eq('id', selectedWithdrawal.user_id);
+        }
+      }
+
+      setFeedback('');
+      setSelectedWithdrawal(null);
+      fetchWithdrawals();
+    } catch (error: any) {
+      console.error('Error reviewing withdrawal:', error);
+      alert(error.message || 'Failed to update withdrawal status.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-display font-bold text-white">Withdrawal Requests</h2>
+        <p className="text-sm text-gray-500 mt-1">Review and process user withdrawal requests.</p>
+      </div>
+
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-white/5 border-b border-white/5">
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">User</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Amount</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Network/Address</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-brand mx-auto" />
+                  </td>
+                </tr>
+              ) : withdrawals.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500 text-sm">
+                    No withdrawal requests found.
+                  </td>
+                </tr>
+              ) : (
+                withdrawals.map((w) => (
+                  <tr key={w.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-white">{w.profiles?.full_name || 'User'}</span>
+                        <span className="text-[10px] text-gray-500">{w.profiles?.email}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-white">{formatUSDT(w.amount)}</span>
+                        <span className="text-[10px] text-gray-500">USDT</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-brand uppercase tracking-widest">{w.network}</span>
+                        <span className="text-[10px] text-gray-400 font-mono truncate max-w-[150px]">{w.address}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={cn(
+                        "px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest",
+                        w.status === 'pending' ? "bg-yellow-500/10 text-yellow-500" :
+                        w.status === 'approved' ? "bg-green-500/10 text-green-500" :
+                        "bg-red-500/10 text-red-500"
+                      )}>
+                        {w.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-[10px] text-gray-500">
+                      {new Date(w.created_at).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {w.status === 'pending' && (
+                        <button 
+                          onClick={() => setSelectedWithdrawal(w)}
+                          className="p-2 hover:bg-brand/10 text-brand rounded-lg transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <Modal
+        isOpen={selectedWithdrawal !== null}
+        onClose={() => setSelectedWithdrawal(null)}
+        title="Review Withdrawal Request"
+      >
+        {selectedWithdrawal && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4 p-4 bg-white/5 rounded-2xl border border-white/10">
+              <div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">User</p>
+                <p className="text-sm text-white font-bold">{selectedWithdrawal.profiles?.full_name}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Amount</p>
+                <p className="text-sm text-white font-bold">{formatUSDT(selectedWithdrawal.amount)} USDT</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Network</p>
+                <p className="text-sm text-brand font-bold uppercase">{selectedWithdrawal.network}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Wallet Address</p>
+                <p className="text-sm text-white font-mono break-all bg-black/40 p-2 rounded-lg">{selectedWithdrawal.address}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Admin Feedback (Optional)</label>
+              <textarea 
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                className="input-field min-h-[100px]"
+                placeholder="Reason for rejection or transaction hash for approval..."
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <button 
+                onClick={() => handleReview('rejected')}
+                disabled={isProcessing}
+                className="flex-1 py-3 bg-red-600/10 hover:bg-red-600/20 text-red-500 rounded-xl font-bold transition-all border border-red-600/20"
+              >
+                Reject
+              </button>
+              <button 
+                onClick={() => handleReview('approved')}
+                disabled={isProcessing}
+                className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-green-600/20"
+              >
+                Approve & Process
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
