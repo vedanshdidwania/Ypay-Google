@@ -57,7 +57,7 @@ export default function Navbar() {
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center shadow-lg shadow-brand/10 group-hover:scale-105 transition-transform overflow-hidden border border-white/10">
               <img 
-                src="/logo.png" 
+                src="https://res.cloudinary.com/dvep5xtf2/image/upload/v1774265829/logo.png_l0lsdc.png" 
                 alt="Y" 
                 className="w-full h-full object-cover" 
                 referrerPolicy="no-referrer"

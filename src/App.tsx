@@ -18,6 +18,7 @@ import P2POrder from './pages/P2POrder';
 import Wallet from './pages/Wallet';
 import KYC from './pages/KYC';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Support from './components/Support';
 import { AlertTriangle } from 'lucide-react';
 
@@ -74,6 +75,7 @@ export default function App() {
             <Route path="/sell" element={<PrivateRoute><Sell /></PrivateRoute>} />
             <Route path="/admin/*" element={<PrivateRoute adminOnly><Admin /></PrivateRoute>} />
           </Routes>
+          <Footer />
           <Support />
         </div>
       </Router>

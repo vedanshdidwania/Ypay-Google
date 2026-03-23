@@ -59,7 +59,7 @@ export default function Auth() {
           <div className="flex justify-center mb-6">
             <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl overflow-hidden border border-gray-100">
               <img 
-                src="/logo.png" 
+                src="https://res.cloudinary.com/dvep5xtf2/image/upload/v1774265829/logo.png_l0lsdc.png" 
                 alt="Y" 
                 className="w-full h-full object-cover" 
                 referrerPolicy="no-referrer"

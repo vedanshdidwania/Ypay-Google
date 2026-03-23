@@ -336,35 +336,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm border border-white/10">
-                <img 
-                  src="/logo.png" 
-                  alt="Y" 
-                  className="w-full h-full object-cover" 
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=Y&background=4F46E5&color=fff&bold=true';
-                  }}
-                />
-              </div>
-              <span className="font-display font-bold text-white tracking-tight text-xl">YPAY</span>
-            </div>
-            <div className="flex items-center gap-8 text-sm font-medium text-gray-400">
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="hover:text-white transition-colors">Security</a>
-              <a href="#" className="hover:text-white transition-colors">Status</a>
-            </div>
-            <p className="text-sm text-gray-500">© 2026 Ypay Protocol. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
