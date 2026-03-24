@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn, formatCurrency, formatUSDT } from '../lib/utils';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 interface Ad {
   id: string;
@@ -76,61 +77,19 @@ export default function P2PCreateOrder() {
       const inrAmount = parseFloat(amount);
       const usdtAmount = inrAmount / ad.price;
 
-      // If user is selling (ad.type === 'buy'), we need to lock the funds in escrow
-      if (ad.type === 'buy') {
-        const { data: userProfile, error: profileError } = await supabase
-          .from('profiles')
-          .select('balance_usdt, escrow_balance_usdt')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) throw profileError;
-        if (!userProfile || userProfile.balance_usdt < usdtAmount) {
-          throw new Error('Insufficient balance to start this trade. You need at least ' + usdtAmount.toFixed(2) + ' USDT.');
-        }
-
-        // Deduct from balance and add to escrow
-        const { error: balanceError } = await supabase
-          .from('profiles')
-          .update({ 
-            balance_usdt: userProfile.balance_usdt - usdtAmount,
-            escrow_balance_usdt: (userProfile.escrow_balance_usdt || 0) + usdtAmount
-          })
-          .eq('id', user.id);
-
-        if (balanceError) throw balanceError;
-
-        // Log the escrow lock
-        await supabase.from('transactions').insert({
-          user_id: user.id,
-          type: 'trade_escrow',
-          amount: usdtAmount,
-          status: 'completed',
-          tx_hash: 'ESCROW-' + Math.random().toString(36).substring(2, 10).toUpperCase()
-        });
-      }
-      
-      const { data, error } = await supabase
-        .from('orders')
-        .insert({
-          ad_id: ad.id,
-          user_id: user.id,
-          type: ad.type === 'buy' ? 'sell' : 'buy', // If ad is 'buy', user is 'selling'
-          amount_inr: inrAmount,
-          amount_usdt: usdtAmount,
-          rate: ad.price,
-          payment_window: paymentWindow,
-          status: 'pending'
-        })
-        .select()
-        .single();
+      const { data: orderId, error } = await supabase.rpc('start_p2p_trade', {
+        p_ad_id: ad.id,
+        p_amount_inr: inrAmount,
+        p_amount_usdt: usdtAmount
+      });
 
       if (error) throw error;
       
-      navigate(`/p2p/order/${data.id}`);
+      toast.success('Order created successfully!');
+      navigate(`/p2p/order/${orderId}`);
     } catch (error: any) {
       console.error('Error starting trade:', error);
-      alert(error.message || 'Failed to initiate trade. Please try again.');
+      toast.error(error.message || 'Failed to start trade');
     } finally {
       setIsTrading(false);
     }
@@ -168,7 +127,7 @@ export default function P2PCreateOrder() {
                   <User className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">{ad.user_profile?.full_name || 'Merchant'}</h3>
+                  <h3 className="text-lg font-bold text-white">{ad.user_profile?.full_name || 'User'}</h3>
                   <div className="flex items-center gap-1 text-yellow-500">
                     <Star className="w-3 h-3 fill-current" />
                     <span className="text-xs font-bold">4.9 (120+ trades)</span>

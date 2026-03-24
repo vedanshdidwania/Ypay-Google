@@ -107,10 +107,10 @@ export default function P2POrder() {
         .from('orders')
         .select(`
           *,
-          user_profile:profiles(id, full_name, email),
+          user_profile:profiles(id, full_name, email, avatar_url, total_trades, completion_rate),
           ad:ads(
             *,
-            ad_profile:profiles(id, full_name, email)
+            ad_profile:profiles(id, full_name, email, avatar_url, total_trades, completion_rate)
           )
         `)
         .eq('id', id)
@@ -249,76 +249,17 @@ export default function P2POrder() {
     if (!confirm('Have you received the correct amount in your bank/wallet? Once released, this action cannot be undone.')) return;
 
     try {
-      // Fetch seller profile to get current escrow balance
-      const { data: sellerProfile, error: sellerError } = await supabase
-        .from('profiles')
-        .select('balance_usdt, escrow_balance_usdt')
-        .eq('id', sellerId)
-        .single();
-
-      if (sellerError) throw sellerError;
-
-      // Fetch buyer profile to get current balance
-      const { data: buyerProfile, error: buyerError } = await supabase
-        .from('profiles')
-        .select('balance_usdt')
-        .eq('id', buyerId)
-        .single();
-
-      if (buyerError) throw buyerError;
-
-      // Deduct from seller's escrow and add to buyer's balance
-      const { error: releaseError } = await supabase
-        .from('profiles')
-        .update({ 
-          escrow_balance_usdt: (sellerProfile.escrow_balance_usdt || 0) - order.amount_usdt
-        })
-        .eq('id', sellerId);
-
-      if (releaseError) throw releaseError;
-
-      const { error: receiveError } = await supabase
-        .from('profiles')
-        .update({ 
-          balance_usdt: (buyerProfile.balance_usdt || 0) + order.amount_usdt
-        })
-        .eq('id', buyerId);
-
-      if (receiveError) throw receiveError;
-
-      // Log the transaction for both parties
-      await supabase.from('transactions').insert([
-        {
-          user_id: sellerId,
-          type: 'trade_release',
-          amount: order.amount_usdt,
-          status: 'completed',
-          tx_hash: 'RELEASE-' + id?.slice(0, 8).toUpperCase()
-        },
-        {
-          user_id: buyerId,
-          type: 'deposit',
-          amount: order.amount_usdt,
-          status: 'completed',
-          tx_hash: 'TRADE-' + id?.slice(0, 8).toUpperCase()
-        }
-      ]);
-
-      const { error } = await supabase
-        .from('orders')
-        .update({ 
-          status: 'completed',
-          escrow_released_at: new Date().toISOString()
-        })
-        .eq('id', id);
+      const { error } = await supabase.rpc('release_p2p_order', {
+        p_order_id: id
+      });
 
       if (error) throw error;
       
       toast.success('Funds released successfully! Trade completed.');
       setShowReviewModal(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error releasing funds:', error);
-      toast.error('Failed to release funds');
+      toast.error(error.message || 'Failed to release funds');
     }
   };
 
@@ -353,35 +294,15 @@ export default function P2POrder() {
     if (!confirm('Are you sure you want to cancel this order?')) return;
 
     try {
-      // Fetch seller profile to get current escrow balance
-      const { data: sellerProfile, error: sellerError } = await supabase
-        .from('profiles')
-        .select('balance_usdt, escrow_balance_usdt')
-        .eq('id', sellerId)
-        .single();
-
-      if (sellerError) throw sellerError;
-
-      // Move funds back from escrow to balance
-      const { error: refundError } = await supabase
-        .from('profiles')
-        .update({ 
-          balance_usdt: (sellerProfile.balance_usdt || 0) + order.amount_usdt,
-          escrow_balance_usdt: (sellerProfile.escrow_balance_usdt || 0) - order.amount_usdt
-        })
-        .eq('id', sellerId);
-
-      if (refundError) throw refundError;
-
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: 'cancelled' })
-        .eq('id', id);
+      const { error } = await supabase.rpc('cancel_p2p_order', {
+        p_order_id: id
+      });
 
       if (error) throw error;
-      toast.success('Order cancelled and funds returned to escrow.');
-    } catch (error) {
+      toast.success('Order cancelled and funds returned to balance.');
+    } catch (error: any) {
       console.error('Error cancelling order:', error);
+      toast.error(error.message || 'Failed to cancel order');
     }
   };
 
@@ -389,29 +310,9 @@ export default function P2POrder() {
     if (!order || order.status !== 'pending') return;
 
     try {
-      // Fetch seller profile to get current escrow balance
-      const { data: sellerProfile, error: sellerError } = await supabase
-        .from('profiles')
-        .select('balance_usdt, escrow_balance_usdt')
-        .eq('id', sellerId)
-        .single();
-
-      if (sellerError) throw sellerError;
-
-      // Move funds back from escrow to balance
-      await supabase
-        .from('profiles')
-        .update({ 
-          balance_usdt: (sellerProfile.balance_usdt || 0) + order.amount_usdt,
-          escrow_balance_usdt: (sellerProfile.escrow_balance_usdt || 0) - order.amount_usdt
-        })
-        .eq('id', sellerId);
-
-      await supabase
-        .from('orders')
-        .update({ status: 'cancelled' })
-        .eq('id', id)
-        .eq('status', 'pending');
+      await supabase.rpc('cancel_p2p_order', {
+        p_order_id: id
+      });
     } catch (error) {
       console.error('Error in auto-cancel:', error);
     }
@@ -638,12 +539,20 @@ export default function P2POrder() {
           <div className="card flex flex-col h-[600px] overflow-hidden">
             <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center text-brand">
-                  <User className="w-4 h-4" />
+                <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5 overflow-hidden">
+                  {otherParty?.avatar_url ? (
+                    <img src={otherParty.avatar_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <User className="w-5 h-5" />
+                  )}
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-white">{otherParty?.full_name || 'Merchant'}</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-widest">Online</p>
+                  <p className="text-sm font-bold text-white">{otherParty?.full_name || 'User'}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{otherParty?.total_trades || 0} Trades</span>
+                    <span className="text-gray-700">•</span>
+                    <span className="text-[10px] text-green-500 font-bold uppercase tracking-widest">{otherParty?.completion_rate || 100}%</span>
+                  </div>
                 </div>
               </div>
             </div>

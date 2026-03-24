@@ -22,9 +22,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../lib/useAuth';
 import { supabase } from '../lib/supabase';
-import { cn } from '../lib/utils';
+import { cn, formatCurrency, formatUSDT } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface Ad {
   id: string;
@@ -140,50 +141,19 @@ export default function P2P() {
     try {
       setIsSubmitting(true);
       
-      // If it's a sell ad, we need to lock the funds in escrow
-      if (newAd.type === 'sell') {
-        if (!profile || profile.balance_usdt < newAd.max_limit) {
-          throw new Error('Insufficient balance to post this advertisement. You need at least ' + newAd.max_limit + ' USDT.');
-        }
-
-        // Deduct from balance and add to escrow
-        const { error: balanceError } = await supabase
-          .from('profiles')
-          .update({ 
-            balance_usdt: profile.balance_usdt - newAd.max_limit,
-            escrow_balance_usdt: (profile.escrow_balance_usdt || 0) + newAd.max_limit
-          })
-          .eq('id', user.id);
-
-        if (balanceError) throw balanceError;
-
-        // Log the escrow lock
-        await supabase.from('transactions').insert({
-          user_id: user.id,
-          type: 'trade_escrow',
-          amount: newAd.max_limit,
-          status: 'completed',
-          tx_hash: 'ESCROW-' + Math.random().toString(36).substring(2, 10).toUpperCase()
-        });
-      }
-
-      const { error } = await supabase.from('ads').insert({
-        user_id: user.id,
-        type: newAd.type,
-        asset: 'USDT',
-        pricing_type: 'fixed',
-        price: newAd.price,
-        min_limit: newAd.min_limit,
-        max_limit: newAd.max_limit,
-        payment_methods: newAd.payment_methods,
-        terms: '',
-        status: 'active'
+      const { error } = await supabase.rpc('create_p2p_ad', {
+        p_type: newAd.type,
+        p_price: newAd.price,
+        p_min_limit: newAd.min_limit,
+        p_max_limit: newAd.max_limit,
+        p_payment_methods: newAd.payment_methods
       });
 
       if (error) throw error;
       
       setIsCreateModalOpen(false);
       fetchAds();
+      toast.success('Advertisement posted successfully!');
       // Reset form
       setNewAd({
         type: 'buy',
@@ -192,9 +162,9 @@ export default function P2P() {
         max_limit: 50000,
         payment_methods: []
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating ad:', error);
-      alert('Failed to post advertisement. Please try again.');
+      toast.error(error.message || 'Failed to post advertisement');
     } finally {
       setIsSubmitting(false);
     }
@@ -332,19 +302,23 @@ export default function P2P() {
                   {/* Merchant Info */}
                   <div className="flex items-center gap-4">
                     <div className="relative">
-                      <div className="w-12 h-12 bg-brand/10 rounded-xl flex items-center justify-center text-brand font-bold">
-                        {ad.user_profile?.full_name?.[0] || 'M'}
+                      <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5 overflow-hidden">
+                        {ad.user_profile?.avatar_url ? (
+                          <img src={ad.user_profile.avatar_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        ) : (
+                          <User className="w-6 h-6" />
+                        )}
                       </div>
-                      {ad.user_profile?.is_verified_merchant && (
+                      {ad.user_profile?.is_verified && (
                         <div className="absolute -top-1 -right-1 bg-[#111111] rounded-full p-0.5 shadow-sm border border-white/5">
-                          <CheckCircle2 className="w-4 h-4 text-brand fill-brand/10" />
+                          <ShieldCheck className="w-4 h-4 text-brand fill-brand/10" />
                         </div>
                       )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-bold text-white">{ad.user_profile?.full_name || 'Merchant'}</span>
-                        {ad.user_profile?.is_verified_merchant && (
+                        <span className="font-bold text-white">{ad.user_profile?.full_name || 'User'}</span>
+                        {ad.user_profile?.is_verified && (
                           <span className="px-1.5 py-0.5 bg-brand/10 text-brand text-[8px] font-bold uppercase tracking-widest rounded-md">
                             Verified
                           </span>
@@ -369,21 +343,12 @@ export default function P2P() {
                       <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                         <div className="flex items-center gap-1">
                           <Zap className="w-3 h-3 text-amber-500" />
-                          <span>{ad.user_profile?.trades_completed || 0} Trades</span>
+                          <span>{ad.user_profile?.total_trades || 0} Trades</span>
                         </div>
                         <span className="w-1 h-1 rounded-full bg-white/10" />
                         <div className="flex items-center gap-1">
                           <TrendingUp className="w-3 h-3 text-green-500" />
                           <span className="text-green-400">{ad.user_profile?.completion_rate || 100}% Success</span>
-                        </div>
-                        <span className="w-1 h-1 rounded-full bg-white/10" />
-                        <div className="flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3 text-brand" />
-                          <span className="text-brand">
-                            {ad.user_profile?.rating_count && ad.user_profile.rating_count > 0 
-                              ? (ad.user_profile.rating_sum / ad.user_profile.rating_count).toFixed(1) 
-                              : '5.0'}
-                          </span>
                         </div>
                       </div>
                     </div>

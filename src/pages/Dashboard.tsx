@@ -14,7 +14,12 @@ import {
   Info,
   CheckCircle2,
   TrendingUp,
-  Clock
+  Clock,
+  ShieldCheck,
+  Loader2,
+  Plus,
+  Star,
+  ShoppingCart
 } from 'lucide-react';
 import { useAuth } from '../lib/useAuth';
 import { supabase } from '../lib/supabase';
@@ -51,56 +56,93 @@ export default function Dashboard() {
     }
   }, [searchParams]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [ads, setAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [trc20Address, setTrc20Address] = useState(profile?.trc20_address || '');
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
+  const [uploading, setUploading] = useState(false);
+  const [trc20Address, setTrc20Address] = useState('');
+  const [fullName, setFullName] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
-    if (profile) {
-      setTrc20Address(profile.trc20_address || '');
-    }
-  }, [profile]);
-
-  useEffect(() => {
     if (user) {
-      fetchOrders();
+      fetchDashboardData();
     }
   }, [user]);
 
-  const fetchOrders = async () => {
+  const fetchDashboardData = async () => {
     try {
       setLoading(true);
       
-      // Fetch my ads to get their IDs
-      const { data: myAds } = await supabase
-        .from('ads')
-        .select('id')
-        .eq('user_id', user?.id);
-      
-      const myAdIds = myAds?.map(ad => ad.id) || [];
-      
-      let query = supabase
+      // Fetch Orders
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('*, ad:ads(*)');
-      
-      if (myAdIds.length > 0) {
-        // Use a single query with .or() for both conditions
-        query = query.or(`user_id.eq.${user?.id},ad_id.in.(${myAdIds.join(',')})`);
-      } else {
-        query = query.eq('user_id', user?.id);
-      }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
+        .select('*, ad:ads(*)')
+        .or(`user_id.eq.${user?.id},ad.user_id.eq.${user?.id}`)
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setOrders(data || []);
+      if (ordersError) throw ordersError;
+      setOrders(ordersData || []);
+
+      // Fetch Ads
+      const { data: adsData, error: adsError } = await supabase
+        .from('ads')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (adsError) throw adsError;
+      setAds(adsData || []);
+
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (profile) {
+      setTrc20Address(profile.trc20_address || '');
+      setFullName(profile.full_name || '');
+      setAvatarUrl(profile.avatar_url || '');
+    }
+  }, [profile]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      if (!e.target.files || e.target.files.length === 0) return;
+      const file = e.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user?.id}-${Math.random()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user?.id);
+
+      if (updateError) throw updateError;
+      setAvatarUrl(publicUrl);
+      alert('Profile picture updated!');
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      alert(error.message || 'Error uploading avatar');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -110,7 +152,10 @@ export default function Dashboard() {
       setSaving(true);
       const { error } = await supabase
         .from('profiles')
-        .update({ trc20_address: trc20Address })
+        .update({ 
+          trc20_address: trc20Address,
+          full_name: fullName
+        })
         .eq('id', user.id);
 
       if (error) throw error;
@@ -300,7 +345,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center gap-4">
                     <button 
-                      onClick={fetchOrders}
+                      onClick={fetchDashboardData}
                       className="text-xs font-bold text-brand uppercase tracking-widest hover:text-brand/80 transition-colors"
                     >
                       Refresh
@@ -395,13 +440,37 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-8">
                 <div className="card p-8">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
-                      <User className="w-6 h-6" />
+                  <div className="flex items-center gap-6 mb-8">
+                    <div className="relative group">
+                      <div className="w-24 h-24 bg-white/5 rounded-2xl flex items-center justify-center text-gray-500 border border-white/5 overflow-hidden">
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        ) : (
+                          <User className="w-10 h-10" />
+                        )}
+                        {uploading && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 text-brand animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <label className="absolute -bottom-2 -right-2 w-8 h-8 bg-brand text-white rounded-lg flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-lg shadow-brand/20">
+                        <Plus className="w-4 h-4" />
+                        <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                      </label>
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-white">Profile Information</h2>
-                      <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Personal identity details</p>
+                      <h2 className="text-2xl font-bold text-white">{profile?.full_name || 'User'}</h2>
+                      <div className="flex items-center gap-3 mt-1">
+                        <div className="flex items-center gap-1 text-yellow-500">
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          <span className="text-xs font-bold">{profile?.trust_score || '5.0'}</span>
+                        </div>
+                        <span className="text-gray-700">•</span>
+                        <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">{profile?.total_trades || 0} Trades</span>
+                        <span className="text-gray-700">•</span>
+                        <span className="text-xs text-green-500 font-bold uppercase tracking-widest">{profile?.completion_rate || 100}% Completion</span>
+                      </div>
                     </div>
                   </div>
 
@@ -428,6 +497,93 @@ export default function Dashboard() {
                 </div>
 
                 <div className="card p-8">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
+                        <ShoppingCart className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-white">My Advertisements</h2>
+                        <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Manage your active P2P ads</p>
+                      </div>
+                    </div>
+                    <Link 
+                      to="/p2p" 
+                      className="px-6 py-3 bg-brand text-white rounded-xl text-sm font-bold hover:bg-brand/90 transition-all shadow-lg shadow-brand/20"
+                    >
+                      Create Ad
+                    </Link>
+                  </div>
+
+                  <div className="space-y-4">
+                    {ads.length === 0 ? (
+                      <div className="p-12 text-center border border-dashed border-white/10 rounded-2xl">
+                        <p className="text-gray-500 text-sm">You haven't created any advertisements yet.</p>
+                      </div>
+                    ) : (
+                      ads.map((ad) => (
+                        <div key={ad.id} className="p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className={cn(
+                              "w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs",
+                              ad.type === 'buy' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
+                            )}>
+                              {ad.type.toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-white">₹{ad.rate.toFixed(2)} / USDT</p>
+                              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+                                Limit: ₹{ad.min_limit.toLocaleString()} - ₹{ad.max_limit.toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={cn(
+                              "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
+                              ad.status === 'active' ? "bg-green-500/10 text-green-500" : "bg-gray-500/10 text-gray-500"
+                            )}>
+                              {ad.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className="card p-8">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
+                      <TrendingUp className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Referral Program</h2>
+                      <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Earn rewards for inviting friends</p>
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-brand/5 border border-brand/10 rounded-2xl">
+                    <p className="text-sm text-gray-300 mb-4 leading-relaxed">
+                      Invite your friends to Ypay and earn 0.1% on every trade they complete. Your referral code is:
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-mono text-white text-sm">
+                        {profile?.referral_code || 'YPAY-' + user?.id.substring(0, 6).toUpperCase()}
+                      </div>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(profile?.referral_code || 'YPAY-' + user?.id.substring(0, 6).toUpperCase());
+                          alert('Referral code copied!');
+                        }}
+                        className="px-6 py-3 bg-brand text-white rounded-xl text-sm font-bold hover:bg-brand/90 transition-all shadow-lg shadow-brand/20"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card p-8">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
                       <Lock className="w-6 h-6" />
@@ -438,36 +594,53 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">New Password</label>
-                        <input 
-                          type="password" 
-                          placeholder="••••••••"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="input-field"
-                        />
+                  <div className="space-y-8">
+                    <div className="p-6 bg-brand/5 border border-brand/10 rounded-2xl flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
+                          <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">Two-Factor Authentication (2FA)</p>
+                          <p className="text-xs text-gray-500">Add an extra layer of security to your account.</p>
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Confirm Password</label>
-                        <input 
-                          type="password" 
-                          placeholder="••••••••"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="input-field"
-                        />
-                      </div>
+                      <button className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold transition-colors">
+                        Enable
+                      </button>
                     </div>
-                    <button 
-                      onClick={handleUpdatePassword}
-                      disabled={passwordLoading}
-                      className="btn-primary w-full md:w-auto px-12 disabled:opacity-50"
-                    >
-                      {passwordLoading ? 'Updating...' : 'Update Password'}
-                    </button>
+
+                    <div className="space-y-6">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">New Password</label>
+                          <input 
+                            type="password" 
+                            placeholder="••••••••"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="input-field"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Confirm Password</label>
+                          <input 
+                            type="password" 
+                            placeholder="••••••••"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="input-field"
+                          />
+                        </div>
+                      </div>
+                      <button 
+                        onClick={handleUpdatePassword}
+                        disabled={passwordLoading}
+                        className="btn-primary w-full md:w-auto px-12 disabled:opacity-50"
+                      >
+                        {passwordLoading ? 'Updating...' : 'Update Password'}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -483,6 +656,16 @@ export default function Dashboard() {
                   </div>
 
                   <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Full Name</label>
+                      <input 
+                        type="text" 
+                        placeholder="Enter your full name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="input-field"
+                      />
+                    </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">TRC20 Wallet Address</label>
                       <input 
