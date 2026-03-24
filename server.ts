@@ -39,7 +39,7 @@ async function startServer() {
           pay_currency: "usdttrc20",
           order_id: `DEP-${Date.now()}`,
           order_description: "Wallet Deposit",
-          ipn_callback_url: "https://www.ypay.online/api/webhook",
+          ipn_callback_url: `${process.env.APP_URL}/api/wallet/webhook`,
         },
         {
           headers: {

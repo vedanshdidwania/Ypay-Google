@@ -147,7 +147,7 @@ export default function Orders() {
 
                   <div className="text-right hidden md:block">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Date</p>
-                    <p className="text-sm font-bold text-white">{new Date(order.at).toLocaleDateString()}</p>
+                    <p className="text-sm font-bold text-white">{new Date(order.created_at).toLocaleDateString()}</p>
                   </div>
 
                   <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 group-hover:bg-brand group-hover:text-white transition-all">

@@ -299,106 +299,70 @@ export default function P2P() {
                 className="card p-6 hover:shadow-md transition-all group"
               >
                 <div className="grid md:grid-cols-4 gap-8 items-center">
-                  {/* Merchant Info */}
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5 overflow-hidden">
-                        {ad.user_profile?.avatar_url ? (
-                          <img src={ad.user_profile.avatar_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                        ) : (
-                          <User className="w-6 h-6" />
-                        )}
-                      </div>
-                      {ad.user_profile?.is_verified && (
-                        <div className="absolute -top-1 -right-1 bg-[#111111] rounded-full p-0.5 shadow-sm border border-white/5">
-                          <ShieldCheck className="w-4 h-4 text-brand fill-brand/10" />
-                        </div>
-                      )}
+                  {/* Profile Name */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand border border-brand/20">
+                      <User className="w-5 h-5" />
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-bold text-white">{ad.user_profile?.full_name || 'User'}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-white tracking-tight truncate">
+                          {ad.user_profile?.full_name || 'User'}
+                        </span>
                         {ad.user_profile?.is_verified && (
-                          <span className="px-1.5 py-0.5 bg-brand/10 text-brand text-[8px] font-bold uppercase tracking-widest rounded-md">
-                            Verified
-                          </span>
+                          <ShieldCheck className="w-4 h-4 text-brand shrink-0" />
                         )}
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite(ad.user_id);
-                          }}
-                          className="ml-auto p-1.5 hover:bg-white/5 rounded-lg transition-colors group/fav"
-                        >
-                          <Heart 
-                            className={cn(
-                              "w-4 h-4 transition-all",
-                              favorites.includes(ad.user_id) 
-                                ? "fill-red-500 text-red-500 scale-110" 
-                                : "text-gray-600 group-hover/fav:text-red-400"
-                            )} 
-                          />
-                        </button>
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                        <div className="flex items-center gap-1">
-                          <Zap className="w-3 h-3 text-amber-500" />
-                          <span>{ad.user_profile?.total_trades || 0} Trades</span>
-                        </div>
-                        <span className="w-1 h-1 rounded-full bg-white/10" />
-                        <div className="flex items-center gap-1">
-                          <TrendingUp className="w-3 h-3 text-green-500" />
-                          <span className="text-green-400">{ad.user_profile?.completion_rate || 100}% Success</span>
-                        </div>
-                      </div>
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Verified Advertiser</p>
                     </div>
                   </div>
 
                   {/* Price Info */}
                   <div>
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Price per USDT</p>
-                    <p className="text-2xl font-display font-bold text-white">₹{ad.price ? ad.price.toFixed(2) : '0.00'}</p>
+                    <p className="text-3xl font-display font-bold text-white leading-none">₹{ad.price ? ad.price.toFixed(2) : '0.00'}</p>
                   </div>
 
-                  {/* Limits & Payment */}
+                  {/* Payment Tags */}
                   <div>
-                    <div className="mb-3">
-                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Available Limits</p>
-                      <p className="text-sm font-medium text-gray-300">
-                        {formatCurrency(ad.min_limit)} - {formatCurrency(ad.max_limit)}
-                      </p>
-                    </div>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Payment Methods</p>
                     <div className="flex flex-wrap gap-2">
                       {ad.payment_methods.map((pm, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-white/5 text-[9px] font-bold text-gray-500 uppercase tracking-widest rounded-md border border-white/5">
+                        <span key={i} className="px-2.5 py-1 bg-brand/5 text-[9px] font-bold text-brand uppercase tracking-widest rounded-lg border border-brand/10">
                           {pm}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  {/* Action */}
-                  <div className="flex items-center gap-2 justify-end">
-                    {ad.user_id === user?.id && (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteAd(ad.id);
-                        }}
-                        className="p-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl transition-all border border-red-500/20"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => navigate(`/p2p/create/${ad.id}`)}
-                      className={cn(
-                        "btn-primary w-full md:w-auto px-10",
-                        filterType === 'buy' ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                  {/* Action & Limits */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                      <span>Limits</span>
+                      <span className="text-gray-300">{formatCurrency(ad.min_limit)} - {formatCurrency(ad.max_limit)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {ad.user_id === user?.id && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteAd(ad.id);
+                          }}
+                          className="p-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl transition-all border border-red-500/20"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
                       )}
-                    >
-                      {filterType === 'buy' ? 'Buy USDT' : 'Sell USDT'}
-                    </button>
+                      <button 
+                        onClick={() => navigate(`/p2p/create/${ad.id}`)}
+                        className={cn(
+                          "btn-primary flex-1 py-3",
+                          filterType === 'buy' ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                        )}
+                      >
+                        {filterType === 'buy' ? 'Buy USDT' : 'Sell USDT'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>

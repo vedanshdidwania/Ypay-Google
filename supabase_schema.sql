@@ -248,7 +248,8 @@ CREATE TRIGGER on_trade_review_created
 
 -- Profiles
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can read own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can read own profile" ON profiles;
+CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
 CREATE POLICY "Admins can manage all profiles" ON profiles FOR ALL USING (public.is_admin());
 
 -- Ads
@@ -389,3 +390,108 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- RPC Functions for P2P
+CREATE OR REPLACE FUNCTION public.create_p2p_ad(
+  p_type TEXT,
+  p_price NUMERIC,
+  p_min_limit NUMERIC,
+  p_max_limit NUMERIC,
+  p_payment_methods TEXT[]
+)
+RETURNS void AS $$
+BEGIN
+  INSERT INTO public.ads (
+    user_id,
+    type,
+    price,
+    min_limit,
+    max_limit,
+    payment_methods,
+    status
+  )
+  VALUES (
+    auth.uid(),
+    p_type,
+    p_price,
+    p_min_limit,
+    p_max_limit,
+    p_payment_methods,
+    'active'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.release_p2p_order(p_order_id UUID)
+RETURNS void AS $$
+DECLARE
+  v_order RECORD;
+  v_buyer_id UUID;
+  v_seller_id UUID;
+BEGIN
+  -- Get order details
+  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
+  
+  IF v_order IS NULL THEN
+    RAISE EXCEPTION 'Order not found';
+  END IF;
+
+  IF v_order.status != 'paid' THEN
+    RAISE EXCEPTION 'Order must be in paid status to release funds';
+  END IF;
+
+  -- Determine buyer and seller
+  -- If order.type is 'buy', order creator is buyer, ad creator is seller.
+  -- If order.type is 'sell', order creator is seller, ad creator is buyer.
+  IF v_order.type = 'buy' THEN
+    v_buyer_id := v_order.user_id;
+    v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+  ELSE
+    v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+    v_seller_id := v_order.user_id;
+  END IF;
+
+  -- Update order status
+  UPDATE public.orders 
+  SET status = 'completed', escrow_released_at = NOW() 
+  WHERE id = p_order_id;
+
+  -- Update buyer balance
+  UPDATE public.profiles 
+  SET balance_usdt = balance_usdt + v_order.amount_usdt 
+  WHERE id = v_buyer_id;
+
+  -- Update seller stats
+  UPDATE public.profiles 
+  SET trades_completed = trades_completed + 1 
+  WHERE id = v_seller_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.cancel_p2p_order(p_order_id UUID)
+RETURNS void AS $$
+DECLARE
+  v_order RECORD;
+BEGIN
+  -- Get order details
+  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
+  
+  IF v_order IS NULL THEN
+    RAISE EXCEPTION 'Order not found';
+  END IF;
+
+  IF v_order.status NOT IN ('pending', 'paid') THEN
+    RAISE EXCEPTION 'Order cannot be cancelled in current status';
+  END IF;
+
+  -- Update order status
+  UPDATE public.orders 
+  SET status = 'cancelled' 
+  WHERE id = p_order_id;
+
+  -- If it was a 'sell' order, the seller's funds were locked in escrow.
+  -- We should return them if they were deducted from balance.
+  -- (Assuming balance is deducted when ad is created or order is placed for sell ads)
+  -- For now, we just mark as cancelled.
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
