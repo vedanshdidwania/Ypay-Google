@@ -139,6 +139,34 @@ export default function P2P() {
 
     try {
       setIsSubmitting(true);
+      
+      // If it's a sell ad, we need to lock the funds in escrow
+      if (newAd.type === 'sell') {
+        if (!profile || profile.balance_usdt < newAd.max_limit) {
+          throw new Error('Insufficient balance to post this advertisement. You need at least ' + newAd.max_limit + ' USDT.');
+        }
+
+        // Deduct from balance and add to escrow
+        const { error: balanceError } = await supabase
+          .from('profiles')
+          .update({ 
+            balance_usdt: profile.balance_usdt - newAd.max_limit,
+            escrow_balance_usdt: (profile.escrow_balance_usdt || 0) + newAd.max_limit
+          })
+          .eq('id', user.id);
+
+        if (balanceError) throw balanceError;
+
+        // Log the escrow lock
+        await supabase.from('transactions').insert({
+          user_id: user.id,
+          type: 'trade_escrow',
+          amount: newAd.max_limit,
+          status: 'completed',
+          tx_hash: 'ESCROW-' + Math.random().toString(36).substring(2, 10).toUpperCase()
+        });
+      }
+
       const { error } = await supabase.from('ads').insert({
         user_id: user.id,
         type: newAd.type,

@@ -43,6 +43,26 @@ export default function Auth() {
   };
 
   const [success, setSuccess] = useState<string | null>(null);
+  const [resetMode, setResetMode] = useState(false);
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?tab=reset`,
+      });
+      if (error) throw error;
+      setSuccess('Password reset link sent! Please check your email.');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
@@ -70,9 +90,13 @@ export default function Auth() {
             </div>
           </div>
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+            <h2 className="text-3xl font-bold mb-2">
+              {resetMode ? 'Reset Password' : (isLogin ? 'Welcome Back' : 'Create Account')}
+            </h2>
             <p className="text-gray-500">
-              {isLogin ? 'Enter your credentials to access your account' : 'Join Ypay and start trading USDT instantly'}
+              {resetMode 
+                ? 'Enter your email to receive a password reset link' 
+                : (isLogin ? 'Enter your credentials to access your account' : 'Join Ypay and start trading USDT instantly')}
             </p>
           </div>
 
@@ -82,8 +106,8 @@ export default function Auth() {
             </div>
           )}
 
-          <form onSubmit={handleAuth} className="space-y-4">
-            {!isLogin && (
+          <form onSubmit={resetMode ? handleResetPassword : handleAuth} className="space-y-4">
+            {!isLogin && !resetMode && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-500 ml-1">Full Name</label>
                 <div className="relative">
@@ -115,20 +139,33 @@ export default function Auth() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-500 ml-1">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
-                  placeholder="••••••••"
-                />
+            {!resetMode && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between ml-1">
+                  <label className="text-sm font-medium text-gray-500">Password</label>
+                  {isLogin && (
+                    <button
+                      type="button"
+                      onClick={() => setResetMode(true)}
+                      className="text-xs text-blue-500 hover:text-blue-400 font-medium"
+                    >
+                      Forgot Password?
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
+                    placeholder="••••••••"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {error && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
@@ -145,20 +182,29 @@ export default function Auth() {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  <span>{isLogin ? 'Sign In' : 'Sign Up'}</span>
+                  <span>{resetMode ? 'Send Reset Link' : (isLogin ? 'Sign In' : 'Sign Up')}</span>
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-white/5 text-center">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
-            </button>
+          <div className="mt-8 pt-6 border-t border-white/5 text-center space-y-4">
+            {resetMode ? (
+              <button
+                onClick={() => setResetMode(false)}
+                className="text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                Back to Sign In
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
+              </button>
+            )}
           </div>
         </div>
       </motion.div>

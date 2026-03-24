@@ -19,10 +19,12 @@ export function NotificationCenter() {
         .on('postgres_changes', { 
           event: 'INSERT', 
           schema: 'public', 
-          table: 'notifications',
-          filter: `user_id=eq.${profile.id}`
+          table: 'notifications'
         }, (payload) => {
-          setNotifications(prev => [payload.new, ...prev]);
+          // Only add if it's for this user or global
+          if (!payload.new.user_id || payload.new.user_id === profile.id) {
+            setNotifications(prev => [payload.new, ...prev]);
+          }
         })
         .subscribe();
 
@@ -37,7 +39,7 @@ export function NotificationCenter() {
     const { data } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', profile.id)
+      .or(`user_id.eq.${profile.id},user_id.is.null`)
       .order('created_at', { ascending: false })
       .limit(20);
     

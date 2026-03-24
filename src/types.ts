@@ -12,6 +12,7 @@ export interface UserProfile {
   is_disabled: boolean;
   kyc_status: KYCStatus;
   balance_usdt: number;
+  escrow_balance_usdt: number;
   is_verified_merchant: boolean;
   trades_completed: number;
   completion_rate: number;

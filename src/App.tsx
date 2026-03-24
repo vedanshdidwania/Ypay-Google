@@ -16,6 +16,7 @@ import Sell from './pages/Sell';
 import P2P from './pages/P2P';
 import P2POrder from './pages/P2POrder';
 import P2PCreateOrder from './pages/P2PCreateOrder';
+import MyAds from './pages/MyAds';
 import Wallet from './pages/Wallet';
 import KYC from './pages/KYC';
 import Info from './pages/Info';
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="/p2p" element={<P2P />} />
             <Route path="/p2p/create/:adId" element={<PrivateRoute><P2PCreateOrder /></PrivateRoute>} />
             <Route path="/p2p/order/:id" element={<PrivateRoute><P2POrder /></PrivateRoute>} />
+            <Route path="/p2p/my-ads" element={<PrivateRoute><MyAds /></PrivateRoute>} />
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />
             <Route path="/kyc" element={<PrivateRoute><KYC /></PrivateRoute>} />

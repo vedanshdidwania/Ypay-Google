@@ -176,6 +176,12 @@ export default function Wallet() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+                <div className="text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-1">Escrow Balance</div>
+                <div className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                  {profile?.escrow_balance_usdt?.toFixed(2) || '0.00'} USDT
+                </div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
                 <div className="text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-1">KYC Level</div>
                 <div className={cn(
                   "text-xs font-bold uppercase tracking-wider",
@@ -183,10 +189,6 @@ export default function Wallet() {
                 )}>
                   {profile?.kyc_status || 'Unverified'}
                 </div>
-              </div>
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-                <div className="text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-1">Trust Score</div>
-                <div className="text-xs font-bold text-blue-400 uppercase tracking-wider">A+ Grade</div>
               </div>
             </div>
 

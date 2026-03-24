@@ -51,7 +51,7 @@ import { useAuth } from '../lib/useAuth';
 import Modal from '../components/Modal';
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const location = useLocation();
   const currentPath = location.pathname.split('/').pop() || 'dashboard';
 
@@ -68,6 +68,7 @@ export default function Admin() {
     { id: 'logs', label: 'System Logs', icon: Clock, path: '/admin/logs' },
     { id: 'support', label: 'Support', icon: MessageSquare, path: '/admin/support' },
     { id: 'p2p-chats', label: 'P2P Chats', icon: MessageSquare, path: '/admin/p2p-chats' },
+    { id: 'notifications', label: 'Notifications', icon: Send, path: '/admin/notifications' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/admin/settings' },
   ];
 
@@ -117,6 +118,7 @@ export default function Admin() {
             <Route path="logs" element={<AdminLogs />} />
             <Route path="support" element={<AdminSupport />} />
             <Route path="p2p-chats" element={<AdminP2PChats adminId={user?.id} />} />
+            <Route path="notifications" element={<AdminNotifications />} />
             <Route path="settings" element={<AdminSettings />} />
           </Routes>
         </div>
@@ -142,6 +144,18 @@ function AdminDashboard() {
   useEffect(() => {
     fetchStats();
     generateChartData();
+
+    // Subscribe to real-time order updates
+    const ordersSubscription = supabase
+      .channel('admin-dashboard-orders')
+      .on('postgres_changes', { event: '*', table: 'orders' }, () => {
+        fetchStats();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(ordersSubscription);
+    };
   }, []);
 
   const generateChartData = () => {
@@ -415,22 +429,56 @@ function AdminAnalytics() {
   const [pieData, setPieData] = useState<any[]>([]);
 
   useEffect(() => {
-    // Mock data for detailed analytics
-    const mockData = Array.from({ length: 30 }, (_, i) => ({
-      date: `2024-03-${i + 1}`,
-      volume: Math.floor(Math.random() * 1000000) + 200000,
-      revenue: Math.floor(Math.random() * 10000) + 2000,
-      trades: Math.floor(Math.random() * 100) + 20,
-      users: Math.floor(Math.random() * 50) + 10
-    }));
-    setData(mockData);
-
-    setPieData([
-      { name: 'Completed', value: 85, fill: '#00FF00' },
-      { name: 'Cancelled', value: 10, fill: '#EF4444' },
-      { name: 'Disputed', value: 5, fill: '#F59E0B' }
-    ]);
+    fetchAnalyticsData();
   }, []);
+
+  const fetchAnalyticsData = async () => {
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('*')
+        .gte('created_at', thirtyDaysAgo.toISOString());
+
+      if (orders) {
+        // Group by date
+        const grouped = orders.reduce((acc: any, order) => {
+          const date = new Date(order.created_at).toLocaleDateString();
+          if (!acc[date]) {
+            acc[date] = { date, volume: 0, revenue: 0, trades: 0, users: new Set() };
+          }
+          acc[date].volume += order.amount_inr || 0;
+          acc[date].revenue += (order.amount_inr || 0) * 0.01; // 1% fee
+          acc[date].trades += 1;
+          acc[date].users.add(order.user_id);
+          return acc;
+        }, {});
+
+        const chartData = Object.values(grouped).map((item: any) => ({
+          ...item,
+          users: item.users.size
+        })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        setData(chartData);
+
+        // Status distribution
+        const statusCounts = orders.reduce((acc: any, order) => {
+          acc[order.status] = (acc[order.status] || 0) + 1;
+          return acc;
+        }, {});
+
+        setPieData([
+          { name: 'Completed', value: statusCounts.completed || 0, fill: '#00FF00' },
+          { name: 'Pending', value: statusCounts.pending || 0, fill: '#F59E0B' },
+          { name: 'Cancelled', value: statusCounts.cancelled || 0, fill: '#EF4444' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -1613,7 +1661,238 @@ function AdminP2PChats({ adminId }: { adminId?: string }) {
     </div>
   );
 }
+function AdminNotifications() {
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [type, setType] = useState<'info' | 'success' | 'warning' | 'error'>('info');
+  const [targetUser, setTargetUser] = useState<'all' | 'specific'>('all');
+  const [targetUserId, setTargetUserId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchNotifications();
+    fetchUsers();
+  }, []);
+
+  const fetchNotifications = async () => {
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    setNotifications(data || []);
+  };
+
+  const fetchUsers = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, email, full_name')
+      .limit(100);
+    setUsers(data || []);
+  };
+
+  const handleSendNotification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title || !message) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const notificationData = {
+        title,
+        message,
+        type,
+        user_id: targetUser === 'all' ? null : targetUserId,
+        read: false
+      };
+
+      const { error } = await supabase
+        .from('notifications')
+        .insert([notificationData]);
+
+      if (error) throw error;
+
+      alert('Notification sent successfully!');
+      setTitle('');
+      setMessage('');
+      fetchNotifications();
+    } catch (error: any) {
+      console.error('Error sending notification:', error);
+      alert(error.message || 'Failed to send notification');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteNotification = async (id: string) => {
+    if (!confirm('Are you sure?')) return;
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-2xl font-display font-bold text-white">System Notifications</h2>
+        <p className="text-sm text-gray-500 mt-1">Broadcast messages to users or send targeted alerts.</p>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div className="card p-8">
+          <h3 className="text-lg font-bold text-white mb-6">Send New Notification</h3>
+          <form onSubmit={handleSendNotification} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Target Audience</label>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setTargetUser('all')}
+                  className={cn(
+                    "flex-1 py-3 rounded-xl border font-bold text-xs uppercase tracking-widest transition-all",
+                    targetUser === 'all' ? "bg-brand text-white border-brand shadow-lg shadow-brand/20" : "bg-white/5 text-gray-500 border-white/5 hover:text-white"
+                  )}
+                >
+                  All Users
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTargetUser('specific')}
+                  className={cn(
+                    "flex-1 py-3 rounded-xl border font-bold text-xs uppercase tracking-widest transition-all",
+                    targetUser === 'specific' ? "bg-brand text-white border-brand shadow-lg shadow-brand/20" : "bg-white/5 text-gray-500 border-white/5 hover:text-white"
+                  )}
+                >
+                  Specific User
+                </button>
+              </div>
+            </div>
+
+            {targetUser === 'specific' && (
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Select User</label>
+                <select
+                  value={targetUserId}
+                  onChange={(e) => setTargetUserId(e.target.value)}
+                  className="input-field"
+                  required
+                >
+                  <option value="">Select a user...</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>{u.email} ({u.full_name})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Notification Type</label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as any)}
+                className="input-field"
+              >
+                <option value="info">Information (Blue)</option>
+                <option value="success">Success (Green)</option>
+                <option value="warning">Warning (Amber)</option>
+                <option value="error">Error (Red)</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Title</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. System Maintenance"
+                className="input-field"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Message</label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Enter notification content..."
+                className="input-field min-h-[120px] resize-none"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full py-4 flex items-center justify-center gap-2"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+              <span>Send Notification</span>
+            </button>
+          </form>
+        </div>
+
+        <div className="space-y-6">
+          <h3 className="text-lg font-bold text-white">Recent Notifications</h3>
+          <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+            {notifications.map((n) => (
+              <div key={n.id} className="card p-4 border-white/5 hover:border-white/10 transition-all">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                      n.type === 'info' ? "bg-blue-500/10 text-blue-500" :
+                      n.type === 'success' ? "bg-green-500/10 text-green-500" :
+                      n.type === 'warning' ? "bg-amber-500/10 text-amber-500" :
+                      "bg-red-500/10 text-red-500"
+                    )}>
+                      <Send className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white mb-1">{n.title}</h4>
+                      <p className="text-xs text-gray-500 leading-relaxed mb-2">{n.message}</p>
+                      <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-gray-600">
+                        <span>{n.user_id ? 'Targeted' : 'Global'}</span>
+                        <span>•</span>
+                        <span>{new Date(n.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteNotification(n.id)}
+                    className="p-2 text-gray-600 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {notifications.length === 0 && (
+              <div className="text-center py-12 text-gray-500">
+                No notifications sent yet.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminSettings() {
+  const { user } = useAuth();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -1647,6 +1926,13 @@ function AdminSettings() {
         .eq('id', settings.id);
       
       if (error) throw error;
+      
+      // Log action
+      await supabase.from('platform_logs').insert({
+        admin_id: user?.id,
+        action: 'SETTINGS_UPDATE',
+        details: `Protocol settings updated: Buy Rate: ${settings.buy_rate}, Sell Rate: ${settings.sell_rate}, Fee: ${settings.platform_fee}%`
+      });
 
       setSuccess('Settings updated successfully!');
       setTimeout(() => setSuccess(null), 3000);
@@ -2461,6 +2747,7 @@ function AdminKYC() {
 }
 
 function AdminDisputes() {
+  const { user } = useAuth();
   const [disputes, setDisputes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -2512,6 +2799,14 @@ function AdminDisputes() {
         .eq('id', orderId);
       
       if (orderError) throw orderError;
+      
+      // 3. Log action
+      await supabase.from('platform_logs').insert({
+        admin_id: user?.id,
+        action: 'DISPUTE_RESOLVED',
+        details: `Dispute ${disputeId} for order ${orderId} resolved in favor of ${winnerId}`,
+        user_affected: winnerId
+      });
 
       fetchDisputes();
     } catch (error: any) {

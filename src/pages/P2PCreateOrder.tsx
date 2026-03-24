@@ -75,6 +75,40 @@ export default function P2PCreateOrder() {
       setIsTrading(true);
       const inrAmount = parseFloat(amount);
       const usdtAmount = inrAmount / ad.price;
+
+      // If user is selling (ad.type === 'buy'), we need to lock the funds in escrow
+      if (ad.type === 'buy') {
+        const { data: userProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('balance_usdt, escrow_balance_usdt')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) throw profileError;
+        if (!userProfile || userProfile.balance_usdt < usdtAmount) {
+          throw new Error('Insufficient balance to start this trade. You need at least ' + usdtAmount.toFixed(2) + ' USDT.');
+        }
+
+        // Deduct from balance and add to escrow
+        const { error: balanceError } = await supabase
+          .from('profiles')
+          .update({ 
+            balance_usdt: userProfile.balance_usdt - usdtAmount,
+            escrow_balance_usdt: (userProfile.escrow_balance_usdt || 0) + usdtAmount
+          })
+          .eq('id', user.id);
+
+        if (balanceError) throw balanceError;
+
+        // Log the escrow lock
+        await supabase.from('transactions').insert({
+          user_id: user.id,
+          type: 'trade_escrow',
+          amount: usdtAmount,
+          status: 'completed',
+          tx_hash: 'ESCROW-' + Math.random().toString(36).substring(2, 10).toUpperCase()
+        });
+      }
       
       const { data, error } = await supabase
         .from('orders')

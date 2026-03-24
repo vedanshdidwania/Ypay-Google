@@ -98,7 +98,7 @@ export default function P2POrder() {
   }, [order]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
   }, [messages]);
 
   const fetchOrder = async () => {
@@ -249,6 +249,61 @@ export default function P2POrder() {
     if (!confirm('Have you received the correct amount in your bank/wallet? Once released, this action cannot be undone.')) return;
 
     try {
+      // Fetch seller profile to get current escrow balance
+      const { data: sellerProfile, error: sellerError } = await supabase
+        .from('profiles')
+        .select('balance_usdt, escrow_balance_usdt')
+        .eq('id', sellerId)
+        .single();
+
+      if (sellerError) throw sellerError;
+
+      // Fetch buyer profile to get current balance
+      const { data: buyerProfile, error: buyerError } = await supabase
+        .from('profiles')
+        .select('balance_usdt')
+        .eq('id', buyerId)
+        .single();
+
+      if (buyerError) throw buyerError;
+
+      // Deduct from seller's escrow and add to buyer's balance
+      const { error: releaseError } = await supabase
+        .from('profiles')
+        .update({ 
+          escrow_balance_usdt: (sellerProfile.escrow_balance_usdt || 0) - order.amount_usdt
+        })
+        .eq('id', sellerId);
+
+      if (releaseError) throw releaseError;
+
+      const { error: receiveError } = await supabase
+        .from('profiles')
+        .update({ 
+          balance_usdt: (buyerProfile.balance_usdt || 0) + order.amount_usdt
+        })
+        .eq('id', buyerId);
+
+      if (receiveError) throw receiveError;
+
+      // Log the transaction for both parties
+      await supabase.from('transactions').insert([
+        {
+          user_id: sellerId,
+          type: 'trade_release',
+          amount: order.amount_usdt,
+          status: 'completed',
+          tx_hash: 'RELEASE-' + id?.slice(0, 8).toUpperCase()
+        },
+        {
+          user_id: buyerId,
+          type: 'deposit',
+          amount: order.amount_usdt,
+          status: 'completed',
+          tx_hash: 'TRADE-' + id?.slice(0, 8).toUpperCase()
+        }
+      ]);
+
       const { error } = await supabase
         .from('orders')
         .update({ 
@@ -298,23 +353,68 @@ export default function P2POrder() {
     if (!confirm('Are you sure you want to cancel this order?')) return;
 
     try {
+      // Fetch seller profile to get current escrow balance
+      const { data: sellerProfile, error: sellerError } = await supabase
+        .from('profiles')
+        .select('balance_usdt, escrow_balance_usdt')
+        .eq('id', sellerId)
+        .single();
+
+      if (sellerError) throw sellerError;
+
+      // Move funds back from escrow to balance
+      const { error: refundError } = await supabase
+        .from('profiles')
+        .update({ 
+          balance_usdt: (sellerProfile.balance_usdt || 0) + order.amount_usdt,
+          escrow_balance_usdt: (sellerProfile.escrow_balance_usdt || 0) - order.amount_usdt
+        })
+        .eq('id', sellerId);
+
+      if (refundError) throw refundError;
+
       const { error } = await supabase
         .from('orders')
         .update({ status: 'cancelled' })
         .eq('id', id);
 
       if (error) throw error;
+      toast.success('Order cancelled and funds returned to escrow.');
     } catch (error) {
       console.error('Error cancelling order:', error);
     }
   };
 
   const handleAutoCancel = async () => {
-    await supabase
-      .from('orders')
-      .update({ status: 'cancelled' })
-      .eq('id', id)
-      .eq('status', 'pending');
+    if (!order || order.status !== 'pending') return;
+
+    try {
+      // Fetch seller profile to get current escrow balance
+      const { data: sellerProfile, error: sellerError } = await supabase
+        .from('profiles')
+        .select('balance_usdt, escrow_balance_usdt')
+        .eq('id', sellerId)
+        .single();
+
+      if (sellerError) throw sellerError;
+
+      // Move funds back from escrow to balance
+      await supabase
+        .from('profiles')
+        .update({ 
+          balance_usdt: (sellerProfile.balance_usdt || 0) + order.amount_usdt,
+          escrow_balance_usdt: (sellerProfile.escrow_balance_usdt || 0) - order.amount_usdt
+        })
+        .eq('id', sellerId);
+
+      await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', id)
+        .eq('status', 'pending');
+    } catch (error) {
+      console.error('Error in auto-cancel:', error);
+    }
   };
 
   const handleDispute = async () => {

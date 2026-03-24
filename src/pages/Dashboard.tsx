@@ -54,6 +54,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [trc20Address, setTrc20Address] = useState(profile?.trc20_address || '');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -117,6 +120,38 @@ export default function Dashboard() {
       alert(error.message || 'Failed to save settings.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      alert('Please fill in all password fields');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      alert('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      setPasswordLoading(true);
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+      alert('Password updated successfully!');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      alert(error.message || 'Failed to update password.');
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -199,11 +234,14 @@ export default function Dashboard() {
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-400">Locked in Escrow</span>
-                  <span className="font-semibold text-amber-500">0.00 USDT</span>
+                  <span className="font-semibold text-amber-500">{formatUSDT(profile?.escrow_balance_usdt || 0)}</span>
                 </div>
-                <div className="pt-4 border-t border-white/5">
+                <div className="pt-4 border-t border-white/5 space-y-3">
                   <Link to="/wallet" className="w-full btn-primary py-3 flex items-center justify-center">
                     Add Funds
+                  </Link>
+                  <Link to="/p2p/my-ads" className="w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl flex items-center justify-center transition-all border border-white/5 text-sm font-bold">
+                    Manage My Ads
                   </Link>
                 </div>
               </div>
@@ -386,6 +424,50 @@ export default function Dashboard() {
                         className="input-field bg-white/5 text-gray-400 cursor-not-allowed border-white/5"
                       />
                     </div>
+                  </div>
+                </div>
+
+                <div className="card p-8">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
+                      <Lock className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Security Settings</h2>
+                      <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Account protection & password</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">New Password</label>
+                        <input 
+                          type="password" 
+                          placeholder="••••••••"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="input-field"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Confirm Password</label>
+                        <input 
+                          type="password" 
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="input-field"
+                        />
+                      </div>
+                    </div>
+                    <button 
+                      onClick={handleUpdatePassword}
+                      disabled={passwordLoading}
+                      className="btn-primary w-full md:w-auto px-12 disabled:opacity-50"
+                    >
+                      {passwordLoading ? 'Updating...' : 'Update Password'}
+                    </button>
                   </div>
                 </div>
 
