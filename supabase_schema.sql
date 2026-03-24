@@ -179,7 +179,72 @@ CREATE TABLE support_messages (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- RLS Policies
+-- 1. Update Profiles for Ratings and Security Deposit
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='rating_sum') THEN
+        ALTER TABLE profiles ADD COLUMN rating_sum NUMERIC DEFAULT 0.0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='rating_count') THEN
+        ALTER TABLE profiles ADD COLUMN rating_count INTEGER DEFAULT 0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='security_deposit_amount') THEN
+        ALTER TABLE profiles ADD COLUMN security_deposit_amount NUMERIC DEFAULT 0.0;
+    END IF;
+END $$;
+
+-- 2. Update Orders for Escrow Tracking
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='escrow_locked_at') THEN
+        ALTER TABLE orders ADD COLUMN escrow_locked_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='escrow_released_at') THEN
+        ALTER TABLE orders ADD COLUMN escrow_released_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+END $$;
+
+-- 3. Create Trade Reviews Table
+CREATE TABLE IF NOT EXISTS trade_reviews (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
+  reviewer_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  reviewee_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5) NOT NULL,
+  comment TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  UNIQUE(order_id, reviewer_id)
+);
+
+ALTER TABLE trade_reviews ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can read reviews" ON trade_reviews;
+CREATE POLICY "Anyone can read reviews" ON trade_reviews FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can create reviews for their orders" ON trade_reviews;
+CREATE POLICY "Users can create reviews for their orders" ON trade_reviews FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM orders WHERE id = order_id AND (user_id = auth.uid() OR EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid())))
+);
+
+-- 4. Function to Update Profile Stats on Review
+CREATE OR REPLACE FUNCTION public.update_profile_rating()
+RETURNS trigger AS $$
+BEGIN
+  UPDATE profiles
+  SET 
+    rating_sum = rating_sum + NEW.rating,
+    rating_count = rating_count + 1,
+    completion_rate = CASE 
+      WHEN trades_completed > 0 THEN (trades_completed::numeric / (trades_completed + 1)::numeric) * 100 
+      ELSE 100 
+    END
+  WHERE id = NEW.reviewee_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_trade_review_created ON trade_reviews;
+CREATE TRIGGER on_trade_review_created
+  AFTER INSERT ON trade_reviews
+  FOR EACH ROW EXECUTE PROCEDURE public.update_profile_rating();
 
 -- Profiles
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -286,6 +351,23 @@ CREATE POLICY "Users can read own disputes" ON p2p_disputes FOR SELECT USING (
 );
 CREATE POLICY "Users can create disputes" ON p2p_disputes FOR INSERT WITH CHECK (raised_by = auth.uid());
 CREATE POLICY "Admins can manage all disputes" ON p2p_disputes FOR ALL USING (public.is_admin());
+
+-- Storage Buckets
+INSERT INTO storage.buckets (id, name, public) VALUES ('p2p_chat_images', 'p2p_chat_images', true) ON CONFLICT (id) DO NOTHING;
+INSERT INTO storage.buckets (id, name, public) VALUES ('kyc-documents', 'kyc-documents', false) ON CONFLICT (id) DO NOTHING;
+INSERT INTO storage.buckets (id, name, public) VALUES ('screenshots', 'screenshots', true) ON CONFLICT (id) DO NOTHING;
+
+-- Storage Policies for p2p_chat_images
+CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'p2p_chat_images');
+CREATE POLICY "Authenticated users can upload chat images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'p2p_chat_images' AND auth.role() = 'authenticated');
+
+-- Storage Policies for kyc-documents
+CREATE POLICY "Admins can read KYC documents" ON storage.objects FOR SELECT USING (bucket_id = 'kyc-documents' AND public.is_admin());
+CREATE POLICY "Users can upload own KYC documents" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'kyc-documents' AND auth.role() = 'authenticated');
+
+-- Storage Policies for screenshots
+CREATE POLICY "Public Access Screenshots" ON storage.objects FOR SELECT USING (bucket_id = 'screenshots');
+CREATE POLICY "Authenticated users can upload screenshots" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'screenshots' AND auth.role() = 'authenticated');
 
 -- Enable Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE support_messages;

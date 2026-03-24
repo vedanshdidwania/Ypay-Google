@@ -13,12 +13,15 @@ import {
   ExternalLink,
   Loader2,
   ArrowLeft,
-  User
+  User,
+  Star,
+  Lock
 } from 'lucide-react';
 import { useAuth } from '../lib/useAuth';
 import { supabase } from '../lib/supabase';
 import { cn, formatCurrency, formatUSDT } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 interface P2POrder {
   id: string;
@@ -59,6 +62,10 @@ export default function P2POrder() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -178,8 +185,13 @@ export default function P2POrder() {
 
       if (error) throw error;
       setNewMessage('');
+      
+      // Play notification sound
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+      audio.play().catch(() => {});
     } catch (error) {
       console.error('Error sending message:', error);
+      toast.error('Failed to send message');
     } finally {
       setSending(false);
     }
@@ -190,19 +202,31 @@ export default function P2POrder() {
     if (!file || !user) return;
 
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        await supabase.from('chat_messages').insert({
-          order_id: id,
-          sender_id: user.id,
-          message: 'Sent an image',
-          image_url: base64String
-        });
-      };
-      reader.readAsDataURL(file);
+      setSending(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('p2p_chat_images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('p2p_chat_images')
+        .getPublicUrl(fileName);
+
+      await supabase.from('chat_messages').insert({
+        order_id: id,
+        sender_id: user.id,
+        message: 'Sent an image',
+        image_url: publicUrl
+      });
     } catch (error) {
       console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setSending(false);
     }
   };
 
@@ -227,14 +251,46 @@ export default function P2POrder() {
     try {
       const { error } = await supabase
         .from('orders')
-        .update({ status: 'completed' })
+        .update({ 
+          status: 'completed',
+          escrow_released_at: new Date().toISOString()
+        })
         .eq('id', id);
 
       if (error) throw error;
       
-      alert('Funds released successfully! Trade completed.');
+      toast.success('Funds released successfully! Trade completed.');
+      setShowReviewModal(true);
     } catch (error) {
       console.error('Error releasing funds:', error);
+      toast.error('Failed to release funds');
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!user || !order) return;
+    
+    try {
+      setSubmittingReview(true);
+      const revieweeId = user.id === order.user_id ? order.ad?.user_id : order.user_id;
+      
+      const { error } = await supabase.from('trade_reviews').insert({
+        order_id: id,
+        reviewer_id: user.id,
+        reviewee_id: revieweeId,
+        rating,
+        comment
+      });
+
+      if (error) throw error;
+      
+      toast.success('Thank you for your feedback!');
+      setShowReviewModal(false);
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast.error('Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -364,6 +420,19 @@ export default function P2POrder() {
                 </div>
               </div>
 
+              <div className="mt-8 flex flex-wrap gap-4">
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-xl">
+                  <Lock className="w-4 h-4 text-green-500" />
+                  <span className="text-xs font-bold text-green-500 uppercase tracking-widest">Escrow Protected</span>
+                </div>
+                {order.status === 'completed' && (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-brand/10 border border-brand/20 rounded-xl">
+                    <CheckCircle2 className="w-4 h-4 text-brand" />
+                    <span className="text-xs font-bold text-brand uppercase tracking-widest">Trade Completed</span>
+                  </div>
+                )}
+              </div>
+
               {order.status === 'pending' && (
                 <div className="mt-8 p-6 bg-brand/5 border border-brand/10 rounded-2xl flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -450,6 +519,16 @@ export default function P2POrder() {
                       </button>
                     </div>
                   )}
+                  {order.status === 'pending' && (
+                    <div className="pt-4">
+                      <button 
+                        onClick={handleDispute}
+                        className="w-full py-3 text-xs font-bold text-gray-500 hover:text-red-500 transition-colors uppercase tracking-widest"
+                      >
+                        Need help? Raise a dispute
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -520,6 +599,68 @@ export default function P2POrder() {
           </div>
         </div>
       </div>
+
+      {/* Review Modal */}
+      <AnimatePresence>
+        {showReviewModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setShowReviewModal(false)}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-md bg-[#0a0a0a] border border-white/10 rounded-3xl p-8 shadow-2xl"
+            >
+              <h2 className="text-2xl font-display font-bold text-white mb-2">Rate your experience</h2>
+              <p className="text-gray-400 text-sm mb-8">How was your trade with {otherParty?.full_name}?</p>
+
+              <div className="flex justify-center gap-2 mb-8">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setRating(s)}
+                    className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
+                      rating >= s ? "bg-brand text-white" : "bg-white/5 text-gray-500 hover:bg-white/10"
+                    )}
+                  >
+                    <Star className={cn("w-6 h-6", rating >= s && "fill-current")} />
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Write a short review (optional)..."
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white text-sm focus:outline-none focus:border-brand mb-6 min-h-[100px] resize-none"
+              />
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setShowReviewModal(false)}
+                  className="flex-1 py-4 bg-white/5 hover:bg-white/10 text-gray-400 rounded-2xl font-bold transition-all"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={handleSubmitReview}
+                  disabled={submittingReview}
+                  className="flex-1 py-4 btn-primary rounded-2xl font-bold shadow-lg shadow-brand/20 disabled:opacity-50"
+                >
+                  {submittingReview ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Submit Review'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

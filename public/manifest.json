@@ -1,0 +1,21 @@
+{
+  "name": "Ypay P2P Protocol",
+  "short_name": "Ypay",
+  "description": "Secure P2P USDT Trading Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#00FF00",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/ypay/192/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://picsum.photos/seed/ypay/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

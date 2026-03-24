@@ -15,8 +15,10 @@ import Buy from './pages/Buy';
 import Sell from './pages/Sell';
 import P2P from './pages/P2P';
 import P2POrder from './pages/P2POrder';
+import P2PCreateOrder from './pages/P2PCreateOrder';
 import Wallet from './pages/Wallet';
 import KYC from './pages/KYC';
+import Info from './pages/Info';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Support from './components/Support';
@@ -67,6 +69,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/p2p" element={<P2P />} />
+            <Route path="/p2p/create/:adId" element={<PrivateRoute><P2PCreateOrder /></PrivateRoute>} />
             <Route path="/p2p/order/:id" element={<PrivateRoute><P2POrder /></PrivateRoute>} />
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />
@@ -74,6 +77,20 @@ export default function App() {
             <Route path="/buy" element={<PrivateRoute><Buy /></PrivateRoute>} />
             <Route path="/sell" element={<PrivateRoute><Sell /></PrivateRoute>} />
             <Route path="/admin/*" element={<PrivateRoute adminOnly><Admin /></PrivateRoute>} />
+            <Route path="/info/:slug" element={<Info />} />
+            {/* Redirect old paths to new info route */}
+            <Route path="/about" element={<Navigate to="/info/about" replace />} />
+            <Route path="/careers" element={<Navigate to="/info/careers" replace />} />
+            <Route path="/contact" element={<Navigate to="/info/contact" replace />} />
+            <Route path="/blog" element={<Navigate to="/info/blog" replace />} />
+            <Route path="/terms" element={<Navigate to="/info/terms" replace />} />
+            <Route path="/privacy" element={<Navigate to="/info/privacy" replace />} />
+            <Route path="/cookie-policy" element={<Navigate to="/info/cookie-policy" replace />} />
+            <Route path="/security" element={<Navigate to="/info/security" replace />} />
+            <Route path="/support" element={<Navigate to="/info/support" replace />} />
+            <Route path="/api-docs" element={<Navigate to="/info/api-docs" replace />} />
+            <Route path="/status" element={<Navigate to="/info/status" replace />} />
+            <Route path="/community" element={<Navigate to="/info/community" replace />} />
           </Routes>
           <Footer />
           <Support />

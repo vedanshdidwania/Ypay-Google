@@ -22,29 +22,29 @@ export default function Footer() {
       { name: 'Sell USDT', path: '/sell' },
     ],
     Company: [
-      { name: 'About Us', path: '/' },
-      { name: 'Careers', path: '/' },
-      { name: 'Contact', path: '/' },
-      { name: 'Blog', path: '/' },
+      { name: 'About Us', path: '/info/about' },
+      { name: 'Careers', path: '/info/careers' },
+      { name: 'Contact', path: '/info/contact' },
+      { name: 'Blog', path: '/info/blog' },
     ],
     Legal: [
-      { name: 'Terms of Service', path: '/' },
-      { name: 'Privacy Policy', path: '/' },
-      { name: 'Cookie Policy', path: '/' },
-      { name: 'Security', path: '/' },
+      { name: 'Terms of Service', path: '/info/terms' },
+      { name: 'Privacy Policy', path: '/info/privacy' },
+      { name: 'Cookie Policy', path: '/info/cookie-policy' },
+      { name: 'Security', path: '/info/security' },
     ],
     Resources: [
-      { name: 'Support Center', path: '/' },
-      { name: 'API Docs', path: '/' },
-      { name: 'Status', path: '/' },
-      { name: 'Community', path: '/' },
+      { name: 'Support Center', path: '/info/support' },
+      { name: 'API Docs', path: '/info/api-docs' },
+      { name: 'Status', path: '/info/status' },
+      { name: 'Community', path: '/info/community' },
     ]
   };
 
   const socialLinks = [
-    { icon: Twitter, href: '#', label: 'Twitter' },
-    { icon: Github, href: '#', label: 'GitHub' },
-    { icon: Linkedin, href: '#', label: 'LinkedIn' },
+    { icon: Twitter, href: '/info/community', label: 'Twitter' },
+    { icon: Github, href: '/info/community', label: 'GitHub' },
+    { icon: Linkedin, href: '/info/community', label: 'LinkedIn' },
     { icon: Mail, href: 'mailto:support@ypay.protocol', label: 'Email' },
   ];
 
@@ -75,16 +75,34 @@ export default function Footer() {
               The most secure and efficient P2P protocol for lightning-fast fiat-to-crypto settlements. Built for the next generation of digital finance.
             </p>
             <div className="flex items-center gap-4">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all border border-white/5"
-                  aria-label={social.label}
-                >
-                  <social.icon className="w-5 h-5" />
-                </a>
-              ))}
+              {socialLinks.map((social) => {
+                const isInternal = social.href.startsWith('/');
+                const Icon = social.icon;
+                
+                if (isInternal) {
+                  return (
+                    <Link
+                      key={social.label}
+                      to={social.href}
+                      className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+                      aria-label={social.label}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </Link>
+                  );
+                }
+
+                return (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+                    aria-label={social.label}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
@@ -100,7 +118,6 @@ export default function Footer() {
                       className="text-gray-400 hover:text-brand text-sm transition-colors flex items-center gap-1 group"
                     >
                       {link.name}
-                      {link.path === '/' && <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
                     </Link>
                   </li>
                 ))}

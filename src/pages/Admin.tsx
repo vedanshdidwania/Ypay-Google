@@ -21,14 +21,37 @@ import {
   MessageSquare,
   Send,
   Image as ImageIcon,
-  ExternalLink
+  ExternalLink,
+  Clock,
+  BarChart3,
+  DollarSign,
+  ArrowUpRight,
+  ArrowDownRight
 } from 'lucide-react';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  LineChart, 
+  Line,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 import { cn, formatCurrency, formatUSDT } from '../lib/utils';
 import type { Order, PaymentMethod, AppSettings, UserProfile, KYCSubmission, SupportChat, SupportMessage } from '../types';
 
+import { useAuth } from '../lib/useAuth';
 import Modal from '../components/Modal';
 
 export default function Admin() {
+  const { user } = useAuth();
   const location = useLocation();
   const currentPath = location.pathname.split('/').pop() || 'dashboard';
 
@@ -41,6 +64,8 @@ export default function Admin() {
     { id: 'merchants', label: 'Merchants', icon: ShieldCheck, path: '/admin/merchants' },
     { id: 'payments', label: 'Payments', icon: CreditCard, path: '/admin/payments' },
     { id: 'users', label: 'Users', icon: Users, path: '/admin/users' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
+    { id: 'logs', label: 'System Logs', icon: Clock, path: '/admin/logs' },
     { id: 'support', label: 'Support', icon: MessageSquare, path: '/admin/support' },
     { id: 'p2p-chats', label: 'P2P Chats', icon: MessageSquare, path: '/admin/p2p-chats' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/admin/settings' },
@@ -88,8 +113,10 @@ export default function Admin() {
             <Route path="merchants" element={<AdminMerchants />} />
             <Route path="payments" element={<AdminPayments />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+            <Route path="logs" element={<AdminLogs />} />
             <Route path="support" element={<AdminSupport />} />
-            <Route path="p2p-chats" element={<AdminP2PChats />} />
+            <Route path="p2p-chats" element={<AdminP2PChats adminId={user?.id} />} />
             <Route path="settings" element={<AdminSettings />} />
           </Routes>
         </div>
@@ -104,54 +131,504 @@ function AdminDashboard() {
     totalOrders: 0,
     pendingOrders: 0,
     totalUsers: 0,
-    totalVolume: 0
+    totalVolume: 0,
+    volumeChange: 12.5,
+    userChange: 8.2
   });
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
+    generateChartData();
   }, []);
 
-  const fetchStats = async () => {
-    const [ordersRes, usersRes] = await Promise.all([
-      supabase.from('orders').select('*'),
-      supabase.from('profiles').select('*', { count: 'exact' })
-    ]);
+  const generateChartData = () => {
+    const data = Array.from({ length: 7 }, (_, i) => ({
+      name: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
+      volume: Math.floor(Math.random() * 500000) + 100000,
+      users: Math.floor(Math.random() * 50) + 10
+    }));
+    setChartData(data);
+  };
 
-    if (ordersRes.data) {
-      const pending = ordersRes.data.filter(o => o.status === 'pending').length;
-      const volume = ordersRes.data.reduce((acc, o) => acc + (o.amount_inr || 0), 0);
-      setStats({
-        totalOrders: ordersRes.data.length,
-        pendingOrders: pending,
-        totalUsers: usersRes.count || 0,
-        totalVolume: volume
-      });
+  const fetchStats = async () => {
+    try {
+      const [ordersRes, usersRes, recentRes] = await Promise.all([
+        supabase.from('orders').select('*'),
+        supabase.from('profiles').select('*', { count: 'exact' }),
+        supabase.from('orders').select('*, profiles(email)').order('created_at', { ascending: false }).limit(5)
+      ]);
+
+      if (ordersRes.data) {
+        const pending = ordersRes.data.filter(o => o.status === 'pending').length;
+        const volume = ordersRes.data.reduce((acc, o) => acc + (o.amount_inr || 0), 0);
+        setStats(prev => ({
+          ...prev,
+          totalOrders: ordersRes.data.length,
+          pendingOrders: pending,
+          totalUsers: usersRes.count || 0,
+          totalVolume: volume
+        }));
+      }
+
+      if (recentRes.data) {
+        setRecentOrders(recentRes.data);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-display font-bold text-white">System Overview</h2>
-        <p className="text-sm text-gray-500 mt-1">Real-time protocol metrics and network status.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-display font-bold text-white">System Overview</h2>
+          <p className="text-sm text-gray-500 mt-1">Real-time protocol metrics and network status.</p>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 bg-brand/10 border border-brand/20 rounded-xl">
+          <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
+          <span className="text-[10px] font-bold text-brand uppercase tracking-widest">Live Network</span>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="card p-6 group hover:border-brand/30 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/5 rounded-lg text-gray-400 group-hover:text-brand transition-colors">
+              <ShoppingBag className="w-5 h-5" />
+            </div>
+            <div className="flex items-center gap-1 text-green-500 text-[10px] font-bold">
+              <ArrowUpRight className="w-3 h-3" />
+              <span>+{stats.volumeChange}%</span>
+            </div>
+          </div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Volume</div>
+          <div className="text-2xl font-bold text-white">₹{stats.totalVolume.toLocaleString()}</div>
+        </div>
+
+        <div className="card p-6 group hover:border-amber-500/30 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/5 rounded-lg text-gray-400 group-hover:text-amber-500 transition-colors">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div className="px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[8px] font-bold uppercase tracking-widest rounded-md">
+              Action Required
+            </div>
+          </div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pending Orders</div>
+          <div className="text-2xl font-bold text-white">{stats.pendingOrders}</div>
+        </div>
+
+        <div className="card p-6 group hover:border-brand/30 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/5 rounded-lg text-gray-400 group-hover:text-brand transition-colors">
+              <Users className="w-5 h-5" />
+            </div>
+            <div className="flex items-center gap-1 text-green-500 text-[10px] font-bold">
+              <ArrowUpRight className="w-3 h-3" />
+              <span>+{stats.userChange}%</span>
+            </div>
+          </div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Users</div>
+          <div className="text-2xl font-bold text-white">{stats.totalUsers}</div>
+        </div>
+
+        <div className="card p-6 group hover:border-brand/30 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/5 rounded-lg text-gray-400 group-hover:text-brand transition-colors">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div className="px-2 py-0.5 bg-brand/10 text-brand text-[8px] font-bold uppercase tracking-widest rounded-md">
+              Protocol Fee: 1%
+            </div>
+          </div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Platform Revenue</div>
+          <div className="text-2xl font-bold text-white">₹{(stats.totalVolume * 0.01).toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="card p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-lg font-display font-bold text-white">Volume Analytics</h3>
+              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-1">Last 7 Days (INR)</p>
+            </div>
+            <select className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none">
+              <option>Last 7 Days</option>
+              <option>Last 30 Days</option>
+            </select>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#00FF00" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#00FF00" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#ffffff20" 
+                  fontSize={10} 
+                  tickLine={false} 
+                  axisLine={false}
+                />
+                <YAxis 
+                  stroke="#ffffff20" 
+                  fontSize={10} 
+                  tickLine={false} 
+                  axisLine={false}
+                  tickFormatter={(value) => `₹${value/1000}k`}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px' }}
+                  itemStyle={{ color: '#00FF00', fontSize: '12px', fontWeight: 'bold' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="volume" 
+                  stroke="#00FF00" 
+                  fillOpacity={1} 
+                  fill="url(#colorVolume)" 
+                  strokeWidth={3}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="card p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-lg font-display font-bold text-white">User Growth</h3>
+              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-1">New Signups</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-brand rounded-full" />
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active</span>
+              </div>
+            </div>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#ffffff20" 
+                  fontSize={10} 
+                  tickLine={false} 
+                  axisLine={false}
+                />
+                <YAxis 
+                  stroke="#ffffff20" 
+                  fontSize={10} 
+                  tickLine={false} 
+                  axisLine={false}
+                />
+                <Tooltip 
+                  cursor={{ fill: '#ffffff05' }}
+                  contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px' }}
+                  itemStyle={{ color: '#00FF00', fontSize: '12px', fontWeight: 'bold' }}
+                />
+                <Bar 
+                  dataKey="users" 
+                  fill="#00FF00" 
+                  radius={[4, 4, 0, 0]} 
+                  barSize={30}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Orders Table */}
+      <div className="card overflow-hidden">
+        <div className="p-6 border-b border-white/5 flex justify-between items-center">
+          <h3 className="text-lg font-display font-bold text-white">Recent P2P Orders</h3>
+          <Link to="/admin/orders" className="text-[10px] font-bold text-brand uppercase tracking-widest hover:underline">View All Orders</Link>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-white/5">
+              <tr>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Order ID</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">User</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Amount</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-brand mx-auto" />
+                  </td>
+                </tr>
+              ) : recentOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500 text-xs">No recent orders.</td>
+                </tr>
+              ) : (
+                recentOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-white/5 transition-colors">
+                    <td className="px-6 py-4 font-mono text-[10px] text-gray-500">#{order.id.slice(0, 8)}...</td>
+                    <td className="px-6 py-4 text-xs text-white">{order.profiles?.email}</td>
+                    <td className="px-6 py-4 text-sm font-bold text-white">₹{order.amount_inr.toLocaleString()}</td>
+                    <td className="px-6 py-4">
+                      <span className={cn(
+                        "px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest rounded-full border",
+                        order.status === 'pending' ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" :
+                        order.status === 'completed' ? "bg-green-500/10 text-green-500 border-green-500/20" :
+                        "bg-red-500/10 text-red-500 border-red-500/20"
+                      )}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-[10px] text-gray-500 text-right">
+                      {new Date(order.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminAnalytics() {
+  const [data, setData] = useState<any[]>([]);
+  const [pieData, setPieData] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Mock data for detailed analytics
+    const mockData = Array.from({ length: 30 }, (_, i) => ({
+      date: `2024-03-${i + 1}`,
+      volume: Math.floor(Math.random() * 1000000) + 200000,
+      revenue: Math.floor(Math.random() * 10000) + 2000,
+      trades: Math.floor(Math.random() * 100) + 20,
+      users: Math.floor(Math.random() * 50) + 10
+    }));
+    setData(mockData);
+
+    setPieData([
+      { name: 'Completed', value: 85, fill: '#00FF00' },
+      { name: 'Cancelled', value: 10, fill: '#EF4444' },
+      { name: 'Disputed', value: 5, fill: '#F59E0B' }
+    ]);
+  }, []);
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-display font-bold text-white">Advanced Analytics</h2>
+          <p className="text-sm text-gray-500 mt-1">Deep dive into protocol performance and financial metrics.</p>
+        </div>
+        <div className="flex gap-2">
+          <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-white hover:bg-white/10 transition-all">
+            Export CSV
+          </button>
+          <button className="px-4 py-2 bg-brand text-white rounded-xl text-xs font-bold hover:bg-brand/90 transition-all shadow-lg shadow-brand/20">
+            Generate Report
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="card p-6">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Total Orders</div>
-          <div className="text-3xl font-bold text-white">{stats.totalOrders}</div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-brand/10 rounded-lg text-brand">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <h4 className="text-sm font-bold text-white uppercase tracking-widest">Avg. Trade</h4>
+          </div>
+          <div className="text-2xl font-bold text-white">₹42.5k</div>
+          <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">Per P2P Order</p>
         </div>
         <div className="card p-6">
-          <div className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2">Pending Orders</div>
-          <div className="text-3xl font-bold text-white">{stats.pendingOrders}</div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+              <Users className="w-5 h-5" />
+            </div>
+            <h4 className="text-sm font-bold text-white uppercase tracking-widest">Merchants</h4>
+          </div>
+          <div className="text-2xl font-bold text-white">124</div>
+          <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">Verified & Active</p>
         </div>
         <div className="card p-6">
-          <div className="text-[10px] font-bold text-brand uppercase tracking-widest mb-2">Total Users</div>
-          <div className="text-3xl font-bold text-white">{stats.totalUsers}</div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <h4 className="text-sm font-bold text-white uppercase tracking-widest">Dispute Rate</h4>
+          </div>
+          <div className="text-2xl font-bold text-white">0.4%</div>
+          <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">Last 30 Days</p>
         </div>
         <div className="card p-6">
-          <div className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-2">Total Volume</div>
-          <div className="text-3xl font-bold text-white">{formatCurrency(stats.totalVolume)}</div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-green-500/10 rounded-lg text-green-500">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <h4 className="text-sm font-bold text-white uppercase tracking-widest">Success Rate</h4>
+          </div>
+          <div className="text-2xl font-bold text-white">98.2%</div>
+          <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">Trade Completion</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 card p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-lg font-display font-bold text-white">Revenue & Volume Correlation</h3>
+              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-1">Financial Performance</p>
+            </div>
+          </div>
+          <div className="h-[400px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#ffffff20" 
+                  fontSize={10} 
+                  tickLine={false} 
+                  axisLine={false}
+                />
+                <YAxis 
+                  stroke="#ffffff20" 
+                  fontSize={10} 
+                  tickLine={false} 
+                  axisLine={false}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px' }}
+                  itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="volume" 
+                  stroke="#00FF00" 
+                  strokeWidth={3} 
+                  dot={false}
+                  name="Volume (INR)"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#3B82F6" 
+                  strokeWidth={3} 
+                  dot={false}
+                  name="Revenue (INR)"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="card p-8">
+          <h3 className="text-lg font-display font-bold text-white mb-8">Order Status Distribution</h3>
+          <div className="h-[300px] w-full relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-white">100%</div>
+                <div className="text-[8px] text-gray-500 uppercase font-bold tracking-widest">Total Orders</div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-8 space-y-4">
+            {pieData.map((item) => (
+              <div key={item.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.fill }} />
+                  <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">{item.name}</span>
+                </div>
+                <span className="text-sm font-bold text-white">{item.value}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="card p-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h3 className="text-lg font-display font-bold text-white">User Growth Trend</h3>
+            <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-1">New Signups vs Active Users</p>
+          </div>
+        </div>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data}>
+              <defs>
+                <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+              <XAxis 
+                dataKey="date" 
+                stroke="#ffffff20" 
+                fontSize={10} 
+                tickLine={false} 
+                axisLine={false}
+              />
+              <YAxis 
+                stroke="#ffffff20" 
+                fontSize={10} 
+                tickLine={false} 
+                axisLine={false}
+              />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px' }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="users" 
+                stroke="#3B82F6" 
+                fillOpacity={1} 
+                fill="url(#colorUsers)" 
+                strokeWidth={3}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
@@ -928,7 +1405,7 @@ function AdminUsers() {
   );
 }
 
-function AdminP2PChats() {
+function AdminP2PChats({ adminId }: { adminId?: string }) {
   const [orders, setOrders] = useState<any[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -1002,7 +1479,7 @@ function AdminP2PChats() {
       setSending(true);
       const { error } = await supabase.from('chat_messages').insert({
         order_id: selectedOrder.id,
-        sender_id: 'admin',
+        sender_id: adminId,
         message: `[ADMIN]: ${newMessage}`
       });
 
@@ -1077,19 +1554,19 @@ function AdminP2PChats() {
                   key={msg.id}
                   className={cn(
                     "flex flex-col max-w-[80%]",
-                    msg.sender_id === 'admin' ? "mx-auto items-center" : 
+                    msg.sender_id === adminId ? "mx-auto items-center" : 
                     msg.sender_id === selectedOrder.user_id ? "mr-auto items-start" : "ml-auto items-end"
                   )}
                 >
                   <div className={cn(
                     "p-3 rounded-2xl text-sm",
-                    msg.sender_id === 'admin' ? "bg-white/10 text-brand border border-brand/20" :
+                    msg.sender_id === adminId ? "bg-white/10 text-brand border border-brand/20" :
                     msg.sender_id === selectedOrder.user_id 
                       ? "bg-white/5 text-white rounded-tl-none border border-white/10" 
                       : "bg-brand text-white rounded-tr-none"
                   )}>
                     <p className="text-[8px] font-bold uppercase tracking-widest mb-1 opacity-50">
-                      {msg.sender_id === 'admin' ? 'System Admin' : 
+                      {msg.sender_id === adminId ? 'System Admin' : 
                        msg.sender_id === selectedOrder.user_id ? 'User' : 'Ad Creator'}
                     </p>
                     {msg.image_url && (
@@ -1498,7 +1975,113 @@ function AdminSupport() {
     </div>
   );
 }
+function AdminLogs() {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLogs();
+  }, []);
+
+  const fetchLogs = async () => {
+    try {
+      const { data } = await supabase
+        .from('platform_logs')
+        .select('*, profiles:admin_id(email)')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      if (data) {
+        setLogs(data);
+      }
+    } catch (error) {
+      console.error('Error fetching logs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getActionColor = (action: string) => {
+    if (action.includes('APPROVE')) return 'text-green-500';
+    if (action.includes('REJECT') || action.includes('REVOKE')) return 'text-red-500';
+    if (action.includes('DISPUTE')) return 'text-amber-500';
+    return 'text-brand';
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-display font-bold text-white">System Audit Trail</h2>
+          <p className="text-sm text-gray-500 mt-1">Immutable record of all administrative actions.</p>
+        </div>
+        <button 
+          onClick={fetchLogs}
+          className="p-2 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-all"
+        >
+          <Clock className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-white/5 border-b border-white/5">
+              <tr>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Admin</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Action</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Details</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-brand mx-auto" />
+                  </td>
+                </tr>
+              ) : logs.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500 text-sm">
+                    No system logs found.
+                  </td>
+                </tr>
+              ) : (
+                logs.map((log) => (
+                  <tr key={log.id} className="hover:bg-white/5 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="text-xs font-bold text-white">{log.profiles?.email || 'System'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={cn(
+                        "text-[10px] font-bold uppercase tracking-widest",
+                        getActionColor(log.action)
+                      )}>
+                        {log.action.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-xs text-gray-400 max-w-xs truncate" title={log.details}>
+                        {log.details}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-[10px] text-gray-500 text-right">
+                      {new Date(log.created_at).toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminWithdrawals() {
+  const { user } = useAuth();
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<any | null>(null);
@@ -1540,6 +2123,14 @@ function AdminWithdrawals() {
         .eq('id', selectedWithdrawal.id);
       
       if (error) throw error;
+
+      // Log action
+      await supabase.from('platform_logs').insert({
+        admin_id: user?.id,
+        action: `WITHDRAWAL_${status.toUpperCase()}`,
+        details: `Withdrawal ${selectedWithdrawal.id} for ${selectedWithdrawal.amount} USDT was ${status}. Feedback: ${feedback || 'None'}`,
+        user_affected: selectedWithdrawal.user_id
+      });
 
       // If rejected, refund the user's balance
       if (status === 'rejected') {
@@ -1712,6 +2303,7 @@ function AdminWithdrawals() {
   );
 }
 function AdminKYC() {
+  const { user } = useAuth();
   const [submissions, setSubmissions] = useState<KYCSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
@@ -1744,6 +2336,14 @@ function AdminKYC() {
 
       const { error: profileError } = await supabase.from('profiles').update({ kyc_status: status }).eq('id', userId);
       if (profileError) throw profileError;
+
+      // Log action
+      await supabase.from('platform_logs').insert({
+        admin_id: user?.id,
+        action: `KYC_${status.toUpperCase()}`,
+        details: `KYC submission ${id} was ${status}. Feedback: ${feedback || 'None'}`,
+        user_affected: userId
+      });
 
       setFeedback('');
       setSelectedDoc(null);
