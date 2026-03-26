@@ -10,7 +10,10 @@ import {
   ArrowRight,
   Clock,
   User,
-  Star
+  Star,
+  Info,
+  Zap,
+  MessageSquare
 } from 'lucide-react';
 import { cn, formatCurrency, formatUSDT } from '../lib/utils';
 import { motion } from 'framer-motion';
@@ -20,6 +23,7 @@ interface Ad {
   id: string;
   user_id: string;
   type: 'buy' | 'sell';
+  asset: string;
   price: number;
   min_limit: number;
   max_limit: number;
@@ -27,6 +31,13 @@ interface Ad {
   user_profile?: {
     full_name: string;
     email: string;
+    trades_completed: number;
+    completion_rate: number;
+    rating_sum: number;
+    rating_count: number;
+    speed_rating: number;
+    comm_rating: number;
+    is_verified_merchant: boolean;
   };
 }
 
@@ -39,12 +50,23 @@ export default function P2PCreateOrder() {
   const [amount, setAmount] = useState('');
   const [paymentWindow, setPaymentWindow] = useState(15);
   const [isTrading, setIsTrading] = useState(false);
+  const [platformFee, setPlatformFee] = useState(0);
 
   useEffect(() => {
     if (adId) {
       fetchAd();
+      fetchSettings();
     }
   }, [adId]);
+
+  const fetchSettings = async () => {
+    try {
+      const { data } = await supabase.from('app_settings').select('platform_fee').single();
+      if (data) setPlatformFee(data.platform_fee);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
 
   const fetchAd = async () => {
     try {
@@ -53,7 +75,7 @@ export default function P2PCreateOrder() {
         .from('ads')
         .select(`
           *,
-          user_profile:profiles(full_name, email)
+          user_profile:profiles(full_name, email, trades_completed, completion_rate, rating_sum, rating_count, speed_rating, comm_rating, is_verified_merchant)
         `)
         .eq('id', adId)
         .single();
@@ -75,12 +97,13 @@ export default function P2PCreateOrder() {
     try {
       setIsTrading(true);
       const inrAmount = parseFloat(amount);
-      const usdtAmount = inrAmount / ad.price;
+      const cryptoAmount = inrAmount / ad.price;
 
       const { data: orderId, error } = await supabase.rpc('start_p2p_trade', {
         p_ad_id: ad.id,
         p_amount_inr: inrAmount,
-        p_amount_usdt: usdtAmount
+        p_amount_crypto: cryptoAmount, // Updated parameter name in RPC
+        p_rate: ad.price
       });
 
       if (error) throw error;
@@ -98,72 +121,111 @@ export default function P2PCreateOrder() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+        <Loader2 className="w-10 h-10 animate-spin text-brand" />
       </div>
     );
   }
 
   if (!ad) return null;
 
-  const usdtAmount = amount ? (parseFloat(amount) / ad.price).toFixed(2) : '0.00';
+  const cryptoAmount = amount ? (parseFloat(amount) / ad.price).toFixed(8) : '0.00000000';
+  const feeAmount = amount ? (parseFloat(amount) * platformFee / 100) : 0;
 
   return (
     <div className="min-h-screen bg-[#050505] pt-24 pb-12">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-5xl mx-auto px-4">
         <button 
           onClick={() => navigate('/p2p')}
-          className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors group"
+          className="flex items-center gap-3 text-gray-400 hover:text-white mb-10 transition-all group"
         >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-bold uppercase tracking-widest text-xs">Back to Marketplace</span>
+          <div className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-white/10 transition-all">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          </div>
+          <span className="font-bold uppercase tracking-widest text-[10px]">Back to Marketplace</span>
         </button>
 
-        <div className="grid lg:grid-cols-5 gap-8">
+        <div className="grid lg:grid-cols-12 gap-10">
           {/* Left Side: Ad Info */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="card p-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
-                  <User className="w-6 h-6" />
+          <div className="lg:col-span-4 space-y-8">
+            <div className="card p-8">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="relative">
+                  <div className="w-16 h-16 bg-brand/10 rounded-2xl flex items-center justify-center text-brand border border-brand/20">
+                    <User className="w-8 h-8" />
+                  </div>
+                  {ad.user_profile?.is_verified_merchant && (
+                    <div className="absolute -bottom-1 -right-1 bg-[#050505] p-0.5 rounded-full">
+                      <ShieldCheck className="w-6 h-6 text-brand" />
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">{ad.user_profile?.full_name || 'User'}</h3>
-                  <div className="flex items-center gap-1 text-yellow-500">
-                    <Star className="w-3 h-3 fill-current" />
-                    <span className="text-xs font-bold">4.9 (120+ trades)</span>
+                  <h3 className="text-xl font-bold text-white tracking-tight">{ad.user_profile?.full_name || 'Anonymous'}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={cn(
+                            "w-3 h-3", 
+                            i < Math.round((ad.user_profile?.rating_sum || 0) / (ad.user_profile?.rating_count || 1)) 
+                              ? "text-yellow-500 fill-current" 
+                              : "text-gray-700"
+                          )} 
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-500">({ad.user_profile?.rating_count || 0})</span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500">Price</span>
-                  <span className="font-bold text-white">₹{ad.price.toFixed(2)}</span>
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Price</span>
+                  <span className="text-xl font-bold text-white">₹{ad.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500">Limits</span>
-                  <span className="font-bold text-white">₹{ad.min_limit.toLocaleString()} - ₹{ad.max_limit.toLocaleString()}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Limits</span>
+                  <span className="text-sm font-bold text-white">₹{ad.min_limit.toLocaleString()} - ₹{ad.max_limit.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500">Payment Methods</span>
-                  <div className="flex flex-wrap gap-1 justify-end">
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Payments</span>
+                  <div className="flex flex-wrap gap-1.5 justify-end max-w-[150px]">
                     {ad.payment_methods.map(pm => (
-                      <span key={pm} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-md text-[10px] text-gray-400 font-bold uppercase">
+                      <span key={pm} className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-[9px] text-gray-400 font-bold uppercase tracking-widest">
                         {pm}
                       </span>
                     ))}
                   </div>
                 </div>
               </div>
+
+              <div className="mt-8 pt-8 border-t border-white/5 grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-brand" />
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Speed</p>
+                    <p className="text-xs font-bold text-white">{ad.user_profile?.speed_rating || 5.0}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-brand" />
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Comm</p>
+                    <p className="text-xs font-bold text-white">{ad.user_profile?.comm_rating || 5.0}</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="card p-6 bg-brand/5 border-brand/10">
-              <div className="flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-brand shrink-0 mt-0.5" />
+            <div className="card p-8 bg-brand/5 border-brand/20">
+              <div className="flex items-start gap-4">
+                <ShieldCheck className="w-6 h-6 text-brand shrink-0" />
                 <div>
-                  <p className="text-sm font-bold text-white mb-1">Escrow Protection</p>
+                  <p className="text-sm font-bold text-white mb-2">Institutional Escrow</p>
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    The seller's USDT is locked in our secure escrow wallet. Once you complete the payment and the seller confirms, the USDT will be released to your wallet automatically.
+                    The merchant's {ad.asset} is automatically locked in our secure escrow protocol. Release is only possible after payment verification.
                   </p>
                 </div>
               </div>
@@ -171,18 +233,24 @@ export default function P2PCreateOrder() {
           </div>
 
           {/* Right Side: Order Form */}
-          <div className="lg:col-span-3">
-            <div className="card p-8">
-              <h2 className="text-2xl font-display font-bold text-white mb-8">
-                {ad.type === 'buy' ? 'Sell' : 'Buy'} USDT
-              </h2>
+          <div className="lg:col-span-8">
+            <div className="card p-10">
+              <div className="flex items-center justify-between mb-10">
+                <h2 className="text-3xl font-display font-bold text-white tracking-tight">
+                  {ad.type === 'buy' ? 'Sell' : 'Buy'} {ad.asset}
+                </h2>
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl border border-white/10">
+                  <Clock className="w-4 h-4 text-brand" />
+                  <span className="text-xs font-bold text-white">{paymentWindow}m Window</span>
+                </div>
+              </div>
 
-              <form onSubmit={handleStartTrade} className="space-y-8">
-                <div className="space-y-4">
+              <form onSubmit={handleStartTrade} className="space-y-10">
+                <div className="space-y-6">
                   <div className="flex justify-between items-end">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount to {ad.type === 'buy' ? 'Sell' : 'Buy'}</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount in INR</label>
                     <span className="text-[10px] font-bold text-brand uppercase tracking-widest">
-                      Balance: {ad.type === 'buy' ? '0.00 USDT' : '₹0.00'}
+                      Available: {ad.type === 'buy' ? '0.00 ' + ad.asset : '₹0.00'}
                     </span>
                   </div>
                   <div className="relative">
@@ -193,70 +261,87 @@ export default function P2PCreateOrder() {
                       max={ad.max_limit}
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-3xl font-bold focus:outline-none focus:border-brand/50 transition-colors text-white" 
-                      placeholder={`${ad.min_limit} - ${ad.max_limit}`}
+                      className="w-full bg-white/5 border border-white/10 rounded-3xl px-8 py-6 text-4xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-gray-800" 
+                      placeholder={`${ad.min_limit.toLocaleString()} - ${ad.max_limit.toLocaleString()}`}
                     />
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 font-bold text-gray-500">INR</div>
+                    <div className="absolute right-8 top-1/2 -translate-y-1/2 font-display font-bold text-gray-600 text-xl">INR</div>
                   </div>
-                  <div className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">You will {ad.type === 'buy' ? 'Send' : 'Receive'}</p>
-                      <p className="text-2xl font-bold text-brand">{usdtAmount} USDT</p>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">You will {ad.type === 'buy' ? 'Send' : 'Receive'}</p>
+                      <div className="flex items-baseline gap-2">
+                        <p className="text-3xl font-display font-bold text-brand">{cryptoAmount}</p>
+                        <p className="text-sm font-bold text-gray-500">{ad.asset}</p>
+                      </div>
                     </div>
-                    <div className="text-right space-y-1">
-                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Price</p>
-                      <p className="text-lg font-bold text-white">₹{ad.price.toFixed(2)}</p>
+                    <div className="p-6 bg-white/5 rounded-3xl border border-white/5 flex flex-col justify-center">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Platform Fee</span>
+                        <span className="text-xs font-bold text-white">₹{feeAmount.toFixed(2)} ({platformFee}%)</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Net Amount</span>
+                        <span className="text-xs font-bold text-brand">₹{(parseFloat(amount || '0') - feeAmount).toFixed(2)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Payment Window</label>
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-500" />
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Payment Window</label>
+                  </div>
+                  <div className="grid grid-cols-4 gap-4">
                     {[15, 30, 45, 60].map((min) => (
                       <button
                         key={min}
                         type="button"
                         onClick={() => setPaymentWindow(min)}
                         className={cn(
-                          "px-4 py-3 rounded-xl border text-xs font-bold transition-all",
+                          "py-4 rounded-2xl border text-xs font-bold transition-all",
                           paymentWindow === min 
                             ? "bg-brand/10 border-brand text-brand shadow-lg shadow-brand/10" 
-                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                            : "bg-white/5 border-white/10 text-gray-500 hover:bg-white/10"
                         )}
                       >
-                        {min}m
+                        {min} Minutes
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-gray-400 leading-relaxed">
-                    Please ensure you can complete the payment within the selected window. 
-                    Frequent cancellations may lead to account restrictions.
-                  </p>
+                <div className="p-6 bg-yellow-500/5 border border-yellow-500/20 rounded-3xl flex items-start gap-4">
+                  <AlertCircle className="w-6 h-6 text-yellow-500 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-white">Trading Policy</p>
+                    <p className="text-[10px] text-gray-500 leading-relaxed">
+                      Please ensure you can complete the payment within the selected window. 
+                      Frequent cancellations or non-payment may lead to account suspension. 
+                      Always use your own bank account for payments.
+                    </p>
+                  </div>
                 </div>
 
                 <button 
                   type="submit" 
                   disabled={isTrading || !amount}
                   className={cn(
-                    "w-full py-5 rounded-2xl font-bold text-white shadow-xl transition-all flex items-center justify-center gap-3",
+                    "w-full py-6 rounded-3xl font-display font-bold text-white shadow-2xl transition-all flex items-center justify-center gap-4 text-lg",
                     ad.type === 'buy' ? "bg-red-600 hover:bg-red-700 shadow-red-600/20" : "bg-green-600 hover:bg-green-700 shadow-green-600/20",
                     (isTrading || !amount) && "opacity-50 cursor-not-allowed"
                   )}
                 >
                   {isTrading ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Initiating Trade...</span>
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <span>Initiating Trade Protocol...</span>
                     </>
                   ) : (
                     <>
-                      <span>{ad.type === 'buy' ? 'Sell' : 'Buy'} USDT Now</span>
-                      <ArrowRight className="w-5 h-5" />
+                      <span>{ad.type === 'buy' ? 'Sell' : 'Buy'} {ad.asset} Now</span>
+                      <ArrowRight className="w-6 h-6" />
                     </>
                   )}
                 </button>

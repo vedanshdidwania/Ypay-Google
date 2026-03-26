@@ -9,7 +9,8 @@ import {
   Filter,
   Loader2,
   ExternalLink,
-  Clock
+  Clock,
+  Download
 } from 'lucide-react';
 import { formatCurrency, formatUSDT } from '../lib/utils';
 import { motion } from 'framer-motion';
@@ -56,6 +57,33 @@ export default function Transactions() {
     tx.tx_hash?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleExport = () => {
+    if (filteredTransactions.length === 0) return;
+
+    const headers = ['ID', 'Type', 'Amount', 'Status', 'Hash', 'Date'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredTransactions.map(tx => [
+        tx.id,
+        tx.type,
+        tx.amount,
+        tx.status,
+        tx.tx_hash || '',
+        new Date(tx.created_at).toLocaleString()
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `transactions_${new Date().getTime()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
@@ -74,6 +102,14 @@ export default function Transactions() {
           </div>
 
           <div className="flex items-center gap-4">
+            <button 
+              onClick={handleExport}
+              className="p-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+              title="Export to CSV"
+            >
+              <Download className="w-5 h-5" />
+              <span className="text-xs font-bold uppercase tracking-widest hidden md:inline">Export</span>
+            </button>
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input

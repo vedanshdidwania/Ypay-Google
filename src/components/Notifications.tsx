@@ -4,6 +4,7 @@ import { useAuth } from '../lib/useAuth';
 import { Bell, X, CheckCircle2, AlertCircle, Info, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { toast } from 'sonner';
 
 export function NotificationCenter() {
   const { profile } = useAuth();
@@ -24,6 +25,12 @@ export function NotificationCenter() {
           // Only add if it's for this user or global
           if (!payload.new.user_id || payload.new.user_id === profile.id) {
             setNotifications(prev => [payload.new, ...prev]);
+            toast(payload.new.title, {
+              description: payload.new.message,
+              icon: payload.new.type === 'order_update' ? <Info className="w-4 h-4 text-blue-500" /> :
+                    payload.new.type === 'dispute' ? <AlertCircle className="w-4 h-4 text-red-500" /> :
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+            });
           }
         })
         .subscribe();

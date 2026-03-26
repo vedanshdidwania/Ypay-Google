@@ -9,7 +9,13 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 // Initialize the client only if keys are present, otherwise use a proxy that warns
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl!, supabaseAnonKey!)
+  ? createClient(supabaseUrl!, supabaseAnonKey!, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      }
+    })
   : new Proxy({} as any, {
       get: (_, prop) => {
         if (prop === 'auth') {

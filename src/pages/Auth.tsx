@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, Shield } from 'lucide-react';
 import { cn } from '../lib/utils';
+import TwoFactorModal from '../components/TwoFactorModal';
 
 export default function Auth() {
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get('ref');
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [show2FA, setShow2FA] = useState(false);
+  const [tempUserId, setTempUserId] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // If there's a referral code, switch to sign up mode
+    if (referralCode) {
+      setIsLogin(false);
+    }
+  }, [referralCode]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,20 +33,39 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) throw signInError;
+
+        if (user) {
+          // Check if 2FA is enabled
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('two_factor_enabled')
+            .eq('id', user.id)
+            .single();
+
+          if (profile?.two_factor_enabled) {
+            setTempUserId(user.id);
+            setShow2FA(true);
+            setLoading(false);
+            return;
+          }
+        }
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { full_name: fullName },
+            data: { 
+              full_name: fullName,
+              referred_by: referralCode
+            },
           },
         });
         if (error) throw error;
         setSuccess('Registration successful! Please check your email for verification.');
       }
-      if (isLogin) navigate('/dashboard');
+      if (isLogin && !show2FA) navigate('/dashboard');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -208,6 +239,19 @@ export default function Auth() {
           </div>
         </div>
       </motion.div>
+
+      {tempUserId && (
+        <TwoFactorModal
+          isOpen={show2FA}
+          onClose={() => {
+            setShow2FA(false);
+            supabase.auth.signOut();
+          }}
+          onSuccess={() => navigate('/dashboard')}
+          userId={tempUserId}
+          action="verify"
+        />
+      )}
     </div>
   );
 }

@@ -19,13 +19,15 @@ import {
   Loader2,
   Plus,
   Star,
-  ShoppingCart
+  ShoppingCart,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '../lib/useAuth';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import TwoFactorModal from '../components/TwoFactorModal';
 
 interface Order {
   id: string;
@@ -66,6 +68,7 @@ export default function Dashboard() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [show2FAModal, setShow2FAModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -552,30 +555,49 @@ export default function Dashboard() {
                 </div>
 
                 <div className="card p-8">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
-                      <TrendingUp className="w-6 h-6" />
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
+                        <TrendingUp className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-white">Referral Program</h2>
+                        <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Earn rewards for inviting friends</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-white">Referral Program</h2>
-                      <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Earn rewards for inviting friends</p>
+                    <Link 
+                      to="/referrals" 
+                      className="px-6 py-3 bg-brand text-white rounded-xl text-sm font-bold hover:bg-brand/90 transition-all shadow-lg shadow-brand/20"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total Earnings</p>
+                      <p className="text-xl font-bold text-green-500">${((profile?.referral_earnings_l1 || 0) + (profile?.referral_earnings_l2 || 0)).toFixed(2)}</p>
+                    </div>
+                    <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Referral Code</p>
+                      <p className="text-xl font-bold text-white font-mono">{profile?.referral_code || '---'}</p>
                     </div>
                   </div>
 
                   <div className="p-6 bg-brand/5 border border-brand/10 rounded-2xl">
                     <p className="text-sm text-gray-300 mb-4 leading-relaxed">
-                      Invite your friends to Ypay and earn 0.1% on every trade they complete. Your referral code is:
+                      Invite your friends to Ypay and earn up to 0.15% on every trade they complete.
                     </p>
                     <div className="flex items-center gap-4">
-                      <div className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-mono text-white text-sm">
-                        {profile?.referral_code || 'YPAY-' + user?.id.substring(0, 6).toUpperCase()}
+                      <div className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-mono text-white text-sm truncate">
+                        {`${window.location.origin}/auth?ref=${profile?.referral_code}`}
                       </div>
                       <button 
                         onClick={() => {
-                          navigator.clipboard.writeText(profile?.referral_code || 'YPAY-' + user?.id.substring(0, 6).toUpperCase());
-                          alert('Referral code copied!');
+                          navigator.clipboard.writeText(`${window.location.origin}/auth?ref=${profile?.referral_code}`);
+                          alert('Referral link copied!');
                         }}
-                        className="px-6 py-3 bg-brand text-white rounded-xl text-sm font-bold hover:bg-brand/90 transition-all shadow-lg shadow-brand/20"
+                        className="px-6 py-3 bg-brand text-white rounded-xl text-sm font-bold hover:bg-brand/90 transition-all shadow-lg shadow-brand/20 shrink-0"
                       >
                         Copy
                       </button>
@@ -597,16 +619,33 @@ export default function Dashboard() {
                   <div className="space-y-8">
                     <div className="p-6 bg-brand/5 border border-brand/10 rounded-2xl flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
-                          <ShieldCheck className="w-5 h-5" />
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center border transition-colors",
+                          profile?.two_factor_enabled 
+                            ? "bg-green-500/10 border-green-500/20 text-green-500" 
+                            : "bg-brand/10 border-brand/20 text-brand"
+                        )}>
+                          <Shield className="w-5 h-5" />
                         </div>
                         <div>
                           <p className="text-sm font-bold text-white">Two-Factor Authentication (2FA)</p>
-                          <p className="text-xs text-gray-500">Add an extra layer of security to your account.</p>
+                          <p className="text-xs text-gray-500">
+                            {profile?.two_factor_enabled 
+                              ? "Your account is protected with 2FA." 
+                              : "Add an extra layer of security to your account."}
+                          </p>
                         </div>
                       </div>
-                      <button className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold transition-colors">
-                        Enable
+                      <button 
+                        onClick={() => setShow2FAModal(true)}
+                        className={cn(
+                          "px-4 py-2 rounded-lg text-xs font-bold transition-colors",
+                          profile?.two_factor_enabled
+                            ? "bg-white/5 text-gray-400 hover:text-white"
+                            : "bg-brand text-white hover:bg-brand/90 shadow-lg shadow-brand/20"
+                        )}
+                      >
+                        {profile?.two_factor_enabled ? "Manage" : "Enable"}
                       </button>
                     </div>
 
@@ -696,6 +735,20 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {user && (
+        <TwoFactorModal
+          isOpen={show2FAModal}
+          onClose={() => setShow2FAModal(false)}
+          onSuccess={() => {
+            fetchDashboardData();
+            // Refresh profile in auth context if needed, but fetchDashboardData might be enough if it re-fetches profile
+            window.location.reload(); // Simple way to refresh profile in context
+          }}
+          userId={user.id}
+          action={profile?.two_factor_enabled ? 'verify' : 'enable'}
+        />
+      )}
     </div>
   );
 }

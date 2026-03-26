@@ -101,30 +101,15 @@ export default function Wallet() {
 
     try {
       const amount = parseFloat(withdrawAmount);
-      const totalAmount = amount + NETWORK_FEE;
       
-      // Generate a dummy tx hash for simulation if not provided by backend
-      const dummyHash = 'T' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
-      const { error: withdrawError } = await supabase.from('transactions').insert({
-        user_id: profile.id,
-        type: 'withdrawal',
-        amount: amount,
-        status: 'pending',
-        tx_hash: dummyHash
+      const { data: txHash, error: withdrawError } = await supabase.rpc('withdraw_usdt', {
+        p_amount: amount,
+        p_address: withdrawAddress
       });
 
       if (withdrawError) throw withdrawError;
-
-      // Deduct balance from profile
-      const { error: balanceError } = await supabase
-        .from('profiles')
-        .update({ balance_usdt: profile.balance_usdt - totalAmount })
-        .eq('id', profile.id);
-
-      if (balanceError) throw balanceError;
       
-      setWithdrawTxHash(dummyHash);
+      setWithdrawTxHash(txHash);
       setShowWithdrawConfirm(false);
       setShowWithdrawSuccess(true);
       setWithdrawAmount('');

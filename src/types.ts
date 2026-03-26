@@ -16,6 +16,13 @@ export interface UserProfile {
   is_verified_merchant: boolean;
   trades_completed: number;
   completion_rate: number;
+  two_factor_enabled: boolean;
+  two_factor_secret?: string;
+  preferred_currency: string;
+  referred_by?: string;
+  referred_by_l2?: string;
+  referral_earnings_l1: number;
+  referral_earnings_l2: number;
   created_at: string;
 }
 
@@ -63,10 +70,34 @@ export interface Order {
   payment_screenshot_url?: string;
   transaction_hash?: string;
   admin_feedback?: string;
+  expires_at?: string;
+  is_reviewed?: boolean;
   created_at: string;
   updated_at: string;
   user_profile?: UserProfile;
   ad?: Ad & { ad_profile?: UserProfile };
+}
+
+export interface Review {
+  id: string;
+  order_id: string;
+  reviewer_id: string;
+  reviewee_id: string;
+  rating: number; // 1-5
+  comment?: string;
+  is_positive: boolean;
+  created_at: string;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  link?: string;
+  is_read: boolean;
+  created_at: string;
 }
 
 export interface Transaction {

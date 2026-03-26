@@ -706,12 +706,20 @@ function AdminOrders() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', id);
-      
-      if (error) throw error;
+      const order = orders.find(o => o.id === id);
+      if (!order) return;
+
+      if (status === 'approved' && order.type === 'buy' && !order.ad_id) {
+        // Direct deposit approval
+        const { error } = await supabase.rpc('approve_direct_deposit', { p_order_id: id });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('orders')
+          .update({ status })
+          .eq('id', id);
+        if (error) throw error;
+      }
 
       fetchOrders();
       if (selectedOrder?.id === id) {
@@ -2399,14 +2407,12 @@ function AdminWithdrawals() {
 
     try {
       setIsProcessing(true);
-      const { error } = await supabase
-        .from('withdrawals')
-        .update({ 
-          status, 
-          admin_feedback: feedback,
-          processed_at: new Date().toISOString()
-        })
-        .eq('id', selectedWithdrawal.id);
+      
+      const { error } = await supabase.rpc('process_withdrawal', {
+        p_withdrawal_id: selectedWithdrawal.id,
+        p_status: status,
+        p_feedback: feedback
+      });
       
       if (error) throw error;
 
@@ -2417,22 +2423,6 @@ function AdminWithdrawals() {
         details: `Withdrawal ${selectedWithdrawal.id} for ${selectedWithdrawal.amount} USDT was ${status}. Feedback: ${feedback || 'None'}`,
         user_affected: selectedWithdrawal.user_id
       });
-
-      // If rejected, refund the user's balance
-      if (status === 'rejected') {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('balance')
-          .eq('id', selectedWithdrawal.user_id)
-          .single();
-        
-        if (profile) {
-          await supabase
-            .from('profiles')
-            .update({ balance: profile.balance + selectedWithdrawal.amount })
-            .eq('id', selectedWithdrawal.user_id);
-        }
-      }
 
       setFeedback('');
       setSelectedWithdrawal(null);
@@ -2779,35 +2769,15 @@ function AdminDisputes() {
 
   const resolveDispute = async (disputeId: string, orderId: string, winnerId: string) => {
     try {
-      // 1. Update dispute status
-      const { error: disputeError } = await supabase
-        .from('p2p_disputes')
-        .update({ 
-          status: 'resolved',
-          admin_feedback: `Resolved in favor of user ${winnerId}`
-        })
-        .eq('id', disputeId);
-      
-      if (disputeError) throw disputeError;
-
-      // 2. Update order status
-      const { error: orderError } = await supabase
-        .from('orders')
-        .update({ 
-          status: 'completed' // Or 'cancelled' depending on decision
-        })
-        .eq('id', orderId);
-      
-      if (orderError) throw orderError;
-      
-      // 3. Log action
-      await supabase.from('platform_logs').insert({
-        admin_id: user?.id,
-        action: 'DISPUTE_RESOLVED',
-        details: `Dispute ${disputeId} for order ${orderId} resolved in favor of ${winnerId}`,
-        user_affected: winnerId
+      const { error } = await supabase.rpc('resolve_p2p_dispute', {
+        p_dispute_id: disputeId,
+        p_order_id: orderId,
+        p_winner_id: winnerId,
+        p_admin_feedback: `Resolved in favor of user ${winnerId}`
       });
-
+      
+      if (error) throw error;
+      
       fetchDisputes();
     } catch (error: any) {
       console.error('Error resolving dispute:', error);
@@ -2849,7 +2819,20 @@ function AdminDisputes() {
                       <div className="text-[10px] font-bold uppercase tracking-widest text-brand">User: {d.order?.user_profile?.email}</div>
                       <div className="text-[10px] font-bold uppercase tracking-widest text-orange-500">Ad Creator: {d.order?.ad?.ad_profile?.email}</div>
                     </td>
-                    <td className="px-6 py-4 text-xs text-gray-400 italic">"{d.reason}"</td>
+                    <td className="px-6 py-4 text-xs text-gray-400 italic">
+                      <div>"{d.reason}"</div>
+                      {d.video_proof_url && (
+                        <a 
+                          href={d.video_proof_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-brand hover:underline flex items-center gap-1 mt-1"
+                        >
+                          <ImageIcon className="w-3 h-3" />
+                          <span>Video Proof</span>
+                        </a>
+                      )}
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         <Link to={`/p2p/orders/${d.order_id}`} className="p-2 text-gray-400 hover:text-brand transition-colors">

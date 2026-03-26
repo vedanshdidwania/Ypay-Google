@@ -12,7 +12,8 @@ import {
   ChevronDown,
   Wallet,
   ShoppingCart,
-  History
+  History,
+  Gift
 } from 'lucide-react';
 import { useAuth } from '../lib/useAuth';
 import { cn } from '../lib/utils';
@@ -42,6 +43,7 @@ export default function Navbar() {
     { name: 'Orders', path: '/orders', icon: ArrowLeftRight, auth: true },
     { name: 'History', path: '/transactions', icon: History, auth: true },
     { name: 'Wallet', path: '/wallet', icon: Wallet, auth: true },
+    { name: 'Referrals', path: '/referrals', icon: Gift, auth: true },
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, auth: true },
   ];
 

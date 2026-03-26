@@ -29,17 +29,33 @@ interface P2POrder {
   ad_id: string;
   type: 'buy' | 'sell';
   amount_inr: number;
-  amount_usdt: number;
+  amount_crypto: number;
+  asset: string;
   rate: number;
+  platform_fee: number;
   status: 'pending' | 'paid' | 'completed' | 'cancelled' | 'disputed';
   payment_window?: number;
   created_at: string;
   payment_screenshot_url?: string;
-  user_profile?: { id: string; full_name: string; email: string };
+  user_profile?: { 
+    id: string; 
+    full_name: string; 
+    email: string;
+    avatar_url?: string;
+    total_trades?: number;
+    completion_rate?: number;
+  };
   ad?: { 
     user_id: string;
     payment_methods: string[];
-    ad_profile?: { id: string; full_name: string; email: string };
+    ad_profile?: { 
+      id: string; 
+      full_name: string; 
+      email: string;
+      avatar_url?: string;
+      total_trades?: number;
+      completion_rate?: number;
+    };
   };
 }
 
@@ -63,6 +79,10 @@ export default function P2POrder() {
   const [sending, setSending] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [videoProofUrl, setVideoProofUrl] = useState('');
+  const [raisingDispute, setRaisingDispute] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -232,16 +252,18 @@ export default function P2POrder() {
 
   const handleMarkAsPaid = async () => {
     if (!confirm('Have you completed the payment? Providing false information may lead to account suspension.')) return;
+    if (!order) return;
 
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: 'paid' })
-        .eq('id', id);
+      const { error } = await supabase.rpc('mark_p2p_order_as_paid', {
+        p_order_id: id
+      });
 
       if (error) throw error;
-    } catch (error) {
+      toast.success('Order marked as paid. Waiting for seller to release funds.');
+    } catch (error: any) {
       console.error('Error marking as paid:', error);
+      toast.error(error.message || 'Failed to mark as paid');
     }
   };
 
@@ -319,26 +341,36 @@ export default function P2POrder() {
   };
 
   const handleDispute = async () => {
-    const reason = prompt('Please describe the reason for the dispute:');
-    if (!reason) return;
+    if (!disputeReason.trim()) {
+      toast.error('Please provide a reason for the dispute');
+      return;
+    }
 
     try {
-      const { error } = await supabase
+      setRaisingDispute(true);
+      const { error: orderError } = await supabase
         .from('orders')
         .update({ status: 'disputed' })
         .eq('id', id);
 
-      if (error) throw error;
+      if (orderError) throw orderError;
 
-      await supabase.from('p2p_disputes').insert({
+      const { error: disputeError } = await supabase.from('p2p_disputes').insert({
         order_id: id,
         raised_by: user?.id,
-        reason
+        reason: disputeReason,
+        video_proof_url: videoProofUrl || null
       });
 
-      alert('Dispute raised. An admin will review the trade shortly.');
+      if (disputeError) throw disputeError;
+
+      toast.success('Dispute raised. An admin will review the trade shortly.');
+      setShowDisputeModal(false);
     } catch (error) {
       console.error('Error raising dispute:', error);
+      toast.error('Failed to raise dispute');
+    } finally {
+      setRaisingDispute(false);
     }
   };
 
@@ -412,8 +444,8 @@ export default function P2POrder() {
                   <p className="text-2xl font-display font-bold text-white">₹{order.amount_inr.toLocaleString()}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">USDT to {isBuyer ? 'Receive' : 'Send'}</p>
-                  <p className="text-2xl font-display font-bold text-brand">{formatUSDT(order.amount_usdt)}</p>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{order.asset} to {isBuyer ? 'Receive' : 'Send'}</p>
+                  <p className="text-2xl font-display font-bold text-brand">{order.amount_crypto} {order.asset}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Price</p>
@@ -421,15 +453,15 @@ export default function P2POrder() {
                 </div>
               </div>
 
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-xl">
                   <Lock className="w-4 h-4 text-green-500" />
                   <span className="text-xs font-bold text-green-500 uppercase tracking-widest">Escrow Protected</span>
                 </div>
-                {order.status === 'completed' && (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-brand/10 border border-brand/20 rounded-xl">
-                    <CheckCircle2 className="w-4 h-4 text-brand" />
-                    <span className="text-xs font-bold text-brand uppercase tracking-widest">Trade Completed</span>
+                {order.platform_fee > 0 && (
+                  <div className="flex items-center justify-between px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Platform Fee</span>
+                    <span className="text-xs font-bold text-white">₹{order.platform_fee.toFixed(2)}</span>
                   </div>
                 )}
               </div>
@@ -507,7 +539,7 @@ export default function P2POrder() {
                   {order.status === 'paid' && (
                     <div className="flex gap-4 pt-4">
                       <button 
-                        onClick={handleDispute}
+                        onClick={() => setShowDisputeModal(true)}
                         className="flex-1 py-4 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-2xl font-bold transition-all border border-red-500/20"
                       >
                         Dispute
@@ -516,14 +548,14 @@ export default function P2POrder() {
                         onClick={handleReleaseFunds}
                         className="flex-1 py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-green-600/20"
                       >
-                        Release USDT
+                        Release {order.asset}
                       </button>
                     </div>
                   )}
                   {order.status === 'pending' && (
                     <div className="pt-4">
                       <button 
-                        onClick={handleDispute}
+                        onClick={() => setShowDisputeModal(true)}
                         className="w-full py-3 text-xs font-bold text-gray-500 hover:text-red-500 transition-colors uppercase tracking-widest"
                       >
                         Need help? Raise a dispute
@@ -608,6 +640,70 @@ export default function P2POrder() {
           </div>
         </div>
       </div>
+
+      {/* Dispute Modal */}
+      <AnimatePresence>
+        {showDisputeModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setShowDisputeModal(false)}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-md bg-[#0a0a0a] border border-white/10 rounded-3xl p-8 shadow-2xl"
+            >
+              <h2 className="text-2xl font-display font-bold text-white mb-2">Raise a Dispute</h2>
+              <p className="text-gray-400 text-sm mb-8">Please provide details about the issue. An admin will review it.</p>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 block">Reason for Dispute</label>
+                  <textarea
+                    value={disputeReason}
+                    onChange={(e) => setDisputeReason(e.target.value)}
+                    placeholder="Describe the issue in detail..."
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white text-sm focus:outline-none focus:border-brand min-h-[120px] resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 block">Video Proof URL (Optional)</label>
+                  <input
+                    type="url"
+                    value={videoProofUrl}
+                    onChange={(e) => setVideoProofUrl(e.target.value)}
+                    placeholder="Link to video proof (Google Drive, Mega, etc.)"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white text-sm focus:outline-none focus:border-brand"
+                  />
+                  <p className="text-[10px] text-gray-500 mt-2">Uploading a video of the payment/issue helps resolve disputes faster.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-8">
+                <button
+                  onClick={() => setShowDisputeModal(false)}
+                  className="flex-1 py-4 bg-white/5 hover:bg-white/10 text-gray-400 rounded-2xl font-bold transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDispute}
+                  disabled={raisingDispute || !disputeReason.trim()}
+                  className="flex-1 py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-red-600/20 disabled:opacity-50"
+                >
+                  {raisingDispute ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Raise Dispute'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Review Modal */}
       <AnimatePresence>

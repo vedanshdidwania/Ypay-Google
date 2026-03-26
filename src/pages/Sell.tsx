@@ -41,6 +41,7 @@ export default function Sell() {
       const inrAmountRaw = parseFloat(usdtAmount) * (settings?.sell_rate || 1);
       const inrAmountWithFee = inrAmountRaw * (1 - (settings?.platform_fee || 0) / 100);
 
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
       const { error: orderError } = await supabase.from('orders').insert({
         user_id: profile.id,
         type: 'sell',
@@ -49,6 +50,7 @@ export default function Sell() {
         rate: settings?.sell_rate,
         status: 'pending',
         transaction_hash: txHash,
+        expires_at: expiresAt,
       });
 
       if (orderError) throw orderError;

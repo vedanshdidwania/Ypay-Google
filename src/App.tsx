@@ -18,8 +18,11 @@ import P2POrder from './pages/P2POrder';
 import P2PCreateOrder from './pages/P2PCreateOrder';
 import MyAds from './pages/MyAds';
 import Wallet from './pages/Wallet';
+import Orders from './pages/Orders';
+import Transactions from './pages/Transactions';
 import KYC from './pages/KYC';
 import Info from './pages/Info';
+import Referrals from './pages/Referrals';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Support from './components/Support';
@@ -76,9 +79,12 @@ export default function App() {
               <Route path="/p2p/create/:adId" element={<PrivateRoute><P2PCreateOrder /></PrivateRoute>} />
               <Route path="/p2p/order/:id" element={<PrivateRoute><P2POrder /></PrivateRoute>} />
               <Route path="/p2p/my-ads" element={<PrivateRoute><MyAds /></PrivateRoute>} />
+              <Route path="/orders" element={<PrivateRoute><Orders /></PrivateRoute>} />
+              <Route path="/transactions" element={<PrivateRoute><Transactions /></PrivateRoute>} />
               <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
               <Route path="/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />
               <Route path="/kyc" element={<PrivateRoute><KYC /></PrivateRoute>} />
+              <Route path="/referrals" element={<PrivateRoute><Referrals /></PrivateRoute>} />
               <Route path="/buy" element={<PrivateRoute><Buy /></PrivateRoute>} />
               <Route path="/sell" element={<PrivateRoute><Sell /></PrivateRoute>} />
               <Route path="/admin/*" element={<PrivateRoute adminOnly><Admin /></PrivateRoute>} />

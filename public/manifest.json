@@ -1,21 +1,24 @@
 {
   "name": "Ypay P2P Protocol",
   "short_name": "Ypay",
-  "description": "Secure P2P USDT Trading Platform",
+  "description": "Institutional-grade P2P crypto marketplace.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050505",
   "theme_color": "#00FF00",
   "icons": [
     {
-      "src": "https://picsum.photos/seed/ypay/192/192",
+      "src": "https://res.cloudinary.com/dvep5xtf2/image/upload/v1774265829/logo.png_l0lsdc.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://picsum.photos/seed/ypay/512/512",
+      "src": "https://res.cloudinary.com/dvep5xtf2/image/upload/v1774265829/logo.png_l0lsdc.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "orientation": "portrait"
 }

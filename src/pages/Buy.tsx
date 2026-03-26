@@ -65,6 +65,7 @@ export default function Buy() {
       const usdtAmountRaw = parseFloat(inrAmount) / (settings?.buy_rate || 1);
       const usdtAmountWithFee = usdtAmountRaw * (1 - (settings?.platform_fee || 0) / 100);
 
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
       const { error: orderError } = await supabase.from('orders').insert({
         user_id: profile.id,
         type: 'buy',
@@ -74,6 +75,7 @@ export default function Buy() {
         status: 'pending',
         payment_method_id: selectedMethod.id,
         payment_screenshot_url: screenshotUrl,
+        expires_at: expiresAt,
       });
 
       if (orderError) throw orderError;

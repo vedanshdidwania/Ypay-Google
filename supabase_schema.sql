@@ -13,6 +13,7 @@ CREATE TABLE profiles (
   completion_rate NUMERIC DEFAULT 100.0,
   kyc_status TEXT DEFAULT 'none', -- none, pending, approved, rejected
   balance_usdt NUMERIC DEFAULT 0.00,
+  escrow_balance_usdt NUMERIC DEFAULT 0.00,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -39,6 +40,7 @@ CREATE TABLE ads (
   min_limit NUMERIC NOT NULL,
   max_limit NUMERIC NOT NULL,
   payment_methods TEXT[] NOT NULL,
+  payment_window INTEGER DEFAULT 15,
   terms TEXT,
   status TEXT DEFAULT 'active', -- active, inactive
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -59,6 +61,7 @@ CREATE TABLE orders (
   transaction_hash TEXT,
   admin_feedback TEXT,
   payment_window INTEGER DEFAULT 15,
+  expires_at TIMESTAMP WITH TIME ZONE DEFAULT (TIMEZONE('utc'::text, NOW()) + INTERVAL '15 minutes'),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
@@ -68,7 +71,9 @@ CREATE TABLE app_settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   buy_rate NUMERIC DEFAULT 92.50,
   sell_rate NUMERIC DEFAULT 89.00,
-  platform_fee NUMERIC DEFAULT 1.0,
+  platform_fee NUMERIC DEFAULT 1.0, -- Default 1%
+  referral_commission_l1 NUMERIC DEFAULT 10.0, -- 10% of the platform fee
+  referral_commission_l2 NUMERIC DEFAULT 5.0, -- 5% of the platform fee
   admin_wallet_address TEXT,
   support_contact TEXT,
   homepage_headline TEXT DEFAULT 'Trade USDT with Zero Friction',
@@ -135,6 +140,59 @@ CREATE TABLE transactions (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
+-- Create withdrawals table
+CREATE TABLE withdrawals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  amount NUMERIC NOT NULL,
+  network TEXT NOT NULL,
+  address TEXT NOT NULL,
+  status TEXT DEFAULT 'pending', -- pending, approved, rejected
+  admin_feedback TEXT,
+  processed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Create platform_logs table
+CREATE TABLE platform_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  admin_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  action TEXT NOT NULL,
+  target_user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  details JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- RLS for withdrawals
+ALTER TABLE public.withdrawals ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own withdrawals"
+  ON public.withdrawals FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can view all withdrawals"
+  ON public.withdrawals FOR SELECT
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+CREATE POLICY "Users can create withdrawals"
+  ON public.withdrawals FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Admins can update withdrawals"
+  ON public.withdrawals FOR UPDATE
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- RLS for platform_logs
+ALTER TABLE public.platform_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can view platform logs"
+  ON public.platform_logs FOR SELECT
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+CREATE POLICY "Admins can insert platform logs"
+  ON public.platform_logs FOR INSERT
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
 -- Create user_payment_methods table
 CREATE TABLE user_payment_methods (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -179,7 +237,7 @@ CREATE TABLE support_messages (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 1. Update Profiles for Ratings and Security Deposit
+-- 1. Update Profiles for Ratings, Security Deposit, 2FA, and Referrals
 DO $$ 
 BEGIN 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='rating_sum') THEN
@@ -191,9 +249,51 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='security_deposit_amount') THEN
         ALTER TABLE profiles ADD COLUMN security_deposit_amount NUMERIC DEFAULT 0.0;
     END IF;
+    -- 2FA
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='two_factor_secret') THEN
+        ALTER TABLE profiles ADD COLUMN two_factor_secret TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='is_2fa_enabled') THEN
+        ALTER TABLE profiles ADD COLUMN is_2fa_enabled BOOLEAN DEFAULT FALSE;
+    END IF;
+    -- Reputation
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='speed_rating') THEN
+        ALTER TABLE profiles ADD COLUMN speed_rating NUMERIC DEFAULT 5.0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='comm_rating') THEN
+        ALTER TABLE profiles ADD COLUMN comm_rating NUMERIC DEFAULT 5.0;
+    END IF;
+    -- Referrals
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='referral_code') THEN
+        ALTER TABLE profiles ADD COLUMN referral_code TEXT UNIQUE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='referred_by') THEN
+        ALTER TABLE profiles ADD COLUMN referred_by UUID REFERENCES profiles(id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='referred_by_l2') THEN
+        ALTER TABLE profiles ADD COLUMN referred_by_l2 UUID REFERENCES profiles(id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='referral_earnings_l1') THEN
+        ALTER TABLE profiles ADD COLUMN referral_earnings_l1 NUMERIC DEFAULT 0.0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='referral_earnings_l2') THEN
+        ALTER TABLE profiles ADD COLUMN referral_earnings_l2 NUMERIC DEFAULT 0.0;
+    END IF;
+    -- Verification Badge
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='has_verification_badge') THEN
+        ALTER TABLE profiles ADD COLUMN has_verification_badge BOOLEAN DEFAULT FALSE;
+    END IF;
+    -- Orders Expiration
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='expires_at') THEN
+        ALTER TABLE orders ADD COLUMN expires_at TIMESTAMP WITH TIME ZONE DEFAULT (TIMEZONE('utc'::text, NOW()) + INTERVAL '15 minutes');
+    END IF;
+    -- Ads Payment Window
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ads' AND column_name='payment_window') THEN
+        ALTER TABLE ads ADD COLUMN payment_window INTEGER DEFAULT 15;
+    END IF;
 END $$;
 
--- 2. Update Orders for Escrow Tracking
+-- 2. Update Orders for Escrow Tracking and Fees
 DO $$ 
 BEGIN 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='escrow_locked_at') THEN
@@ -201,6 +301,9 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='escrow_released_at') THEN
         ALTER TABLE orders ADD COLUMN escrow_released_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='platform_fee_amount') THEN
+        ALTER TABLE orders ADD COLUMN platform_fee_amount NUMERIC DEFAULT 0.0;
     END IF;
 END $$;
 
@@ -223,6 +326,19 @@ DROP POLICY IF EXISTS "Users can create reviews for their orders" ON trade_revie
 CREATE POLICY "Users can create reviews for their orders" ON trade_reviews FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM orders WHERE id = order_id AND (user_id = auth.uid() OR EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid())))
 );
+
+-- Create referral_earnings table
+CREATE TABLE IF NOT EXISTS referral_earnings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  referrer_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  referee_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
+  amount NUMERIC NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+ALTER TABLE referral_earnings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own referral earnings" ON referral_earnings FOR SELECT USING (auth.uid() = referrer_id OR public.is_admin());
 
 -- 4. Function to Update Profile Stats on Review
 CREATE OR REPLACE FUNCTION public.update_profile_rating()
@@ -248,8 +364,17 @@ CREATE TRIGGER on_trade_review_created
 
 -- Profiles
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Users can read own profile" ON profiles;
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
 CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id)
+WITH CHECK (
+  -- Prevent users from updating their own balance or escrow balance
+  (CASE WHEN public.is_admin() THEN true ELSE 
+    (balance_usdt = profiles.balance_usdt AND escrow_balance_usdt = profiles.escrow_balance_usdt)
+  END)
+);
+DROP POLICY IF EXISTS "Admins can manage all profiles" ON profiles;
 CREATE POLICY "Admins can manage all profiles" ON profiles FOR ALL USING (public.is_admin());
 
 -- Ads
@@ -341,6 +466,7 @@ CREATE TABLE p2p_disputes (
   reason TEXT NOT NULL,
   status TEXT DEFAULT 'open', -- open, resolved
   admin_feedback TEXT,
+  video_proof_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -357,6 +483,7 @@ CREATE POLICY "Admins can manage all disputes" ON p2p_disputes FOR ALL USING (pu
 INSERT INTO storage.buckets (id, name, public) VALUES ('p2p_chat_images', 'p2p_chat_images', true) ON CONFLICT (id) DO NOTHING;
 INSERT INTO storage.buckets (id, name, public) VALUES ('kyc-documents', 'kyc-documents', false) ON CONFLICT (id) DO NOTHING;
 INSERT INTO storage.buckets (id, name, public) VALUES ('screenshots', 'screenshots', true) ON CONFLICT (id) DO NOTHING;
+INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true) ON CONFLICT (id) DO NOTHING;
 
 -- Storage Policies for p2p_chat_images
 CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'p2p_chat_images');
@@ -370,6 +497,11 @@ CREATE POLICY "Users can upload own KYC documents" ON storage.objects FOR INSERT
 CREATE POLICY "Public Access Screenshots" ON storage.objects FOR SELECT USING (bucket_id = 'screenshots');
 CREATE POLICY "Authenticated users can upload screenshots" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'screenshots' AND auth.role() = 'authenticated');
 
+-- Storage Policies for avatars
+CREATE POLICY "Public Access Avatars" ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
+CREATE POLICY "Authenticated users can upload avatars" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'avatars' AND auth.role() = 'authenticated');
+CREATE POLICY "Users can update own avatars" ON storage.objects FOR UPDATE WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+
 -- Enable Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE support_messages;
 ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
@@ -380,9 +512,42 @@ ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
 -- Trigger for profile creation on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
+DECLARE
+  v_referral_code TEXT;
+  v_referrer_id UUID;
+  v_referrer_l2_id UUID;
+  v_ref_code_input TEXT;
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name)
-  VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  -- Generate a unique referral code for the new user
+  v_referral_code := upper(substring(md5(random()::text) from 1 for 8));
+  
+  -- Get referral code from metadata
+  v_ref_code_input := new.raw_user_meta_data->>'referred_by';
+  
+  IF v_ref_code_input IS NOT NULL THEN
+    -- Find the referrer by their referral_code or ID (fallback)
+    SELECT id, referred_by INTO v_referrer_id, v_referrer_l2_id 
+    FROM public.profiles 
+    WHERE referral_code = v_ref_code_input OR id::text = v_ref_code_input
+    LIMIT 1;
+  END IF;
+
+  INSERT INTO public.profiles (
+    id, 
+    email, 
+    full_name, 
+    referral_code, 
+    referred_by, 
+    referred_by_l2
+  )
+  VALUES (
+    new.id, 
+    new.email, 
+    new.raw_user_meta_data->>'full_name', 
+    v_referral_code, 
+    v_referrer_id, 
+    v_referrer_l2_id
+  );
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -397,7 +562,8 @@ CREATE OR REPLACE FUNCTION public.create_p2p_ad(
   p_price NUMERIC,
   p_min_limit NUMERIC,
   p_max_limit NUMERIC,
-  p_payment_methods TEXT[]
+  p_payment_methods TEXT[],
+  p_payment_window INTEGER DEFAULT 15
 )
 RETURNS void AS $$
 BEGIN
@@ -408,6 +574,7 @@ BEGIN
     min_limit,
     max_limit,
     payment_methods,
+    payment_window,
     status
   )
   VALUES (
@@ -417,6 +584,7 @@ BEGIN
     p_min_limit,
     p_max_limit,
     p_payment_methods,
+    p_payment_window,
     'active'
   );
 END;
@@ -428,6 +596,14 @@ DECLARE
   v_order RECORD;
   v_buyer_id UUID;
   v_seller_id UUID;
+  v_platform_fee_pct NUMERIC;
+  v_referral_pct NUMERIC;
+  v_referral_l2_pct NUMERIC;
+  v_platform_fee_amount NUMERIC;
+  v_referral_amount NUMERIC;
+  v_net_amount NUMERIC;
+  v_referrer_id UUID;
+  v_referrer_l2_id UUID;
 BEGIN
   -- Get order details
   SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
@@ -440,9 +616,16 @@ BEGIN
     RAISE EXCEPTION 'Order must be in paid status to release funds';
   END IF;
 
+  -- Get platform settings
+  SELECT platform_fee, referral_commission_l1, referral_commission_l2 
+  INTO v_platform_fee_pct, v_referral_pct, v_referral_l2_pct 
+  FROM public.app_settings LIMIT 1;
+
+  -- Calculate fees
+  v_platform_fee_amount := (v_order.amount_usdt * v_platform_fee_pct) / 100.0;
+  v_net_amount := v_order.amount_usdt - v_platform_fee_amount;
+
   -- Determine buyer and seller
-  -- If order.type is 'buy', order creator is buyer, ad creator is seller.
-  -- If order.type is 'sell', order creator is seller, ad creator is buyer.
   IF v_order.type = 'buy' THEN
     v_buyer_id := v_order.user_id;
     v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
@@ -451,15 +634,63 @@ BEGIN
     v_seller_id := v_order.user_id;
   END IF;
 
-  -- Update order status
+  -- Update order status and record fee
   UPDATE public.orders 
-  SET status = 'completed', escrow_released_at = NOW() 
+  SET status = 'completed', 
+      escrow_released_at = NOW(),
+      platform_fee_amount = v_platform_fee_amount
   WHERE id = p_order_id;
 
   -- Update buyer balance
   UPDATE public.profiles 
   SET balance_usdt = balance_usdt + v_order.amount_usdt 
   WHERE id = v_buyer_id;
+
+  -- Deduct from seller escrow
+  UPDATE public.profiles 
+  SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt 
+  WHERE id = v_seller_id;
+
+  -- Handle Referral Commission (L1)
+  SELECT referred_by, referred_by_l2 INTO v_referrer_id, v_referrer_l2_id 
+  FROM public.profiles WHERE id = v_buyer_id;
+  
+  IF v_referrer_id IS NOT NULL THEN
+    v_referral_amount := (v_platform_fee_amount * v_referral_pct) / 100.0;
+    
+    IF v_referral_amount > 0 THEN
+      UPDATE public.profiles 
+      SET balance_usdt = balance_usdt + v_referral_amount,
+          referral_earnings_l1 = referral_earnings_l1 + v_referral_amount
+      WHERE id = v_referrer_id;
+      
+      INSERT INTO public.referral_earnings (referrer_id, referee_id, order_id, amount)
+      VALUES (v_referrer_id, v_buyer_id, p_order_id, v_referral_amount);
+      
+      -- Notify Referrer
+      INSERT INTO public.notifications (user_id, title, message, type)
+      VALUES (v_referrer_id, 'Referral Commission', 'You earned $' || v_referral_amount || ' from a referral trade!', 'success');
+    END IF;
+  END IF;
+
+  -- Handle Referral Commission (L2)
+  IF v_referrer_l2_id IS NOT NULL THEN
+    v_referral_amount := (v_platform_fee_amount * v_referral_l2_pct) / 100.0;
+    
+    IF v_referral_amount > 0 THEN
+      UPDATE public.profiles 
+      SET balance_usdt = balance_usdt + v_referral_amount,
+          referral_earnings_l2 = referral_earnings_l2 + v_referral_amount
+      WHERE id = v_referrer_l2_id;
+      
+      INSERT INTO public.referral_earnings (referrer_id, referee_id, order_id, amount)
+      VALUES (v_referrer_l2_id, v_buyer_id, p_order_id, v_referral_amount);
+      
+      -- Notify L2 Referrer
+      INSERT INTO public.notifications (user_id, title, message, type)
+      VALUES (v_referrer_l2_id, 'Indirect Referral Commission', 'You earned $' || v_referral_amount || ' from an indirect referral trade!', 'success');
+    END IF;
+  END IF;
 
   -- Update seller stats
   UPDATE public.profiles 
@@ -491,7 +722,324 @@ BEGIN
 
   -- If it was a 'sell' order, the seller's funds were locked in escrow.
   -- We should return them if they were deducted from balance.
-  -- (Assuming balance is deducted when ad is created or order is placed for sell ads)
-  -- For now, we just mark as cancelled.
+  IF v_order.type = 'sell' THEN
+    UPDATE public.profiles 
+    SET balance_usdt = balance_usdt + v_order.amount_usdt,
+        escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
+    WHERE id = v_order.user_id;
+  ELSE
+    -- For 'buy' order, the ad creator (seller) had funds locked
+    UPDATE public.profiles 
+    SET balance_usdt = balance_usdt + v_order.amount_usdt,
+        escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
+    WHERE id = (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.start_p2p_trade(
+  p_ad_id UUID,
+  p_amount_usdt NUMERIC,
+  p_amount_inr NUMERIC,
+  p_rate NUMERIC
+)
+RETURNS UUID AS $$
+DECLARE
+  v_ad RECORD;
+  v_order_id UUID;
+  v_seller_id UUID;
+BEGIN
+  -- Get ad details
+  SELECT * INTO v_ad FROM public.ads WHERE id = p_ad_id;
+  
+  IF v_ad IS NULL THEN
+    RAISE EXCEPTION 'Ad not found';
+  END IF;
+
+  IF v_ad.status != 'active' THEN
+    RAISE EXCEPTION 'Ad is no longer active';
+  END IF;
+
+  IF p_amount_inr < v_ad.min_limit OR p_amount_inr > v_ad.max_limit THEN
+    RAISE EXCEPTION 'Amount is outside of ad limits';
+  END IF;
+
+  -- Determine seller
+  IF v_ad.type = 'buy' THEN
+    -- Ad creator wants to buy, so user is selling
+    v_seller_id := auth.uid();
+  ELSE
+    -- Ad creator wants to sell, so ad creator is seller
+    v_seller_id := v_ad.user_id;
+  END IF;
+
+  -- Check seller balance
+  IF (SELECT balance_usdt FROM public.profiles WHERE id = v_seller_id) < p_amount_usdt THEN
+    RAISE EXCEPTION 'Seller has insufficient balance';
+  END IF;
+
+  -- Create order
+  INSERT INTO public.orders (
+    user_id,
+    ad_id,
+    type,
+    amount_usdt,
+    amount_inr,
+    rate,
+    status,
+    expires_at
+  )
+  VALUES (
+    auth.uid(),
+    p_ad_id,
+    v_ad.type,
+    p_amount_usdt,
+    p_amount_inr,
+    p_rate,
+    'pending',
+    (TIMEZONE('utc'::text, NOW()) + (v_ad.payment_window * INTERVAL '1 minute'))
+  )
+  RETURNING id INTO v_order_id;
+
+  -- Lock funds in escrow
+  UPDATE public.profiles 
+  SET balance_usdt = balance_usdt - p_amount_usdt,
+      escrow_balance_usdt = escrow_balance_usdt + p_amount_usdt
+  WHERE id = v_seller_id;
+
+  RETURN v_order_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.cancel_expired_order(p_order_id UUID)
+RETURNS void AS $$
+DECLARE
+  v_order RECORD;
+BEGIN
+  -- Get order details
+  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
+  
+  IF v_order IS NULL THEN
+    RAISE EXCEPTION 'Order not found';
+  END IF;
+
+  IF v_order.status != 'pending' THEN
+    RETURN; -- Already processed or cancelled
+  END IF;
+
+  -- Update order status
+  UPDATE public.orders 
+  SET status = 'cancelled',
+      admin_feedback = 'Order expired automatically'
+  WHERE id = p_order_id;
+
+  -- Release escrow back to seller
+  IF v_order.type = 'sell' THEN
+    UPDATE public.profiles 
+    SET balance_usdt = balance_usdt + v_order.amount_usdt,
+        escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
+    WHERE id = v_order.user_id;
+  ELSE
+    -- For 'buy' order, the ad creator (seller) had funds locked
+    UPDATE public.profiles 
+    SET balance_usdt = balance_usdt + v_order.amount_usdt,
+        escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
+    WHERE id = (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.mark_p2p_order_as_paid(p_order_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.orders 
+  SET status = 'paid' 
+  WHERE id = p_order_id 
+  AND (
+    -- Only the buyer can mark as paid
+    (type = 'buy' AND user_id = auth.uid()) OR
+    (type = 'sell' AND ad_id IN (SELECT id FROM ads WHERE user_id = auth.uid()))
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.withdraw_usdt(
+  p_amount NUMERIC,
+  p_address TEXT
+)
+RETURNS TEXT AS $$
+DECLARE
+  v_total_amount NUMERIC;
+  v_tx_hash TEXT;
+BEGIN
+  v_total_amount := p_amount + 1.00; -- Network fee
+  
+  IF (SELECT balance_usdt FROM public.profiles WHERE id = auth.uid()) < v_total_amount THEN
+    RAISE EXCEPTION 'Insufficient balance';
+  END IF;
+
+  -- Generate dummy hash
+  v_tx_hash := 'T' || encode(gen_random_bytes(20), 'hex');
+
+  -- Deduct balance
+  UPDATE public.profiles 
+  SET balance_usdt = balance_usdt - v_total_amount 
+  WHERE id = auth.uid();
+
+  -- Record transaction
+  INSERT INTO public.transactions (
+    user_id,
+    type,
+    amount,
+    status,
+    tx_hash
+  )
+  VALUES (
+    auth.uid(),
+    'withdrawal',
+    p_amount,
+    'completed',
+    v_tx_hash
+  );
+
+  RETURN v_tx_hash;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RPC to resolve P2P disputes
+CREATE OR REPLACE FUNCTION public.resolve_p2p_dispute(
+  p_dispute_id UUID,
+  p_order_id UUID,
+  p_winner_id UUID,
+  p_admin_feedback TEXT
+)
+RETURNS void AS $$
+DECLARE
+  v_order RECORD;
+  v_buyer_id UUID;
+  v_seller_id UUID;
+BEGIN
+  -- Get order details
+  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
+  
+  IF v_order IS NULL THEN
+    RAISE EXCEPTION 'Order not found';
+  END IF;
+
+  -- Determine buyer and seller
+  IF v_order.type = 'buy' THEN
+    v_buyer_id := v_order.user_id;
+    v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+  ELSE
+    v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+    v_seller_id := v_order.user_id;
+  END IF;
+
+  -- Update dispute status
+  UPDATE public.p2p_disputes 
+  SET status = 'resolved', admin_feedback = p_admin_feedback 
+  WHERE id = p_dispute_id;
+
+  -- Handle funds based on winner
+  IF p_winner_id = v_buyer_id THEN
+    -- Buyer wins: release escrow to buyer
+    UPDATE public.orders SET status = 'completed', escrow_released_at = NOW() WHERE id = p_order_id;
+    UPDATE public.profiles SET balance_usdt = balance_usdt + v_order.amount_usdt WHERE id = v_buyer_id;
+    UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
+    UPDATE public.profiles SET trades_completed = trades_completed + 1 WHERE id = v_seller_id;
+  ELSE
+    -- Seller wins: return escrow to seller balance
+    UPDATE public.orders SET status = 'cancelled' WHERE id = p_order_id;
+    UPDATE public.profiles SET balance_usdt = balance_usdt + v_order.amount_usdt WHERE id = v_seller_id;
+    UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RPC to process withdrawals
+CREATE OR REPLACE FUNCTION public.process_withdrawal(
+  p_withdrawal_id UUID,
+  p_status TEXT,
+  p_feedback TEXT
+)
+RETURNS void AS $$
+DECLARE
+  v_withdrawal RECORD;
+BEGIN
+  SELECT * INTO v_withdrawal FROM public.withdrawals WHERE id = p_withdrawal_id;
+  
+  IF v_withdrawal IS NULL THEN
+    RAISE EXCEPTION 'Withdrawal not found';
+  END IF;
+
+  IF v_withdrawal.status != 'pending' THEN
+    RAISE EXCEPTION 'Withdrawal already processed';
+  END IF;
+
+  UPDATE public.withdrawals 
+  SET status = p_status, admin_feedback = p_feedback, processed_at = NOW() 
+  WHERE id = p_withdrawal_id;
+
+  IF p_status = 'rejected' THEN
+    -- Refund balance
+    UPDATE public.profiles 
+    SET balance_usdt = balance_usdt + v_withdrawal.amount 
+    WHERE id = v_withdrawal.user_id;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RPC to approve direct deposit (buy order)
+CREATE OR REPLACE FUNCTION public.approve_direct_deposit(p_order_id UUID)
+RETURNS void AS $$
+DECLARE
+  v_order RECORD;
+BEGIN
+  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
+  
+  IF v_order IS NULL THEN
+    RAISE EXCEPTION 'Order not found';
+  END IF;
+
+  IF v_order.status != 'pending' AND v_order.status != 'paid' THEN
+    RAISE EXCEPTION 'Order is not in a state that can be approved';
+  END IF;
+
+  IF v_order.ad_id IS NOT NULL THEN
+    RAISE EXCEPTION 'This is a P2P order, use release_p2p_order instead';
+  END IF;
+
+  UPDATE public.orders SET status = 'completed', updated_at = NOW() WHERE id = p_order_id;
+  UPDATE public.profiles SET balance_usdt = balance_usdt + v_order.amount_usdt WHERE id = v_order.user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RPC to complete deposit from NowPayments webhook
+CREATE OR REPLACE FUNCTION public.complete_deposit(
+  p_payment_id TEXT,
+  p_amount NUMERIC,
+  p_tx_hash TEXT
+)
+RETURNS void AS $$
+DECLARE
+  v_tx RECORD;
+BEGIN
+  -- Find the transaction by payment_id (stored in tx_hash initially)
+  SELECT * INTO v_tx FROM public.transactions 
+  WHERE tx_hash = p_payment_id AND status = 'pending' AND type = 'deposit';
+  
+  IF v_tx IS NULL THEN
+    RETURN; -- Transaction not found or already processed
+  END IF;
+
+  -- Update transaction status
+  UPDATE public.transactions 
+  SET status = 'completed', tx_hash = p_tx_hash, amount = p_amount 
+  WHERE id = v_tx.id;
+
+  -- Update user balance
+  UPDATE public.profiles 
+  SET balance_usdt = balance_usdt + p_amount 
+  WHERE id = v_tx.user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
