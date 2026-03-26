@@ -66,7 +66,8 @@ export default function P2PCreateOrder() {
     if (ad && ad.price > 0 && value) {
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
-        const crypto = (numValue / ad.price).toFixed(2);
+        // Use higher precision for crypto to satisfy RPC validation
+        const crypto = (numValue / ad.price).toFixed(8);
         setCryptoAmount(crypto);
       } else {
         setCryptoAmount('');
@@ -81,6 +82,7 @@ export default function P2PCreateOrder() {
     if (ad && ad.price > 0 && value) {
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
+        // Fiat is usually 2 decimals
         const fiat = (numValue * ad.price).toFixed(2);
         setFiatAmount(fiat);
       } else {
@@ -128,12 +130,20 @@ export default function P2PCreateOrder() {
 
     try {
       setIsTrading(true);
-      const inrAmount = parseFloat(fiatAmount);
-      const cryptoQty = parseFloat(cryptoAmount);
+      let inrAmount = parseFloat(fiatAmount);
+      let cryptoQty = parseFloat(cryptoAmount);
 
       if (isNaN(inrAmount) || isNaN(cryptoQty) || inrAmount <= 0) {
         toast.error('Please enter a valid amount');
         return;
+      }
+
+      // Ensure exact precision for RPC validation to avoid "Amount mismatch" errors
+      // If user entered fiat, calculate exact crypto. If user entered crypto, calculate exact fiat.
+      if (inputMode === 'fiat') {
+        cryptoQty = inrAmount / ad.price;
+      } else {
+        inrAmount = cryptoQty * ad.price;
       }
 
       // Check limits
@@ -171,7 +181,8 @@ export default function P2PCreateOrder() {
 
   if (!ad) return null;
 
-  const feeAmount = fiatAmount ? (parseFloat(fiatAmount) * platformFee / 100) : 0;
+  const cryptoFeeAmount = cryptoAmount ? (parseFloat(cryptoAmount) * platformFee / 100) : 0;
+  const netCryptoAmount = cryptoAmount ? (parseFloat(cryptoAmount) - cryptoFeeAmount) : 0;
 
   return (
     <div className="min-h-screen bg-[#050505] pt-24 pb-12">
@@ -365,7 +376,7 @@ export default function P2PCreateOrder() {
                       <div className="flex items-baseline gap-2">
                         {inputMode === 'fiat' ? (
                           <>
-                            <p className="text-3xl font-display font-bold text-brand">{cryptoAmount || '0.00'}</p>
+                            <p className="text-3xl font-display font-bold text-brand">{parseFloat(cryptoAmount || '0').toFixed(2)}</p>
                             <p className="text-sm font-bold text-gray-500">{ad.asset}</p>
                           </>
                         ) : (
@@ -379,11 +390,16 @@ export default function P2PCreateOrder() {
                     <div className="p-6 bg-white/5 rounded-3xl border border-white/5 flex flex-col justify-center">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Platform Fee</span>
-                        <span className="text-xs font-bold text-white">₹{feeAmount.toFixed(2)} ({platformFee}%)</span>
+                        <span className="text-xs font-bold text-white">{cryptoFeeAmount.toFixed(4)} {ad.asset} ({platformFee}%)</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Net Amount</span>
-                        <span className="text-xs font-bold text-brand">₹{(parseFloat(fiatAmount || '0') - feeAmount).toFixed(2)}</span>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Net {ad.type === 'buy' ? 'INR' : ad.asset}</span>
+                        <span className="text-xs font-bold text-brand">
+                          {ad.type === 'buy' 
+                            ? `₹${parseFloat(fiatAmount || '0').toLocaleString()}` 
+                            : `${netCryptoAmount.toFixed(4)} ${ad.asset}`
+                          }
+                        </span>
                       </div>
                     </div>
                   </div>

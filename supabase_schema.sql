@@ -643,9 +643,9 @@ BEGIN
       platform_fee_amount = v_platform_fee_amount
   WHERE id = p_order_id;
 
-  -- Update buyer balance
+  -- Update buyer balance (deduct platform fee)
   UPDATE public.profiles 
-  SET balance_usdt = balance_usdt + v_order.amount_usdt 
+  SET balance_usdt = balance_usdt + v_net_amount 
   WHERE id = v_buyer_id;
 
   -- Deduct from seller escrow
@@ -949,11 +949,26 @@ BEGIN
 
   -- Handle funds based on winner
   IF p_winner_id = v_buyer_id THEN
-    -- Buyer wins: release escrow to buyer
-    UPDATE public.orders SET status = 'completed', escrow_released_at = NOW() WHERE id = p_order_id;
-    UPDATE public.profiles SET balance_usdt = balance_usdt + v_order.amount_usdt WHERE id = v_buyer_id;
-    UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
-    UPDATE public.profiles SET trades_completed = trades_completed + 1 WHERE id = v_seller_id;
+    -- Buyer wins: release escrow to buyer (deduct platform fee)
+    DECLARE
+      v_platform_fee_pct NUMERIC;
+      v_platform_fee_amount NUMERIC;
+      v_net_amount NUMERIC;
+    BEGIN
+      SELECT platform_fee INTO v_platform_fee_pct FROM public.app_settings LIMIT 1;
+      v_platform_fee_amount := (v_order.amount_usdt * v_platform_fee_pct) / 100.0;
+      v_net_amount := v_order.amount_usdt - v_platform_fee_amount;
+
+      UPDATE public.orders 
+      SET status = 'completed', 
+          escrow_released_at = NOW(),
+          platform_fee_amount = v_platform_fee_amount 
+      WHERE id = p_order_id;
+
+      UPDATE public.profiles SET balance_usdt = balance_usdt + v_net_amount WHERE id = v_buyer_id;
+      UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
+      UPDATE public.profiles SET trades_completed = trades_completed + 1 WHERE id = v_seller_id;
+    END;
   ELSE
     -- Seller wins: return escrow to seller balance
     UPDATE public.orders SET status = 'cancelled' WHERE id = p_order_id;

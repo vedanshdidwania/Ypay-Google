@@ -34,7 +34,7 @@ interface P2POrder {
   amount_usdt: number;
   asset: string;
   rate: number;
-  platform_fee: number;
+  platform_fee_amount?: number;
   status: 'pending' | 'paid' | 'completed' | 'cancelled' | 'disputed';
   payment_window?: number;
   created_at: string;
@@ -456,7 +456,12 @@ export default function P2POrder() {
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{order.asset} to {isBuyer ? 'Receive' : 'Send'}</p>
-                  <p className="text-2xl font-display font-bold text-brand">{order.amount_usdt} {order.asset}</p>
+                  <p className="text-2xl font-display font-bold text-brand">
+                    {order.status === 'completed' && isBuyer 
+                      ? (order.amount_usdt - (order.platform_fee_amount || 0)).toFixed(4)
+                      : order.amount_usdt.toFixed(4)
+                    } {order.asset}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Price</p>
@@ -469,10 +474,10 @@ export default function P2POrder() {
                   <Lock className="w-4 h-4 text-green-500" />
                   <span className="text-xs font-bold text-green-500 uppercase tracking-widest">Escrow Protected</span>
                 </div>
-                {order.platform_fee > 0 && (
+                {order.status === 'completed' && order.platform_fee_amount !== undefined && order.platform_fee_amount > 0 && (
                   <div className="flex items-center justify-between px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Platform Fee</span>
-                    <span className="text-xs font-bold text-white">₹{order.platform_fee.toFixed(2)}</span>
+                    <span className="text-xs font-bold text-white">{order.platform_fee_amount.toFixed(4)} {order.asset}</span>
                   </div>
                 )}
               </div>
