@@ -142,15 +142,33 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
-  // Live Prices from CoinGecko
+  // Live Prices from CoinGecko with Cache
+  let priceCache: any = null;
+  let lastFetchTime = 0;
+  const CACHE_DURATION = 60000; // 1 minute
+
   app.get("/api/prices", async (req, res) => {
     try {
+      const now = Date.now();
+      if (priceCache && now - lastFetchTime < CACHE_DURATION) {
+        return res.json(priceCache);
+      }
+
       const response = await axios.get(
         "https://api.coingecko.com/api/v3/simple/price?ids=tether,bitcoin,ethereum,binancecoin,usd-coin&vs_currencies=inr,usd"
       );
-      res.json(response.data);
+      
+      priceCache = response.data;
+      lastFetchTime = now;
+      res.json(priceCache);
     } catch (error: any) {
       console.error("Price fetch error:", error.message);
+      
+      // If we have a cache, return it even if it's expired
+      if (priceCache) {
+        return res.json(priceCache);
+      }
+      
       res.status(500).json({ error: "Failed to fetch prices" });
     }
   });

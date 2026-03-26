@@ -47,7 +47,9 @@ export default function P2PCreateOrder() {
   const { user } = useAuth();
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
-  const [amount, setAmount] = useState('');
+  const [fiatAmount, setFiatAmount] = useState('');
+  const [cryptoAmount, setCryptoAmount] = useState('');
+  const [inputMode, setInputMode] = useState<'fiat' | 'crypto'>('fiat');
   const [paymentWindow, setPaymentWindow] = useState(15);
   const [isTrading, setIsTrading] = useState(false);
   const [platformFee, setPlatformFee] = useState(0);
@@ -58,6 +60,26 @@ export default function P2PCreateOrder() {
       fetchSettings();
     }
   }, [adId]);
+
+  const handleFiatChange = (value: string) => {
+    setFiatAmount(value);
+    if (ad && value) {
+      const crypto = (parseFloat(value) / ad.price).toFixed(8);
+      setCryptoAmount(crypto);
+    } else {
+      setCryptoAmount('');
+    }
+  };
+
+  const handleCryptoChange = (value: string) => {
+    setCryptoAmount(value);
+    if (ad && value) {
+      const fiat = (parseFloat(value) * ad.price).toFixed(2);
+      setFiatAmount(fiat);
+    } else {
+      setFiatAmount('');
+    }
+  };
 
   const fetchSettings = async () => {
     try {
@@ -92,17 +114,23 @@ export default function P2PCreateOrder() {
 
   const handleStartTrade = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !ad || !amount) return;
+    if (!user || !ad || !fiatAmount || !cryptoAmount) return;
 
     try {
       setIsTrading(true);
-      const inrAmount = parseFloat(amount);
-      const cryptoAmount = inrAmount / ad.price;
+      const inrAmount = parseFloat(fiatAmount);
+      const cryptoQty = parseFloat(cryptoAmount);
+
+      // Check limits
+      if (inrAmount < ad.min_limit || inrAmount > ad.max_limit) {
+        toast.error(`Amount must be between ₹${ad.min_limit.toLocaleString()} and ₹${ad.max_limit.toLocaleString()}`);
+        return;
+      }
 
       const { data: orderId, error } = await supabase.rpc('start_p2p_trade', {
         p_ad_id: ad.id,
         p_amount_inr: inrAmount,
-        p_amount_crypto: cryptoAmount, // Updated parameter name in RPC
+        p_amount_crypto: cryptoQty,
         p_rate: ad.price
       });
 
@@ -128,8 +156,7 @@ export default function P2PCreateOrder() {
 
   if (!ad) return null;
 
-  const cryptoAmount = amount ? (parseFloat(amount) / ad.price).toFixed(8) : '0.00000000';
-  const feeAmount = amount ? (parseFloat(amount) * platformFee / 100) : 0;
+  const feeAmount = fiatAmount ? (parseFloat(fiatAmount) * platformFee / 100) : 0;
 
   return (
     <div className="min-h-screen bg-[#050505] pt-24 pb-12">
@@ -247,32 +274,87 @@ export default function P2PCreateOrder() {
 
               <form onSubmit={handleStartTrade} className="space-y-10">
                 <div className="space-y-6">
-                  <div className="flex justify-between items-end">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount in INR</label>
-                    <span className="text-[10px] font-bold text-brand uppercase tracking-widest">
-                      Available: {ad.type === 'buy' ? '0.00 ' + ad.asset : '₹0.00'}
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <input 
-                      type="number" 
-                      required
-                      min={ad.min_limit}
-                      max={ad.max_limit}
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-3xl px-8 py-6 text-4xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-gray-800" 
-                      placeholder={`${ad.min_limit.toLocaleString()} - ${ad.max_limit.toLocaleString()}`}
-                    />
-                    <div className="absolute right-8 top-1/2 -translate-y-1/2 font-display font-bold text-gray-600 text-xl">INR</div>
+                  <div className="flex flex-col gap-6">
+                    <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 w-fit">
+                      <button
+                        type="button"
+                        onClick={() => setInputMode('fiat')}
+                        className={cn(
+                          "px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                          inputMode === 'fiat' ? "bg-brand text-[#050505]" : "text-gray-500 hover:text-white"
+                        )}
+                      >
+                        By Amount
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setInputMode('crypto')}
+                        className={cn(
+                          "px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                          inputMode === 'crypto' ? "bg-brand text-[#050505]" : "text-gray-500 hover:text-white"
+                        )}
+                      >
+                        By Quantity
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-end">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                          {inputMode === 'fiat' ? 'I want to pay' : 'I want to receive'}
+                        </label>
+                        <span className="text-[10px] font-bold text-brand uppercase tracking-widest">
+                          Limit: ₹{ad.min_limit.toLocaleString()} - ₹{ad.max_limit.toLocaleString()}
+                        </span>
+                      </div>
+                      
+                      <div className="relative">
+                        {inputMode === 'fiat' ? (
+                          <input 
+                            type="number" 
+                            required
+                            min={ad.min_limit}
+                            max={ad.max_limit}
+                            value={fiatAmount}
+                            onChange={(e) => handleFiatChange(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-3xl px-8 py-6 text-4xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-gray-800" 
+                            placeholder={`${ad.min_limit.toLocaleString()} - ${ad.max_limit.toLocaleString()}`}
+                          />
+                        ) : (
+                          <input 
+                            type="number" 
+                            required
+                            step="0.00000001"
+                            value={cryptoAmount}
+                            onChange={(e) => handleCryptoChange(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-3xl px-8 py-6 text-4xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-gray-800" 
+                            placeholder="0.00"
+                          />
+                        )}
+                        <div className="absolute right-8 top-1/2 -translate-y-1/2 font-display font-bold text-gray-600 text-xl">
+                          {inputMode === 'fiat' ? 'INR' : ad.asset}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
-                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">You will {ad.type === 'buy' ? 'Send' : 'Receive'}</p>
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
+                        {inputMode === 'fiat' ? `You will ${ad.type === 'buy' ? 'Send' : 'Receive'}` : 'Total Price'}
+                      </p>
                       <div className="flex items-baseline gap-2">
-                        <p className="text-3xl font-display font-bold text-brand">{cryptoAmount}</p>
-                        <p className="text-sm font-bold text-gray-500">{ad.asset}</p>
+                        {inputMode === 'fiat' ? (
+                          <>
+                            <p className="text-3xl font-display font-bold text-brand">{cryptoAmount || '0.00000000'}</p>
+                            <p className="text-sm font-bold text-gray-500">{ad.asset}</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-3xl font-display font-bold text-brand">₹{parseFloat(fiatAmount || '0').toLocaleString()}</p>
+                            <p className="text-sm font-bold text-gray-500">INR</p>
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className="p-6 bg-white/5 rounded-3xl border border-white/5 flex flex-col justify-center">
@@ -282,7 +364,7 @@ export default function P2PCreateOrder() {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Net Amount</span>
-                        <span className="text-xs font-bold text-brand">₹{(parseFloat(amount || '0') - feeAmount).toFixed(2)}</span>
+                        <span className="text-xs font-bold text-brand">₹{(parseFloat(fiatAmount || '0') - feeAmount).toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -326,11 +408,11 @@ export default function P2PCreateOrder() {
 
                 <button 
                   type="submit" 
-                  disabled={isTrading || !amount}
+                  disabled={isTrading || !fiatAmount}
                   className={cn(
                     "w-full py-6 rounded-3xl font-display font-bold text-white shadow-2xl transition-all flex items-center justify-center gap-4 text-lg",
                     ad.type === 'buy' ? "bg-red-600 hover:bg-red-700 shadow-red-600/20" : "bg-green-600 hover:bg-green-700 shadow-green-600/20",
-                    (isTrading || !amount) && "opacity-50 cursor-not-allowed"
+                    (isTrading || !fiatAmount) && "opacity-50 cursor-not-allowed"
                   )}
                 >
                   {isTrading ? (

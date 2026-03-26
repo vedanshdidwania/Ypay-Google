@@ -80,12 +80,25 @@ export default function Dashboard() {
     try {
       setLoading(true);
       
-      // Fetch Orders
-      const { data: ordersData, error: ordersError } = await supabase
+      // Fetch user's ads to get their IDs for order filtering
+      const { data: userAds } = await supabase
+        .from('ads')
+        .select('id')
+        .eq('user_id', user?.id);
+      
+      const adIds = userAds?.map(ad => ad.id) || [];
+      
+      let ordersQuery = supabase
         .from('orders')
-        .select('*, ad:ads(*)')
-        .or(`user_id.eq.${user?.id},ad.user_id.eq.${user?.id}`)
-        .order('created_at', { ascending: false });
+        .select('*, ad:ads(*)');
+      
+      if (adIds.length > 0) {
+        ordersQuery = ordersQuery.or(`user_id.eq.${user?.id},ad_id.in.(${adIds.join(',')})`);
+      } else {
+        ordersQuery = ordersQuery.eq('user_id', user?.id);
+      }
+
+      const { data: ordersData, error: ordersError } = await ordersQuery.order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;
       setOrders(ordersData || []);

@@ -42,11 +42,26 @@ export default function Orders() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch user's ads to get their IDs
+      const { data: userAds } = await supabase
+        .from('ads')
+        .select('id')
+        .eq('user_id', user?.id);
+      
+      const adIds = userAds?.map(ad => ad.id) || [];
+      
+      let query = supabase
         .from('orders')
-        .select('*, ad:ads(*)')
-        .or(`user_id.eq.${user?.id},ad.user_id.eq.${user?.id}`)
-        .order('created_at', { ascending: false });
+        .select('*, ad:ads(*)');
+      
+      if (adIds.length > 0) {
+        query = query.or(`user_id.eq.${user?.id},ad_id.in.(${adIds.join(',')})`);
+      } else {
+        query = query.eq('user_id', user?.id);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setOrders(data || []);
