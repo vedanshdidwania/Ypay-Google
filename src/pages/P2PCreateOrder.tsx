@@ -63,9 +63,14 @@ export default function P2PCreateOrder() {
 
   const handleFiatChange = (value: string) => {
     setFiatAmount(value);
-    if (ad && value) {
-      const crypto = (parseFloat(value) / ad.price).toFixed(8);
-      setCryptoAmount(crypto);
+    if (ad && ad.price > 0 && value) {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        const crypto = (numValue / ad.price).toFixed(2);
+        setCryptoAmount(crypto);
+      } else {
+        setCryptoAmount('');
+      }
     } else {
       setCryptoAmount('');
     }
@@ -73,9 +78,14 @@ export default function P2PCreateOrder() {
 
   const handleCryptoChange = (value: string) => {
     setCryptoAmount(value);
-    if (ad && value) {
-      const fiat = (parseFloat(value) * ad.price).toFixed(2);
-      setFiatAmount(fiat);
+    if (ad && ad.price > 0 && value) {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        const fiat = (numValue * ad.price).toFixed(2);
+        setFiatAmount(fiat);
+      } else {
+        setFiatAmount('');
+      }
     } else {
       setFiatAmount('');
     }
@@ -121,6 +131,11 @@ export default function P2PCreateOrder() {
       const inrAmount = parseFloat(fiatAmount);
       const cryptoQty = parseFloat(cryptoAmount);
 
+      if (isNaN(inrAmount) || isNaN(cryptoQty) || inrAmount <= 0) {
+        toast.error('Please enter a valid amount');
+        return;
+      }
+
       // Check limits
       if (inrAmount < ad.min_limit || inrAmount > ad.max_limit) {
         toast.error(`Amount must be between ₹${ad.min_limit.toLocaleString()} and ₹${ad.max_limit.toLocaleString()}`);
@@ -129,8 +144,8 @@ export default function P2PCreateOrder() {
 
       const { data: orderId, error } = await supabase.rpc('start_p2p_trade', {
         p_ad_id: ad.id,
+        p_amount_usdt: cryptoQty,
         p_amount_inr: inrAmount,
-        p_amount_crypto: cryptoQty,
         p_rate: ad.price
       });
 
@@ -275,13 +290,15 @@ export default function P2PCreateOrder() {
               <form onSubmit={handleStartTrade} className="space-y-10">
                 <div className="space-y-6">
                   <div className="flex flex-col gap-6">
-                    <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 w-fit">
+                    <div className="flex p-1.5 bg-white/5 rounded-[20px] border border-white/10 w-fit shadow-inner backdrop-blur-sm">
                       <button
                         type="button"
                         onClick={() => setInputMode('fiat')}
                         className={cn(
-                          "px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                          inputMode === 'fiat' ? "bg-brand text-[#050505]" : "text-gray-500 hover:text-white"
+                          "px-8 py-2.5 rounded-[14px] text-[10px] font-bold uppercase tracking-widest transition-all duration-300",
+                          inputMode === 'fiat' 
+                            ? "bg-brand text-[#050505] shadow-[0_0_20px_rgba(var(--brand-rgb),0.3)]" 
+                            : "text-gray-500 hover:text-white hover:bg-white/5"
                         )}
                       >
                         By Amount
@@ -290,8 +307,10 @@ export default function P2PCreateOrder() {
                         type="button"
                         onClick={() => setInputMode('crypto')}
                         className={cn(
-                          "px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                          inputMode === 'crypto' ? "bg-brand text-[#050505]" : "text-gray-500 hover:text-white"
+                          "px-8 py-2.5 rounded-[14px] text-[10px] font-bold uppercase tracking-widest transition-all duration-300",
+                          inputMode === 'crypto' 
+                            ? "bg-brand text-[#050505] shadow-[0_0_20px_rgba(var(--brand-rgb),0.3)]" 
+                            : "text-gray-500 hover:text-white hover:bg-white/5"
                         )}
                       >
                         By Quantity
@@ -346,7 +365,7 @@ export default function P2PCreateOrder() {
                       <div className="flex items-baseline gap-2">
                         {inputMode === 'fiat' ? (
                           <>
-                            <p className="text-3xl font-display font-bold text-brand">{cryptoAmount || '0.00000000'}</p>
+                            <p className="text-3xl font-display font-bold text-brand">{cryptoAmount || '0.00'}</p>
                             <p className="text-sm font-bold text-gray-500">{ad.asset}</p>
                           </>
                         ) : (

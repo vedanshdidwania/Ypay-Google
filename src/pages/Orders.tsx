@@ -53,7 +53,14 @@ export default function Orders() {
       
       let query = supabase
         .from('orders')
-        .select('*, ad:ads(*)');
+        .select(`
+          *,
+          user_profile:profiles!orders_user_id_fkey(id, full_name, email, avatar_url),
+          ad:ads!orders_ad_id_fkey(
+            *,
+            ad_profile:profiles!ads_user_id_fkey(id, full_name, email, avatar_url)
+          )
+        `);
       
       if (adIds.length > 0) {
         query = query.or(`user_id.eq.${user?.id},ad_id.in.(${adIds.join(',')})`);

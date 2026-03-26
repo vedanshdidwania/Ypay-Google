@@ -23,13 +23,15 @@ import { cn, formatCurrency, formatUSDT } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
+import ConfirmationModal from '../components/ConfirmationModal';
+
 interface P2POrder {
   id: string;
   user_id: string;
   ad_id: string;
   type: 'buy' | 'sell';
   amount_inr: number;
-  amount_crypto: number;
+  amount_usdt: number;
   asset: string;
   rate: number;
   platform_fee: number;
@@ -86,6 +88,10 @@ export default function P2POrder() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [showConfirmPaid, setShowConfirmPaid] = useState(false);
+  const [showConfirmRelease, setShowConfirmRelease] = useState(false);
+  const [showConfirmCancel, setShowConfirmCancel] = useState(false);
+  const [processingAction, setProcessingAction] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -98,10 +104,8 @@ export default function P2POrder() {
   }, [id]);
 
   useEffect(() => {
-    if (order && order.status === 'pending') {
-      const start = new Date(order.created_at).getTime();
-      const window = order.payment_window || 15;
-      const end = start + (window * 60 * 1000);
+    if (order && order.status === 'pending' && order.expires_at) {
+      const end = new Date(order.expires_at).getTime();
       
       const timer = setInterval(() => {
         const now = new Date().getTime();
@@ -244,33 +248,35 @@ export default function P2POrder() {
       });
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try again.');
+      toast.error('Failed to upload image. Please try again.');
     } finally {
       setSending(false);
     }
   };
 
   const handleMarkAsPaid = async () => {
-    if (!confirm('Have you completed the payment? Providing false information may lead to account suspension.')) return;
     if (!order) return;
 
     try {
+      setProcessingAction(true);
       const { error } = await supabase.rpc('mark_p2p_order_as_paid', {
         p_order_id: id
       });
 
       if (error) throw error;
       toast.success('Order marked as paid. Waiting for seller to release funds.');
+      setShowConfirmPaid(false);
     } catch (error: any) {
       console.error('Error marking as paid:', error);
       toast.error(error.message || 'Failed to mark as paid');
+    } finally {
+      setProcessingAction(false);
     }
   };
 
   const handleReleaseFunds = async () => {
-    if (!confirm('Have you received the correct amount in your bank/wallet? Once released, this action cannot be undone.')) return;
-
     try {
+      setProcessingAction(true);
       const { error } = await supabase.rpc('release_p2p_order', {
         p_order_id: id
       });
@@ -278,10 +284,13 @@ export default function P2POrder() {
       if (error) throw error;
       
       toast.success('Funds released successfully! Trade completed.');
+      setShowConfirmRelease(false);
       setShowReviewModal(true);
     } catch (error: any) {
       console.error('Error releasing funds:', error);
       toast.error(error.message || 'Failed to release funds');
+    } finally {
+      setProcessingAction(false);
     }
   };
 
@@ -313,18 +322,20 @@ export default function P2POrder() {
   };
 
   const handleCancelOrder = async () => {
-    if (!confirm('Are you sure you want to cancel this order?')) return;
-
     try {
+      setProcessingAction(true);
       const { error } = await supabase.rpc('cancel_p2p_order', {
         p_order_id: id
       });
 
       if (error) throw error;
       toast.success('Order cancelled and funds returned to balance.');
+      setShowConfirmCancel(false);
     } catch (error: any) {
       console.error('Error cancelling order:', error);
       toast.error(error.message || 'Failed to cancel order');
+    } finally {
+      setProcessingAction(false);
     }
   };
 
@@ -445,7 +456,7 @@ export default function P2POrder() {
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{order.asset} to {isBuyer ? 'Receive' : 'Send'}</p>
-                  <p className="text-2xl font-display font-bold text-brand">{order.amount_crypto} {order.asset}</p>
+                  <p className="text-2xl font-display font-bold text-brand">{order.amount_usdt} {order.asset}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Price</p>
@@ -512,13 +523,13 @@ export default function P2POrder() {
                   {order.status === 'pending' && (
                     <div className="flex gap-4 pt-4">
                       <button 
-                        onClick={handleCancelOrder}
+                        onClick={() => setShowConfirmCancel(true)}
                         className="flex-1 py-4 bg-white/5 hover:bg-white/10 text-gray-400 rounded-2xl font-bold transition-all"
                       >
                         Cancel Order
                       </button>
                       <button 
-                        onClick={handleMarkAsPaid}
+                        onClick={() => setShowConfirmPaid(true)}
                         className="flex-1 py-4 btn-primary rounded-2xl font-bold shadow-lg shadow-brand/20"
                       >
                         I Have Paid
@@ -545,7 +556,7 @@ export default function P2POrder() {
                         Dispute
                       </button>
                       <button 
-                        onClick={handleReleaseFunds}
+                        onClick={() => setShowConfirmRelease(true)}
                         className="flex-1 py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-green-600/20"
                       >
                         Release {order.asset}
@@ -766,6 +777,39 @@ export default function P2POrder() {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmationModal
+        isOpen={showConfirmPaid}
+        onClose={() => setShowConfirmPaid(false)}
+        onConfirm={handleMarkAsPaid}
+        loading={processingAction}
+        title="Confirm Payment"
+        message="Have you completed the payment? Providing false information may lead to account suspension."
+        confirmText="Yes, I have paid"
+        variant="primary"
+      />
+
+      <ConfirmationModal
+        isOpen={showConfirmRelease}
+        onClose={() => setShowConfirmRelease(false)}
+        onConfirm={handleReleaseFunds}
+        loading={processingAction}
+        title="Release Funds"
+        message="Have you received the correct amount in your bank/wallet? Once released, this action cannot be undone."
+        confirmText="Release USDT"
+        variant="success"
+      />
+
+      <ConfirmationModal
+        isOpen={showConfirmCancel}
+        onClose={() => setShowConfirmCancel(false)}
+        onConfirm={handleCancelOrder}
+        loading={processingAction}
+        title="Cancel Order"
+        message="Are you sure you want to cancel this order? Frequent cancellations may lead to account restrictions."
+        confirmText="Cancel Order"
+        variant="danger"
+      />
     </div>
   );
 }

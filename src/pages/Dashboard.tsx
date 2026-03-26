@@ -27,6 +27,7 @@ import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import TwoFactorModal from '../components/TwoFactorModal';
 
 interface Order {
@@ -90,7 +91,14 @@ export default function Dashboard() {
       
       let ordersQuery = supabase
         .from('orders')
-        .select('*, ad:ads(*)');
+        .select(`
+          *,
+          user_profile:profiles!orders_user_id_fkey(id, full_name, email, avatar_url),
+          ad:ads!orders_ad_id_fkey(
+            *,
+            ad_profile:profiles!ads_user_id_fkey(id, full_name, email, avatar_url)
+          )
+        `);
       
       if (adIds.length > 0) {
         ordersQuery = ordersQuery.or(`user_id.eq.${user?.id},ad_id.in.(${adIds.join(',')})`);
@@ -153,10 +161,10 @@ export default function Dashboard() {
 
       if (updateError) throw updateError;
       setAvatarUrl(publicUrl);
-      alert('Profile picture updated!');
+      toast.success('Profile picture updated!');
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
-      alert(error.message || 'Error uploading avatar');
+      toast.error(error.message || 'Error uploading avatar');
     } finally {
       setUploading(false);
     }
@@ -175,10 +183,10 @@ export default function Dashboard() {
         .eq('id', user.id);
 
       if (error) throw error;
-      alert('Settings saved successfully!');
+      toast.success('Settings saved successfully!');
     } catch (error: any) {
       console.error('Error saving settings:', error);
-      alert(error.message || 'Failed to save settings.');
+      toast.error(error.message || 'Failed to save settings.');
     } finally {
       setSaving(false);
     }
@@ -186,15 +194,15 @@ export default function Dashboard() {
 
   const handleUpdatePassword = async () => {
     if (!newPassword || !confirmPassword) {
-      alert('Please fill in all password fields');
+      toast.error('Please fill in all password fields');
       return;
     }
     if (newPassword !== confirmPassword) {
-      alert('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
     if (newPassword.length < 6) {
-      alert('Password must be at least 6 characters');
+      toast.error('Password must be at least 6 characters');
       return;
     }
 
@@ -205,12 +213,12 @@ export default function Dashboard() {
       });
 
       if (error) throw error;
-      alert('Password updated successfully!');
+      toast.success('Password updated successfully!');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: any) {
       console.error('Error updating password:', error);
-      alert(error.message || 'Failed to update password.');
+      toast.error(error.message || 'Failed to update password.');
     } finally {
       setPasswordLoading(false);
     }
@@ -608,7 +616,7 @@ export default function Dashboard() {
                       <button 
                         onClick={() => {
                           navigator.clipboard.writeText(`${window.location.origin}/auth?ref=${profile?.referral_code}`);
-                          alert('Referral link copied!');
+                          toast.success('Referral link copied!');
                         }}
                         className="px-6 py-3 bg-brand text-white rounded-xl text-sm font-bold hover:bg-brand/90 transition-all shadow-lg shadow-brand/20 shrink-0"
                       >

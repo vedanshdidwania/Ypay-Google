@@ -627,11 +627,13 @@ BEGIN
 
   -- Determine buyer and seller
   IF v_order.type = 'buy' THEN
-    v_buyer_id := v_order.user_id;
-    v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
-  ELSE
+    -- Ad was 'buy', so ad creator is buyer, order creator is seller
     v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
     v_seller_id := v_order.user_id;
+  ELSE
+    -- Ad was 'sell', so ad creator is seller, order creator is buyer
+    v_buyer_id := v_order.user_id;
+    v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
   END IF;
 
   -- Update order status and record fee
@@ -715,25 +717,25 @@ BEGIN
     RAISE EXCEPTION 'Order cannot be cancelled in current status';
   END IF;
 
+  -- Determine seller to return funds to
+  IF v_order.type = 'buy' THEN
+    -- Ad was 'buy', order creator was seller
+    v_seller_id := v_order.user_id;
+  ELSE
+    -- Ad was 'sell', ad creator was seller
+    v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+  END IF;
+
   -- Update order status
   UPDATE public.orders 
   SET status = 'cancelled' 
   WHERE id = p_order_id;
 
-  -- If it was a 'sell' order, the seller's funds were locked in escrow.
-  -- We should return them if they were deducted from balance.
-  IF v_order.type = 'sell' THEN
-    UPDATE public.profiles 
-    SET balance_usdt = balance_usdt + v_order.amount_usdt,
-        escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
-    WHERE id = v_order.user_id;
-  ELSE
-    -- For 'buy' order, the ad creator (seller) had funds locked
-    UPDATE public.profiles 
-    SET balance_usdt = balance_usdt + v_order.amount_usdt,
-        escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
-    WHERE id = (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
-  END IF;
+  -- Return funds to seller
+  UPDATE public.profiles 
+  SET balance_usdt = balance_usdt + v_order.amount_usdt,
+      escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
+  WHERE id = v_seller_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -815,6 +817,7 @@ CREATE OR REPLACE FUNCTION public.cancel_expired_order(p_order_id UUID)
 RETURNS void AS $$
 DECLARE
   v_order RECORD;
+  v_seller_id UUID;
 BEGIN
   -- Get order details
   SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
@@ -834,18 +837,18 @@ BEGIN
   WHERE id = p_order_id;
 
   -- Release escrow back to seller
-  IF v_order.type = 'sell' THEN
-    UPDATE public.profiles 
-    SET balance_usdt = balance_usdt + v_order.amount_usdt,
-        escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
-    WHERE id = v_order.user_id;
+  IF v_order.type = 'buy' THEN
+    -- Ad was 'buy', order creator was seller
+    v_seller_id := v_order.user_id;
   ELSE
-    -- For 'buy' order, the ad creator (seller) had funds locked
-    UPDATE public.profiles 
-    SET balance_usdt = balance_usdt + v_order.amount_usdt,
-        escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
-    WHERE id = (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+    -- Ad was 'sell', ad creator was seller
+    v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
   END IF;
+
+  UPDATE public.profiles 
+  SET balance_usdt = balance_usdt + v_order.amount_usdt,
+      escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
+  WHERE id = v_seller_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -857,8 +860,10 @@ BEGIN
   WHERE id = p_order_id 
   AND (
     -- Only the buyer can mark as paid
-    (type = 'buy' AND user_id = auth.uid()) OR
-    (type = 'sell' AND ad_id IN (SELECT id FROM ads WHERE user_id = auth.uid()))
+    -- Ad was 'buy', so ad creator is buyer
+    (type = 'buy' AND ad_id IN (SELECT id FROM ads WHERE user_id = auth.uid())) OR
+    -- Ad was 'sell', so order creator is buyer
+    (type = 'sell' AND user_id = auth.uid())
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -928,11 +933,13 @@ BEGIN
 
   -- Determine buyer and seller
   IF v_order.type = 'buy' THEN
-    v_buyer_id := v_order.user_id;
-    v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
-  ELSE
+    -- Ad was 'buy', so ad creator is buyer, order creator is seller
     v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
     v_seller_id := v_order.user_id;
+  ELSE
+    -- Ad was 'sell', so ad creator is seller, order creator is buyer
+    v_buyer_id := v_order.user_id;
+    v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
   END IF;
 
   -- Update dispute status
@@ -1041,5 +1048,18 @@ BEGIN
   UPDATE public.profiles 
   SET balance_usdt = balance_usdt + p_amount 
   WHERE id = v_tx.user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to add demo balance for testing
+CREATE OR REPLACE FUNCTION public.add_demo_balance(p_amount NUMERIC)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.profiles
+  SET balance_usdt = balance_usdt + p_amount
+  WHERE id = auth.uid();
+
+  INSERT INTO public.transactions (user_id, type, amount, status, tx_hash)
+  VALUES (auth.uid(), 'deposit', p_amount, 'completed', 'DEMO_' || encode(gen_random_bytes(16), 'hex'));
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

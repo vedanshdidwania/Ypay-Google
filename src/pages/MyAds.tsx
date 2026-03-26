@@ -19,6 +19,7 @@ import { cn, formatCurrency } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 interface Ad {
   id: string;
@@ -41,6 +42,9 @@ export default function MyAds() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [adToDelete, setAdToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -85,22 +89,27 @@ export default function MyAds() {
     }
   };
 
-  const handleDeleteAd = async (adId: string) => {
-    if (!confirm('Are you sure you want to delete this advertisement? This action cannot be undone.')) return;
+  const handleDeleteAd = async () => {
+    if (!adToDelete || !user) return;
 
     try {
+      setIsDeleting(true);
       const { error } = await supabase
         .from('ads')
         .delete()
-        .eq('id', adId)
+        .eq('id', adToDelete)
         .eq('user_id', user?.id);
 
       if (error) throw error;
-      setAds(prev => prev.filter(ad => ad.id !== adId));
+      setAds(prev => prev.filter(ad => ad.id !== adToDelete));
       toast.success('Advertisement deleted successfully');
+      setShowDeleteConfirm(false);
     } catch (error) {
       console.error('Error deleting ad:', error);
       toast.error('Failed to delete advertisement');
+    } finally {
+      setIsDeleting(false);
+      setAdToDelete(null);
     }
   };
 
@@ -198,7 +207,10 @@ export default function MyAds() {
                       {ad.status === 'active' ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                     </button>
                     <button 
-                      onClick={() => handleDeleteAd(ad.id)}
+                      onClick={() => {
+                        setAdToDelete(ad.id);
+                        setShowDeleteConfirm(true);
+                      }}
                       className="p-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl transition-all border border-red-500/20"
                       title="Delete Ad"
                     >
@@ -221,6 +233,20 @@ export default function MyAds() {
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setAdToDelete(null);
+        }}
+        onConfirm={handleDeleteAd}
+        loading={isDeleting}
+        title="Delete Advertisement"
+        message="Are you sure you want to delete this advertisement? This action cannot be undone and will remove it from the marketplace."
+        confirmText="Delete Ad"
+        variant="danger"
+      />
     </div>
   );
 }

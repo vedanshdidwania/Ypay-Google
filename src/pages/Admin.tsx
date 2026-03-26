@@ -45,6 +45,8 @@ import {
   Cell
 } from 'recharts';
 import { cn, formatCurrency, formatUSDT } from '../lib/utils';
+import { toast } from 'sonner';
+import ConfirmationModal from '../components/ConfirmationModal';
 import type { Order, PaymentMethod, AppSettings, UserProfile, KYCSubmission, SupportChat, SupportMessage } from '../types';
 
 import { useAuth } from '../lib/useAuth';
@@ -725,9 +727,10 @@ function AdminOrders() {
       if (selectedOrder?.id === id) {
         setSelectedOrder(prev => prev ? { ...prev, status } : null);
       }
+      toast.success(`Order ${status} successfully`);
     } catch (error: any) {
       console.error('Error updating order status:', error);
-      alert(error.message || 'Failed to update order status.');
+      toast.error(error.message || 'Failed to update order status.');
     }
   };
 
@@ -997,9 +1000,10 @@ function AdminPayments() {
         upi_id: ''
       });
       fetchMethods();
+      toast.success('Payment method added successfully');
     } catch (error: any) {
       console.error('Error adding payment method:', error);
-      alert(error.message || 'Failed to add payment method.');
+      toast.error(error.message || 'Failed to add payment method.');
     }
   };
 
@@ -1007,10 +1011,11 @@ function AdminPayments() {
     try {
       const { error } = await supabase.from('payment_methods').update({ is_active: !current }).eq('id', id);
       if (error) throw error;
+      toast.success('Payment method status updated');
       fetchMethods();
     } catch (error: any) {
       console.error('Error toggling payment method status:', error);
-      alert(error.message || 'Failed to update payment method status.');
+      toast.error(error.message || 'Failed to update payment method status.');
     }
   };
 
@@ -1023,9 +1028,10 @@ function AdminPayments() {
       
       setDeletingId(null);
       fetchMethods();
+      toast.success('Payment method deleted successfully');
     } catch (error: any) {
       console.error('Error deleting payment method:', error);
-      alert(error.message || 'Failed to delete payment method.');
+      toast.error(error.message || 'Failed to delete payment method.');
     }
   };
 
@@ -1239,9 +1245,10 @@ function AdminUsers() {
 
       setIsEditing(false);
       fetchUsers();
+      toast.success('User updated successfully');
     } catch (error: any) {
       console.error('Error updating user:', error);
-      alert(error.message || 'Failed to update user. Please check your permissions.');
+      toast.error(error.message || 'Failed to update user. Please check your permissions.');
     } finally {
       setIsSaving(false);
     }
@@ -1678,6 +1685,8 @@ function AdminNotifications() {
   const [loading, setLoading] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [notificationToDelete, setNotificationToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNotifications();
@@ -1704,7 +1713,7 @@ function AdminNotifications() {
   const handleSendNotification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !message) {
-      alert('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
@@ -1724,29 +1733,39 @@ function AdminNotifications() {
 
       if (error) throw error;
 
-      alert('Notification sent successfully!');
+      toast.success('Notification sent successfully!');
       setTitle('');
       setMessage('');
       fetchNotifications();
     } catch (error: any) {
       console.error('Error sending notification:', error);
-      alert(error.message || 'Failed to send notification');
+      toast.error(error.message || 'Failed to send notification');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteNotification = async (id: string) => {
-    if (!confirm('Are you sure?')) return;
+    setNotificationToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteNotification = async () => {
+    if (!notificationToDelete) return;
     try {
       const { error } = await supabase
         .from('notifications')
         .delete()
-        .eq('id', id);
+        .eq('id', notificationToDelete);
       if (error) throw error;
-      setNotifications(prev => prev.filter(n => n.id !== id));
-    } catch (error) {
+      setNotifications(prev => prev.filter(n => n.id !== notificationToDelete));
+      toast.success('Notification deleted successfully');
+    } catch (error: any) {
       console.error('Error deleting notification:', error);
+      toast.error(error.message || 'Failed to delete notification');
+    } finally {
+      setShowDeleteConfirm(false);
+      setNotificationToDelete(null);
     }
   };
 
@@ -1942,11 +1961,12 @@ function AdminSettings() {
         details: `Protocol settings updated: Buy Rate: ${settings.buy_rate}, Sell Rate: ${settings.sell_rate}, Fee: ${settings.platform_fee}%`
       });
 
+      toast.success('Settings updated successfully!');
       setSuccess('Settings updated successfully!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (error: any) {
       console.error('Error updating settings:', error);
-      alert(error.message || 'Failed to update settings.');
+      toast.error(error.message || 'Failed to update settings.');
     } finally {
       setLoading(false);
     }
@@ -2427,9 +2447,10 @@ function AdminWithdrawals() {
       setFeedback('');
       setSelectedWithdrawal(null);
       fetchWithdrawals();
+      toast.success(`Withdrawal ${status} successfully`);
     } catch (error: any) {
       console.error('Error reviewing withdrawal:', error);
-      alert(error.message || 'Failed to update withdrawal status.');
+      toast.error(error.message || 'Failed to update withdrawal status.');
     } finally {
       setIsProcessing(false);
     }
@@ -2624,9 +2645,10 @@ function AdminKYC() {
       setFeedback('');
       setSelectedDoc(null);
       fetchSubmissions();
+      toast.success(`KYC status updated to ${status}`);
     } catch (error: any) {
       console.error('Error reviewing KYC:', error);
-      alert(error.message || 'Failed to update KYC status.');
+      toast.error(error.message || 'Failed to update KYC status.');
     }
   };
 
@@ -2779,9 +2801,10 @@ function AdminDisputes() {
       if (error) throw error;
       
       fetchDisputes();
+      toast.success('Dispute resolved successfully');
     } catch (error: any) {
       console.error('Error resolving dispute:', error);
-      alert(error.message || 'Failed to resolve dispute.');
+      toast.error(error.message || 'Failed to resolve dispute.');
     }
   };
 
@@ -2892,9 +2915,10 @@ function AdminMerchants() {
       
       if (error) throw error;
       fetchMerchants();
+      toast.success(`Merchant status updated`);
     } catch (error: any) {
       console.error('Error toggling merchant status:', error);
-      alert(error.message || 'Failed to update merchant status.');
+      toast.error(error.message || 'Failed to update merchant status.');
     }
   };
 

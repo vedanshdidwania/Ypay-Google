@@ -31,6 +31,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import axios from 'axios';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 interface Ad {
   id: string;
@@ -79,6 +80,9 @@ export default function P2P() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [marketPrices, setMarketPrices] = useState<any>({});
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [adToDelete, setAdToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newAd, setNewAd] = useState({
@@ -224,14 +228,26 @@ export default function P2P() {
     }
   };
 
-  const handleDeleteAd = async (adId: string) => {
-    if (!confirm('Are you sure you want to delete this advertisement?')) return;
+  const handleDeleteAd = async () => {
+    if (!adToDelete || !user) return;
     try {
-      const { error } = await supabase.from('ads').update({ status: 'inactive' }).eq('id', adId).eq('user_id', user?.id);
+      setIsDeleting(true);
+      const { error } = await supabase
+        .from('ads')
+        .update({ status: 'inactive' })
+        .eq('id', adToDelete)
+        .eq('user_id', user?.id);
+      
       if (error) throw error;
       fetchAds();
+      setShowDeleteConfirm(false);
+      toast.success('Advertisement removed successfully');
     } catch (error) {
       console.error('Error deleting ad:', error);
+      toast.error('Failed to remove advertisement');
+    } finally {
+      setIsDeleting(false);
+      setAdToDelete(null);
     }
   };
 
@@ -713,6 +729,20 @@ export default function P2P() {
             </div>
           )}
         </AnimatePresence>
+
+        <ConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={() => {
+            setShowDeleteConfirm(false);
+            setAdToDelete(null);
+          }}
+          onConfirm={handleDeleteAd}
+          loading={isDeleting}
+          title="Remove Advertisement"
+          message="Are you sure you want to remove this advertisement from the marketplace? You can always post a new one later."
+          confirmText="Remove Ad"
+          variant="danger"
+        />
       </div>
     </div>
   );

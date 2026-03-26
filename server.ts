@@ -52,43 +52,7 @@ async function startServer() {
   app.use(cors());
   app.use(express.json());
 
-  // Referral Commission Logic
-  const distributeReferralCommissions = async (order: any) => {
-    try {
-      const { amount_usdt, user_id } = order;
-      const { data: buyer, error: buyerError } = await supabase
-        .from("profiles")
-        .select("referred_by, referred_by_l2")
-        .eq("id", user_id)
-        .single();
-
-      if (buyerError || !buyer) return;
-
-      // Level 1: 0.1%
-      if (buyer.referred_by) {
-        const l1Commission = amount_usdt * 0.001;
-        await supabase.rpc("add_referral_earnings", {
-          p_user_id: buyer.referred_by,
-          p_amount: l1Commission,
-          p_level: 1
-        });
-      }
-
-      // Level 2: 0.05%
-      if (buyer.referred_by_l2) {
-        const l2Commission = amount_usdt * 0.0005;
-        await supabase.rpc("add_referral_earnings", {
-          p_user_id: buyer.referred_by_l2,
-          p_amount: l2Commission,
-          p_level: 2
-        });
-      }
-    } catch (err) {
-      console.error("Referral commission error:", err);
-    }
-  };
-
-  // Notification Helper
+  // Trade Expiration Logic
   const createNotification = async (userId: string, title: string, message: string, type: string = 'info', link?: string) => {
     try {
       await supabase.from("notifications").insert({
@@ -357,9 +321,6 @@ async function startServer() {
       });
 
       if (error) throw error;
-
-      // Distribute referral commissions
-      await distributeReferralCommissions(order);
 
       // Notify both parties
       await createNotification(order.user_id, "Order Completed", `Your order #${order.id.slice(0,8)} is complete. USDT released to your wallet.`, "success");
