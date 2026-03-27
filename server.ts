@@ -21,10 +21,23 @@ if (!supabaseUrl || !supabaseServiceKey) {
   console.error("SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "Present" : "Missing");
   console.error("VITE_SUPABASE_ANON_KEY (fallback):", process.env.VITE_SUPABASE_ANON_KEY ? "Present" : "Missing");
 } else {
-  console.log("Supabase initialized in server.ts with URL:", supabaseUrl);
-  console.log("Using Service Role Key:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-  // Log first 5 characters of the key for verification (safe)
-  console.log("Key prefix:", supabaseServiceKey.substring(0, 5) + "...");
+  console.log("Supabase initialized in server.ts");
+  console.log("URL:", supabaseUrl);
+  console.log("Key Source:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "SUPABASE_SERVICE_ROLE_KEY" : "VITE_SUPABASE_ANON_KEY (fallback)");
+  console.log("Key Length:", supabaseServiceKey.length);
+  console.log("Key Prefix:", supabaseServiceKey.substring(0, 10) + "...");
+  
+  // Check if keys contain quotes (common user error)
+  if (supabaseUrl.trim().startsWith('"') || supabaseUrl.trim().endsWith('"')) {
+    console.warn("WARNING: Supabase URL contains quotes. This will cause 'Invalid API key' errors.");
+  }
+  if (supabaseServiceKey.trim().startsWith('"') || supabaseServiceKey.trim().endsWith('"')) {
+    console.warn("WARNING: Supabase Key contains quotes. This will cause 'Invalid API key' errors.");
+  }
+  // Check for trailing slash in URL
+  if (supabaseUrl.endsWith('/')) {
+    console.warn("WARNING: Supabase URL has a trailing slash. This might cause issues.");
+  }
 }
 
 const supabase = createClient(supabaseUrl || "", supabaseServiceKey || "");
