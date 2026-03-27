@@ -92,6 +92,7 @@ export default function P2POrder() {
   const [showConfirmRelease, setShowConfirmRelease] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
   const [processingAction, setProcessingAction] = useState(false);
+  const [sellerPaymentMethods, setSellerPaymentMethods] = useState<any[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -102,6 +103,31 @@ export default function P2POrder() {
       subscribeToOrder();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (order) {
+      fetchSellerPaymentMethods();
+    }
+  }, [order]);
+
+  const fetchSellerPaymentMethods = async () => {
+    if (!order) return;
+    const sellerId = order.type === 'sell' ? order.user_id : order.ad?.user_id;
+    if (!sellerId) return;
+
+    const { data, error } = await supabase
+      .from('user_payment_methods')
+      .select('*')
+      .eq('user_id', sellerId)
+      .eq('is_active', true);
+    
+    if (data) {
+      // Filter by methods accepted in the ad
+      const adMethods = order.ad?.payment_methods || [];
+      const filtered = data.filter(pm => adMethods.includes(pm.type));
+      setSellerPaymentMethods(filtered);
+    }
+  };
 
   useEffect(() => {
     if (order && order.status === 'pending' && order.expires_at) {
@@ -452,14 +478,14 @@ export default function P2POrder() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount to {isBuyer ? 'Pay' : 'Receive'}</p>
-                  <p className="text-2xl font-display font-bold text-white">₹{order.amount_inr.toLocaleString()}</p>
+                  <p className="text-2xl font-display font-bold text-white">₹{order.amount_inr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{order.asset} to {isBuyer ? 'Receive' : 'Send'}</p>
                   <p className="text-2xl font-display font-bold text-brand">
                     {order.status === 'completed' && isBuyer 
-                      ? (order.amount_usdt - (order.platform_fee_amount || 0)).toFixed(4)
-                      : order.amount_usdt.toFixed(4)
+                      ? (order.amount_usdt - (order.platform_fee_amount || 0)).toFixed(8)
+                      : order.amount_usdt.toFixed(8)
                     } {order.asset}
                   </p>
                 </div>
@@ -477,7 +503,7 @@ export default function P2POrder() {
                 {order.status === 'completed' && order.platform_fee_amount !== undefined && order.platform_fee_amount > 0 && (
                   <div className="flex items-center justify-between px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Platform Fee</span>
-                    <span className="text-xs font-bold text-white">{order.platform_fee_amount.toFixed(4)} {order.asset}</span>
+                    <span className="text-xs font-bold text-white">{order.platform_fee_amount.toFixed(8)} {order.asset}</span>
                   </div>
                 )}
               </div>
@@ -515,14 +541,67 @@ export default function P2POrder() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {order.ad?.payment_methods.map((pm) => (
-                      <div key={pm} className="p-4 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between">
-                        <span className="text-sm font-bold text-white">{pm}</span>
-                        <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-brand">
-                          <Copy className="w-4 h-4" />
-                        </button>
+                    {sellerPaymentMethods.length > 0 ? (
+                      sellerPaymentMethods.map((pm) => (
+                        <div key={pm.id} className="p-6 bg-white/5 rounded-2xl border border-white/10 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-bold text-brand uppercase tracking-widest">{pm.type}</span>
+                            <CheckCircle2 className="w-4 h-4 text-brand" />
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Account Name</p>
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-bold text-white">{pm.account_name}</p>
+                                <button onClick={() => { navigator.clipboard.writeText(pm.account_name); toast.success('Copied!'); }} className="text-gray-500 hover:text-white transition-colors">
+                                  <Copy className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {pm.upi_id && (
+                              <div>
+                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">UPI ID</p>
+                                <div className="flex items-center justify-between">
+                                  <p className="text-sm font-bold text-white select-all">{pm.upi_id}</p>
+                                  <button onClick={() => { navigator.clipboard.writeText(pm.upi_id); toast.success('Copied!'); }} className="text-gray-500 hover:text-white transition-colors">
+                                    <Copy className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {pm.account_number && (
+                              <>
+                                <div>
+                                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Account Number</p>
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-sm font-bold text-white select-all">{pm.account_number}</p>
+                                    <button onClick={() => { navigator.clipboard.writeText(pm.account_number); toast.success('Copied!'); }} className="text-gray-500 hover:text-white transition-colors">
+                                      <Copy className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">IFSC Code</p>
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-sm font-bold text-white select-all">{pm.ifsc}</p>
+                                    <button onClick={() => { navigator.clipboard.writeText(pm.ifsc); toast.success('Copied!'); }} className="text-gray-500 hover:text-white transition-colors">
+                                      <Copy className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-span-2 p-8 bg-white/5 border border-dashed border-white/10 rounded-2xl text-center">
+                        <p className="text-sm text-gray-500">No payment details provided by merchant. Please contact them in chat.</p>
                       </div>
-                    ))}
+                    )}
                   </div>
 
                   {order.status === 'pending' && (

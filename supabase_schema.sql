@@ -2,14 +2,16 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create profiles table
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   full_name TEXT,
+  avatar_url TEXT,
   is_admin BOOLEAN DEFAULT FALSE,
   is_disabled BOOLEAN DEFAULT FALSE,
   is_verified_merchant BOOLEAN DEFAULT FALSE,
   trades_completed INTEGER DEFAULT 0,
+  total_trades INTEGER DEFAULT 0,
   completion_rate NUMERIC DEFAULT 100.0,
   kyc_status TEXT DEFAULT 'none', -- none, pending, approved, rejected
   balance_usdt NUMERIC DEFAULT 0.00,
@@ -29,7 +31,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create ads table (P2P Ads)
-CREATE TABLE ads (
+CREATE TABLE IF NOT EXISTS ads (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   type TEXT NOT NULL, -- buy, sell
@@ -47,7 +49,7 @@ CREATE TABLE ads (
 );
 
 -- Create orders table
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   ad_id UUID REFERENCES ads(id) ON DELETE CASCADE,
@@ -67,7 +69,7 @@ CREATE TABLE orders (
 );
 
 -- Create app_settings table
-CREATE TABLE app_settings (
+CREATE TABLE IF NOT EXISTS app_settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   buy_rate NUMERIC DEFAULT 92.50,
   sell_rate NUMERIC DEFAULT 89.00,
@@ -82,7 +84,7 @@ CREATE TABLE app_settings (
 );
 
 -- Create payment_methods table (Admin-defined for Buy orders)
-CREATE TABLE payment_methods (
+CREATE TABLE IF NOT EXISTS payment_methods (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   type TEXT NOT NULL, -- UPI, Bank Transfer
   account_name TEXT NOT NULL,
@@ -95,7 +97,7 @@ CREATE TABLE payment_methods (
 );
 
 -- Create chat_messages table
-CREATE TABLE chat_messages (
+CREATE TABLE IF NOT EXISTS chat_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
   sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -106,7 +108,7 @@ CREATE TABLE chat_messages (
 );
 
 -- Create notifications table
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
@@ -118,7 +120,7 @@ CREATE TABLE notifications (
 );
 
 -- Create kyc_submissions table
-CREATE TABLE kyc_submissions (
+CREATE TABLE IF NOT EXISTS kyc_submissions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   document_type TEXT NOT NULL,
@@ -130,7 +132,7 @@ CREATE TABLE kyc_submissions (
 );
 
 -- Create transactions table (Wallet)
-CREATE TABLE transactions (
+CREATE TABLE IF NOT EXISTS transactions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   type TEXT NOT NULL, -- deposit, withdrawal, trade_escrow, trade_release
@@ -141,7 +143,7 @@ CREATE TABLE transactions (
 );
 
 -- Create withdrawals table
-CREATE TABLE withdrawals (
+CREATE TABLE IF NOT EXISTS withdrawals (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   amount NUMERIC NOT NULL,
@@ -154,7 +156,7 @@ CREATE TABLE withdrawals (
 );
 
 -- Create platform_logs table
-CREATE TABLE platform_logs (
+CREATE TABLE IF NOT EXISTS platform_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   admin_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   action TEXT NOT NULL,
@@ -166,35 +168,41 @@ CREATE TABLE platform_logs (
 -- RLS for withdrawals
 ALTER TABLE public.withdrawals ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own withdrawals" ON public.withdrawals;
 CREATE POLICY "Users can view own withdrawals"
   ON public.withdrawals FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins can view all withdrawals" ON public.withdrawals;
 CREATE POLICY "Admins can view all withdrawals"
   ON public.withdrawals FOR SELECT
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = TRUE));
 
+DROP POLICY IF EXISTS "Users can create withdrawals" ON public.withdrawals;
 CREATE POLICY "Users can create withdrawals"
   ON public.withdrawals FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins can update withdrawals" ON public.withdrawals;
 CREATE POLICY "Admins can update withdrawals"
   ON public.withdrawals FOR UPDATE
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = TRUE));
 
 -- RLS for platform_logs
 ALTER TABLE public.platform_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins can view platform logs" ON public.platform_logs;
 CREATE POLICY "Admins can view platform logs"
   ON public.platform_logs FOR SELECT
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = TRUE));
 
+DROP POLICY IF EXISTS "Admins can insert platform logs" ON public.platform_logs;
 CREATE POLICY "Admins can insert platform logs"
   ON public.platform_logs FOR INSERT
-  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = TRUE));
 
 -- Create user_payment_methods table
-CREATE TABLE user_payment_methods (
+CREATE TABLE IF NOT EXISTS user_payment_methods (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   type TEXT NOT NULL,
@@ -207,7 +215,7 @@ CREATE TABLE user_payment_methods (
 );
 
 -- Create merchant_favorites table
-CREATE TABLE merchant_favorites (
+CREATE TABLE IF NOT EXISTS merchant_favorites (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   merchant_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -216,7 +224,7 @@ CREATE TABLE merchant_favorites (
 );
 
 -- Create support_chats table
-CREATE TABLE support_chats (
+CREATE TABLE IF NOT EXISTS support_chats (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   user_email TEXT NOT NULL,
@@ -227,7 +235,7 @@ CREATE TABLE support_chats (
 );
 
 -- Create support_messages table
-CREATE TABLE support_messages (
+CREATE TABLE IF NOT EXISTS support_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   chat_id UUID REFERENCES support_chats(id) ON DELETE CASCADE NOT NULL,
   sender_id TEXT NOT NULL, -- can be user_id or 'admin'
@@ -240,6 +248,13 @@ CREATE TABLE support_messages (
 -- 1. Update Profiles for Ratings, Security Deposit, 2FA, and Referrals
 DO $$ 
 BEGIN 
+    -- Profile Fields
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='avatar_url') THEN
+        ALTER TABLE profiles ADD COLUMN avatar_url TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='total_trades') THEN
+        ALTER TABLE profiles ADD COLUMN total_trades INTEGER DEFAULT 0;
+    END IF;
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='rating_sum') THEN
         ALTER TABLE profiles ADD COLUMN rating_sum NUMERIC DEFAULT 0.0;
     END IF;
@@ -291,6 +306,18 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ads' AND column_name='payment_window') THEN
         ALTER TABLE ads ADD COLUMN payment_window INTEGER DEFAULT 15;
     END IF;
+    -- Ads Pricing Type
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ads' AND column_name='pricing_type') THEN
+        ALTER TABLE ads ADD COLUMN pricing_type TEXT DEFAULT 'fixed';
+    END IF;
+    -- Ads Margin
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ads' AND column_name='margin') THEN
+        ALTER TABLE ads ADD COLUMN margin NUMERIC DEFAULT 0.0;
+    END IF;
+    -- Ads Terms
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ads' AND column_name='terms') THEN
+        ALTER TABLE ads ADD COLUMN terms TEXT;
+    END IF;
 END $$;
 
 -- 2. Update Orders for Escrow Tracking and Fees
@@ -338,6 +365,7 @@ CREATE TABLE IF NOT EXISTS referral_earnings (
 );
 
 ALTER TABLE referral_earnings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own referral earnings" ON referral_earnings;
 CREATE POLICY "Users can view own referral earnings" ON referral_earnings FOR SELECT USING (auth.uid() = referrer_id OR public.is_admin());
 
 -- 4. Function to Update Profile Stats on Review
@@ -348,6 +376,8 @@ BEGIN
   SET 
     rating_sum = rating_sum + NEW.rating,
     rating_count = rating_count + 1,
+    trades_completed = trades_completed + 1,
+    total_trades = total_trades + 1,
     completion_rate = CASE 
       WHEN trades_completed > 0 THEN (trades_completed::numeric / (trades_completed + 1)::numeric) * 100 
       ELSE 100 
@@ -379,87 +409,126 @@ CREATE POLICY "Admins can manage all profiles" ON profiles FOR ALL USING (public
 
 -- Ads
 ALTER TABLE ads ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Everyone can read active ads" ON ads;
 CREATE POLICY "Everyone can read active ads" ON ads FOR SELECT USING (status = 'active');
+DROP POLICY IF EXISTS "Users can manage own ads" ON ads;
 CREATE POLICY "Users can manage own ads" ON ads FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins can manage all ads" ON ads;
 CREATE POLICY "Admins can manage all ads" ON ads FOR ALL USING (public.is_admin());
 
 -- Orders
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own orders" ON orders;
 CREATE POLICY "Users can read own orders" ON orders FOR SELECT USING (
   auth.uid() = user_id OR 
   EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid()) OR 
   public.is_admin()
 );
+DROP POLICY IF EXISTS "Users can create orders" ON orders;
 CREATE POLICY "Users can create orders" ON orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own orders" ON orders;
 CREATE POLICY "Users can update own orders" ON orders FOR UPDATE USING (
   auth.uid() = user_id OR 
   EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid()) OR 
   public.is_admin()
 );
+DROP POLICY IF EXISTS "Admins can manage all orders" ON orders;
 CREATE POLICY "Admins can manage all orders" ON orders FOR ALL USING (public.is_admin());
 
 -- App Settings
 ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Everyone can read app settings" ON app_settings;
 CREATE POLICY "Everyone can read app settings" ON app_settings FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admins can manage app settings" ON app_settings;
 CREATE POLICY "Admins can manage app settings" ON app_settings FOR ALL USING (public.is_admin());
 
 -- Payment Methods (Admin)
 ALTER TABLE payment_methods ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Everyone can read active payment methods" ON payment_methods;
 CREATE POLICY "Everyone can read active payment methods" ON payment_methods FOR SELECT USING (is_active = true);
+DROP POLICY IF EXISTS "Admins can manage payment methods" ON payment_methods;
 CREATE POLICY "Admins can manage payment methods" ON payment_methods FOR ALL USING (public.is_admin());
 
 -- Chat Messages
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read messages for their orders" ON chat_messages;
 CREATE POLICY "Users can read messages for their orders" ON chat_messages FOR SELECT USING (
   EXISTS (SELECT 1 FROM orders WHERE id = order_id AND (user_id = auth.uid() OR EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid()))) OR public.is_admin()
 );
+DROP POLICY IF EXISTS "Users can send messages for their orders" ON chat_messages;
 CREATE POLICY "Users can send messages for their orders" ON chat_messages FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM orders WHERE id = order_id AND (user_id = auth.uid() OR EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid()))) OR public.is_admin()
 );
 
 -- Notifications
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own notifications" ON notifications;
 CREATE POLICY "Users can read own notifications" ON notifications FOR SELECT USING (auth.uid() = user_id OR public.is_admin());
+DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
 CREATE POLICY "Users can update own notifications" ON notifications FOR UPDATE USING (auth.uid() = user_id OR public.is_admin());
+DROP POLICY IF EXISTS "Admins can create notifications" ON notifications;
 CREATE POLICY "Admins can create notifications" ON notifications FOR INSERT WITH CHECK (public.is_admin());
 
 -- KYC Submissions
 ALTER TABLE kyc_submissions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read/create own kyc" ON kyc_submissions;
 CREATE POLICY "Users can read/create own kyc" ON kyc_submissions FOR SELECT USING (auth.uid() = user_id OR public.is_admin());
+DROP POLICY IF EXISTS "Users can create own kyc" ON kyc_submissions;
 CREATE POLICY "Users can create own kyc" ON kyc_submissions FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins can manage all kyc" ON kyc_submissions;
 CREATE POLICY "Admins can manage all kyc" ON kyc_submissions FOR ALL USING (public.is_admin());
 
 -- Transactions
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own transactions" ON transactions;
 CREATE POLICY "Users can read own transactions" ON transactions FOR SELECT USING (auth.uid() = user_id OR public.is_admin());
+DROP POLICY IF EXISTS "Users can create own transactions" ON transactions;
 CREATE POLICY "Users can create own transactions" ON transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins can manage all transactions" ON transactions;
 CREATE POLICY "Admins can manage all transactions" ON transactions FOR ALL USING (public.is_admin());
 
 -- User Payment Methods
 ALTER TABLE user_payment_methods ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage own payment methods" ON user_payment_methods;
 CREATE POLICY "Users can manage own payment methods" ON user_payment_methods FOR ALL USING (auth.uid() = user_id OR public.is_admin());
+
+DROP POLICY IF EXISTS "Users can view partner payment methods" ON user_payment_methods;
+CREATE POLICY "Users can view partner payment methods" ON user_payment_methods FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM public.orders o
+    JOIN public.ads a ON o.ad_id = a.id
+    WHERE (o.user_id = auth.uid() OR a.user_id = auth.uid())
+    AND (user_payment_methods.user_id = o.user_id OR user_payment_methods.user_id = a.user_id)
+  )
+);
 
 -- Merchant Favorites
 ALTER TABLE merchant_favorites ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage own favorites" ON merchant_favorites;
 CREATE POLICY "Users can manage own favorites" ON merchant_favorites FOR ALL USING (auth.uid() = user_id);
 
 -- Support Chats
 ALTER TABLE support_chats ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read/create own support chats" ON support_chats;
 CREATE POLICY "Users can read/create own support chats" ON support_chats FOR SELECT USING (auth.uid() = user_id OR public.is_admin());
+DROP POLICY IF EXISTS "Users can create own support chats" ON support_chats;
 CREATE POLICY "Users can create own support chats" ON support_chats FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins can manage all support chats" ON support_chats;
 CREATE POLICY "Admins can manage all support chats" ON support_chats FOR ALL USING (public.is_admin());
 
 -- Support Messages
 ALTER TABLE support_messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read messages for their chats" ON support_messages;
 CREATE POLICY "Users can read messages for their chats" ON support_messages FOR SELECT USING (
   EXISTS (SELECT 1 FROM support_chats WHERE id = chat_id AND user_id = auth.uid()) OR public.is_admin()
 );
+DROP POLICY IF EXISTS "Users can send messages for their chats" ON support_messages;
 CREATE POLICY "Users can send messages for their chats" ON support_messages FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM support_chats WHERE id = chat_id AND user_id = auth.uid()) OR public.is_admin()
 );
 
 -- Create p2p_disputes table
-CREATE TABLE p2p_disputes (
+CREATE TABLE IF NOT EXISTS p2p_disputes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
   raised_by UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -471,12 +540,15 @@ CREATE TABLE p2p_disputes (
 );
 
 ALTER TABLE p2p_disputes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own disputes" ON p2p_disputes;
 CREATE POLICY "Users can read own disputes" ON p2p_disputes FOR SELECT USING (
   raised_by = auth.uid() OR 
   EXISTS (SELECT 1 FROM orders WHERE id = order_id AND (user_id = auth.uid() OR EXISTS (SELECT 1 FROM ads WHERE id = ad_id AND user_id = auth.uid()))) OR 
   public.is_admin()
 );
+DROP POLICY IF EXISTS "Users can create disputes" ON p2p_disputes;
 CREATE POLICY "Users can create disputes" ON p2p_disputes FOR INSERT WITH CHECK (raised_by = auth.uid());
+DROP POLICY IF EXISTS "Admins can manage all disputes" ON p2p_disputes;
 CREATE POLICY "Admins can manage all disputes" ON p2p_disputes FOR ALL USING (public.is_admin());
 
 -- Storage Buckets
@@ -486,20 +558,29 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('screenshots', 'screensho
 INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true) ON CONFLICT (id) DO NOTHING;
 
 -- Storage Policies for p2p_chat_images
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
 CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'p2p_chat_images');
+DROP POLICY IF EXISTS "Authenticated users can upload chat images" ON storage.objects;
 CREATE POLICY "Authenticated users can upload chat images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'p2p_chat_images' AND auth.role() = 'authenticated');
 
 -- Storage Policies for kyc-documents
+DROP POLICY IF EXISTS "Admins can read KYC documents" ON storage.objects;
 CREATE POLICY "Admins can read KYC documents" ON storage.objects FOR SELECT USING (bucket_id = 'kyc-documents' AND public.is_admin());
+DROP POLICY IF EXISTS "Users can upload own KYC documents" ON storage.objects;
 CREATE POLICY "Users can upload own KYC documents" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'kyc-documents' AND auth.role() = 'authenticated');
 
 -- Storage Policies for screenshots
+DROP POLICY IF EXISTS "Public Access Screenshots" ON storage.objects;
 CREATE POLICY "Public Access Screenshots" ON storage.objects FOR SELECT USING (bucket_id = 'screenshots');
+DROP POLICY IF EXISTS "Authenticated users can upload screenshots" ON storage.objects;
 CREATE POLICY "Authenticated users can upload screenshots" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'screenshots' AND auth.role() = 'authenticated');
 
 -- Storage Policies for avatars
+DROP POLICY IF EXISTS "Public Access Avatars" ON storage.objects;
 CREATE POLICY "Public Access Avatars" ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
+DROP POLICY IF EXISTS "Authenticated users can upload avatars" ON storage.objects;
 CREATE POLICY "Authenticated users can upload avatars" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'avatars' AND auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Users can update own avatars" ON storage.objects;
 CREATE POLICY "Users can update own avatars" ON storage.objects FOR UPDATE WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
 
 -- Enable Realtime
@@ -536,6 +617,7 @@ BEGIN
     id, 
     email, 
     full_name, 
+    avatar_url,
     referral_code, 
     referred_by, 
     referred_by_l2
@@ -544,6 +626,7 @@ BEGIN
     new.id, 
     new.email, 
     new.raw_user_meta_data->>'full_name', 
+    new.raw_user_meta_data->>'avatar_url',
     v_referral_code, 
     v_referrer_id, 
     v_referrer_l2_id
@@ -627,13 +710,13 @@ BEGIN
 
   -- Determine buyer and seller
   IF v_order.type = 'buy' THEN
-    -- Ad was 'buy', so ad creator is buyer, order creator is seller
-    v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
-    v_seller_id := v_order.user_id;
-  ELSE
-    -- Ad was 'sell', so ad creator is seller, order creator is buyer
+    -- Order creator is buying, ad creator is selling
     v_buyer_id := v_order.user_id;
     v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+  ELSE
+    -- Order creator is selling, ad creator is buying
+    v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+    v_seller_id := v_order.user_id;
   END IF;
 
   -- Update order status and record fee
@@ -696,7 +779,8 @@ BEGIN
 
   -- Update seller stats
   UPDATE public.profiles 
-  SET trades_completed = trades_completed + 1 
+  SET trades_completed = trades_completed + 1,
+      total_trades = total_trades + 1
   WHERE id = v_seller_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -705,6 +789,7 @@ CREATE OR REPLACE FUNCTION public.cancel_p2p_order(p_order_id UUID)
 RETURNS void AS $$
 DECLARE
   v_order RECORD;
+  v_seller_id UUID;
 BEGIN
   -- Get order details
   SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
@@ -718,11 +803,11 @@ BEGIN
   END IF;
 
   -- Determine seller to return funds to
-  IF v_order.type = 'buy' THEN
-    -- Ad was 'buy', order creator was seller
+  IF v_order.type = 'sell' THEN
+    -- Order creator was seller
     v_seller_id := v_order.user_id;
   ELSE
-    -- Ad was 'sell', ad creator was seller
+    -- Ad creator was seller
     v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
   END IF;
 
@@ -750,12 +835,19 @@ DECLARE
   v_ad RECORD;
   v_order_id UUID;
   v_seller_id UUID;
+  v_order_type TEXT;
+  v_platform_fee_percent NUMERIC;
+  v_platform_fee_amount NUMERIC;
 BEGIN
   -- Get ad details
   SELECT * INTO v_ad FROM public.ads WHERE id = p_ad_id;
   
   IF v_ad IS NULL THEN
     RAISE EXCEPTION 'Ad not found';
+  END IF;
+
+  IF v_ad.user_id = auth.uid() THEN
+    RAISE EXCEPTION 'You cannot trade with your own advertisement';
   END IF;
 
   IF v_ad.status != 'active' THEN
@@ -766,19 +858,30 @@ BEGIN
     RAISE EXCEPTION 'Amount is outside of ad limits';
   END IF;
 
-  -- Determine seller
+  -- Validate amount calculation with a small tolerance for floating point rounding
+  IF ABS((p_amount_usdt * p_rate) - p_amount_inr) > 1.0 THEN
+    RAISE EXCEPTION 'Amount mismatch: % * % != %', p_amount_usdt, p_rate, p_amount_inr;
+  END IF;
+
+  -- Determine seller and order type
   IF v_ad.type = 'buy' THEN
-    -- Ad creator wants to buy, so user is selling
+    -- Ad creator wants to buy, so order creator is selling
     v_seller_id := auth.uid();
+    v_order_type := 'sell';
   ELSE
-    -- Ad creator wants to sell, so ad creator is seller
+    -- Ad creator wants to sell, so order creator is buying
     v_seller_id := v_ad.user_id;
+    v_order_type := 'buy';
   END IF;
 
   -- Check seller balance
   IF (SELECT balance_usdt FROM public.profiles WHERE id = v_seller_id) < p_amount_usdt THEN
     RAISE EXCEPTION 'Seller has insufficient balance';
   END IF;
+
+  -- Get platform fee from settings
+  SELECT platform_fee INTO v_platform_fee_percent FROM public.app_settings LIMIT 1;
+  v_platform_fee_amount := (p_amount_usdt * COALESCE(v_platform_fee_percent, 0)) / 100;
 
   -- Create order
   INSERT INTO public.orders (
@@ -789,16 +892,18 @@ BEGIN
     amount_inr,
     rate,
     status,
+    platform_fee_amount,
     expires_at
   )
   VALUES (
     auth.uid(),
     p_ad_id,
-    v_ad.type,
+    v_order_type,
     p_amount_usdt,
     p_amount_inr,
     p_rate,
     'pending',
+    v_platform_fee_amount,
     (TIMEZONE('utc'::text, NOW()) + (v_ad.payment_window * INTERVAL '1 minute'))
   )
   RETURNING id INTO v_order_id;
@@ -837,11 +942,11 @@ BEGIN
   WHERE id = p_order_id;
 
   -- Release escrow back to seller
-  IF v_order.type = 'buy' THEN
-    -- Ad was 'buy', order creator was seller
+  IF v_order.type = 'sell' THEN
+    -- Order creator was seller
     v_seller_id := v_order.user_id;
   ELSE
-    -- Ad was 'sell', ad creator was seller
+    -- Ad creator was seller
     v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
   END IF;
 
@@ -860,10 +965,10 @@ BEGIN
   WHERE id = p_order_id 
   AND (
     -- Only the buyer can mark as paid
-    -- Ad was 'buy', so ad creator is buyer
-    (type = 'buy' AND ad_id IN (SELECT id FROM ads WHERE user_id = auth.uid())) OR
-    -- Ad was 'sell', so order creator is buyer
-    (type = 'sell' AND user_id = auth.uid())
+    -- Order creator is buyer
+    (type = 'buy' AND user_id = auth.uid()) OR
+    -- Ad creator is buyer
+    (type = 'sell' AND ad_id IN (SELECT id FROM ads WHERE user_id = auth.uid()))
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -933,13 +1038,13 @@ BEGIN
 
   -- Determine buyer and seller
   IF v_order.type = 'buy' THEN
-    -- Ad was 'buy', so ad creator is buyer, order creator is seller
-    v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
-    v_seller_id := v_order.user_id;
-  ELSE
-    -- Ad was 'sell', so ad creator is seller, order creator is buyer
+    -- Order creator is buying, ad creator is selling
     v_buyer_id := v_order.user_id;
     v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+  ELSE
+    -- Order creator is selling, ad creator is buying
+    v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+    v_seller_id := v_order.user_id;
   END IF;
 
   -- Update dispute status
@@ -1036,6 +1141,68 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- RPC to refresh all user stats (admin only)
+CREATE OR REPLACE FUNCTION public.refresh_all_user_stats()
+RETURNS void AS $$
+DECLARE
+  v_user_record RECORD;
+  v_completed INTEGER;
+  v_total INTEGER;
+  v_rating_sum NUMERIC;
+  v_rating_count INTEGER;
+BEGIN
+  -- Only admins can run this
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Only admins can refresh user stats';
+  END IF;
+
+  FOR v_user_record IN SELECT id FROM public.profiles LOOP
+    -- Calculate trades where user was seller
+    -- Seller is:
+    -- 1. Ad creator if ad.type = 'sell' AND order.type = 'buy' (order creator is buying)
+    -- 2. Order creator if ad.type = 'buy' AND order.type = 'sell' (order creator is selling)
+    
+    -- Completed trades
+    SELECT COUNT(*) INTO v_completed
+    FROM public.orders o
+    JOIN public.ads a ON o.ad_id = a.id
+    WHERE o.status = 'completed'
+    AND (
+      (a.type = 'sell' AND a.user_id = v_user_record.id) OR
+      (a.type = 'buy' AND o.user_id = v_user_record.id)
+    );
+
+    -- Total trades (completed + cancelled)
+    SELECT COUNT(*) INTO v_total
+    FROM public.orders o
+    JOIN public.ads a ON o.ad_id = a.id
+    WHERE o.status IN ('completed', 'cancelled')
+    AND (
+      (a.type = 'sell' AND a.user_id = v_user_record.id) OR
+      (a.type = 'buy' AND o.user_id = v_user_record.id)
+    );
+
+    -- Ratings
+    SELECT COALESCE(SUM(rating), 0), COUNT(*) INTO v_rating_sum, v_rating_count
+    FROM public.trade_reviews
+    WHERE reviewee_id = v_user_record.id;
+
+    -- Update profile
+    UPDATE public.profiles
+    SET 
+      trades_completed = v_completed,
+      total_trades = v_total,
+      rating_sum = v_rating_sum,
+      rating_count = v_rating_count,
+      completion_rate = CASE 
+        WHEN v_total > 0 THEN (v_completed::numeric / v_total::numeric) * 100.0
+        ELSE 100.0
+      END
+    WHERE id = v_user_record.id;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- RPC to complete deposit from NowPayments webhook
 CREATE OR REPLACE FUNCTION public.complete_deposit(
   p_payment_id TEXT,
@@ -1078,3 +1245,8 @@ BEGIN
   VALUES (auth.uid(), 'deposit', p_amount, 'completed', 'DEMO_' || encode(gen_random_bytes(16), 'hex'));
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Initialize app_settings if empty
+INSERT INTO public.app_settings (buy_rate, sell_rate, platform_fee, referral_commission_l1, referral_commission_l2)
+SELECT 92.50, 89.00, 1.0, 10.0, 5.0
+WHERE NOT EXISTS (SELECT 1 FROM public.app_settings);

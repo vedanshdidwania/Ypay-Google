@@ -26,7 +26,8 @@ import {
   BarChart3,
   DollarSign,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  RefreshCw
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -1922,6 +1923,7 @@ function AdminSettings() {
   const { user } = useAuth();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1969,6 +1971,28 @@ function AdminSettings() {
       toast.error(error.message || 'Failed to update settings.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefreshStats = async () => {
+    try {
+      setRefreshing(true);
+      const { error } = await supabase.rpc('refresh_all_user_stats');
+      if (error) throw error;
+      
+      // Log action
+      await supabase.from('platform_logs').insert({
+        admin_id: user?.id,
+        action: 'STATS_REFRESH',
+        details: 'Manual refresh of all user statistics triggered'
+      });
+
+      toast.success('All user statistics refreshed successfully!');
+    } catch (error: any) {
+      console.error('Error refreshing stats:', error);
+      toast.error(error.message || 'Failed to refresh stats.');
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -2068,6 +2092,37 @@ function AdminSettings() {
             </button>
           </div>
         </form>
+      </div>
+
+      <div className="card p-8 max-w-4xl border-red-500/20 bg-red-500/5">
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
+              <RefreshCw className={cn("w-5 h-5 text-red-500", refreshing && "animate-spin")} />
+            </div>
+            <div>
+              <h3 className="text-lg font-display font-bold text-white">System Maintenance</h3>
+              <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-bold">Dangerous operations and system synchronization.</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/10 group hover:border-red-500/30 transition-all">
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-white uppercase tracking-[0.1em]">Refresh User Statistics</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">Recalculate trade counts, completion rates, and ratings for all users based on order history.</p>
+            </div>
+            <button
+              onClick={handleRefreshStats}
+              disabled={refreshing}
+              className={cn(
+                "px-8 py-3 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
+                refreshing ? "bg-gray-500/20 text-gray-500 cursor-not-allowed" : "bg-white text-black hover:bg-red-500 hover:text-white"
+              )}
+            >
+              {refreshing ? 'Syncing...' : 'Run Global Sync'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -14,7 +14,7 @@ import {
   Play
 } from 'lucide-react';
 import { useAuth } from '../lib/useAuth';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { cn, formatCurrency } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +26,8 @@ interface Ad {
   user_id: string;
   type: 'buy' | 'sell';
   asset: string;
-  fiat: string;
+  pricing_type: 'fixed' | 'dynamic';
+  margin: number;
   price: number;
   min_limit: number;
   max_limit: number;
@@ -44,6 +45,7 @@ export default function MyAds() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [adToDelete, setAdToDelete] = useState<string | null>(null);
+  const adToDeleteRef = React.useRef<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -90,26 +92,57 @@ export default function MyAds() {
   };
 
   const handleDeleteAd = async () => {
-    if (!adToDelete || !user) return;
+    const targetId = adToDeleteRef.current;
+    console.log('handleDeleteAd triggered. targetId from ref:', targetId, 'adToDelete from state:', adToDelete);
+
+    if (!isSupabaseConfigured) {
+      toast.error('Supabase is not configured. Please check your environment variables.');
+      setShowDeleteConfirm(false);
+      return;
+    }
+
+    if (!targetId || !user) {
+      console.warn('Cannot delete ad: targetId or user is missing', { 
+        targetId, 
+        stateId: adToDelete,
+        userId: user?.id 
+      });
+      setShowDeleteConfirm(false);
+      return;
+    }
 
     try {
       setIsDeleting(true);
-      const { error } = await supabase
+      console.log('Attempting to delete ad ID:', targetId, 'for user:', user.id);
+      
+      const { error, count } = await supabase
         .from('ads')
-        .delete()
-        .eq('id', adToDelete)
-        .eq('user_id', user?.id);
+        .delete({ count: 'exact' })
+        .eq('id', targetId)
+        .eq('user_id', user.id);
 
-      if (error) throw error;
-      setAds(prev => prev.filter(ad => ad.id !== adToDelete));
-      toast.success('Advertisement deleted successfully');
-      setShowDeleteConfirm(false);
-    } catch (error) {
-      console.error('Error deleting ad:', error);
-      toast.error('Failed to delete advertisement');
+      if (error) {
+        console.error('Supabase error during deletion:', error);
+        throw error;
+      }
+
+      console.log('Delete operation completed. Rows affected:', count);
+
+      if (count === 0) {
+        console.warn('No rows were deleted. This could mean the ad was already deleted or the user does not have permission.');
+        toast.error('Could not delete the advertisement. It may have been already removed.');
+      } else {
+        setAds(prev => prev.filter(ad => ad.id !== targetId));
+        toast.success('Advertisement deleted successfully');
+      }
+    } catch (error: any) {
+      console.error('Catch block error in handleDeleteAd:', error);
+      toast.error(error.message || 'Failed to delete advertisement');
     } finally {
       setIsDeleting(false);
+      setShowDeleteConfirm(false);
       setAdToDelete(null);
+      adToDeleteRef.current = null;
     }
   };
 
@@ -208,6 +241,8 @@ export default function MyAds() {
                     </button>
                     <button 
                       onClick={() => {
+                        console.log('Setting ad to delete:', ad.id);
+                        adToDeleteRef.current = ad.id;
                         setAdToDelete(ad.id);
                         setShowDeleteConfirm(true);
                       }}
@@ -237,8 +272,10 @@ export default function MyAds() {
       <ConfirmationModal
         isOpen={showDeleteConfirm}
         onClose={() => {
+          console.log('Closing delete modal');
           setShowDeleteConfirm(false);
           setAdToDelete(null);
+          adToDeleteRef.current = null;
         }}
         onConfirm={handleDeleteAd}
         loading={isDeleting}

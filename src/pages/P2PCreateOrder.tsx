@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../lib/useAuth';
 import { 
   ArrowLeft, 
@@ -126,7 +126,19 @@ export default function P2PCreateOrder() {
 
   const handleStartTrade = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !ad || !fiatAmount || !cryptoAmount) return;
+    if (!isSupabaseConfigured) {
+      toast.error('Supabase is not configured. Please check your environment variables.');
+      return;
+    }
+    if (!user || !ad || !fiatAmount || !cryptoAmount) {
+      toast.error('Missing required information to start trade');
+      return;
+    }
+
+    if (ad.user_id === user.id) {
+      toast.error('You cannot trade with your own advertisement');
+      return;
+    }
 
     try {
       setIsTrading(true);
@@ -139,11 +151,23 @@ export default function P2PCreateOrder() {
       }
 
       // Ensure exact precision for RPC validation to avoid "Amount mismatch" errors
-      // If user entered fiat, calculate exact crypto. If user entered crypto, calculate exact fiat.
       if (inputMode === 'fiat') {
         cryptoQty = inrAmount / ad.price;
       } else {
         inrAmount = cryptoQty * ad.price;
+      }
+
+      // Check seller balance if user is selling (ad type is 'buy')
+      if (ad.type === 'buy') {
+        const { data: profile, error: profileError } = await supabase.from('profiles').select('balance_usdt').eq('id', user.id).single();
+        if (profileError) {
+          console.error('Error fetching profile balance:', profileError);
+          throw new Error('Failed to verify your balance. Please try again.');
+        }
+        if (profile && profile.balance_usdt < cryptoQty) {
+          toast.error(`Insufficient balance. You need ${cryptoQty.toFixed(2)} USDT to sell.`);
+          return;
+        }
       }
 
       // Check limits
@@ -152,6 +176,13 @@ export default function P2PCreateOrder() {
         return;
       }
 
+      console.log('Starting P2P trade with params:', {
+        p_ad_id: ad.id,
+        p_amount_usdt: cryptoQty,
+        p_amount_inr: inrAmount,
+        p_rate: ad.price
+      });
+
       const { data: orderId, error } = await supabase.rpc('start_p2p_trade', {
         p_ad_id: ad.id,
         p_amount_usdt: cryptoQty,
@@ -159,13 +190,16 @@ export default function P2PCreateOrder() {
         p_rate: ad.price
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase RPC error starting trade:', error);
+        throw error;
+      }
       
       toast.success('Order created successfully!');
       navigate(`/p2p/order/${orderId}`);
     } catch (error: any) {
       console.error('Error starting trade:', error);
-      toast.error(error.message || 'Failed to start trade');
+      toast.error(error.message || 'Failed to start trade. Please try again.');
     } finally {
       setIsTrading(false);
     }
@@ -361,8 +395,24 @@ export default function P2PCreateOrder() {
                             placeholder="0.00"
                           />
                         )}
-                        <div className="absolute right-8 top-1/2 -translate-y-1/2 font-display font-bold text-gray-600 text-xl">
-                          {inputMode === 'fiat' ? 'INR' : ad.asset}
+                        <div className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-4">
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              if (inputMode === 'fiat') {
+                                handleFiatChange(ad.max_limit.toString());
+                              } else {
+                                handleCryptoChange((ad.max_limit / ad.price).toFixed(8));
+                              }
+                            }}
+                            className="text-[10px] font-bold text-brand uppercase tracking-widest hover:text-brand/80 transition-colors"
+                          >
+                            Max
+                          </button>
+                          <div className="h-4 w-px bg-white/10" />
+                          <div className="font-display font-bold text-gray-600 text-xl">
+                            {inputMode === 'fiat' ? 'INR' : ad.asset}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -376,12 +426,12 @@ export default function P2PCreateOrder() {
                       <div className="flex items-baseline gap-2">
                         {inputMode === 'fiat' ? (
                           <>
-                            <p className="text-3xl font-display font-bold text-brand">{parseFloat(cryptoAmount || '0').toFixed(2)}</p>
+                            <p className="text-3xl font-display font-bold text-brand">{parseFloat(cryptoAmount || '0').toFixed(8)}</p>
                             <p className="text-sm font-bold text-gray-500">{ad.asset}</p>
                           </>
                         ) : (
                           <>
-                            <p className="text-3xl font-display font-bold text-brand">₹{parseFloat(fiatAmount || '0').toLocaleString()}</p>
+                            <p className="text-3xl font-display font-bold text-brand">₹{parseFloat(fiatAmount || '0').toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             <p className="text-sm font-bold text-gray-500">INR</p>
                           </>
                         )}
@@ -390,14 +440,14 @@ export default function P2PCreateOrder() {
                     <div className="p-6 bg-white/5 rounded-3xl border border-white/5 flex flex-col justify-center">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Platform Fee</span>
-                        <span className="text-xs font-bold text-white">{cryptoFeeAmount.toFixed(4)} {ad.asset} ({platformFee}%)</span>
+                        <span className="text-xs font-bold text-white">{cryptoFeeAmount.toFixed(8)} {ad.asset} ({platformFee}%)</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Net {ad.type === 'buy' ? 'INR' : ad.asset}</span>
                         <span className="text-xs font-bold text-brand">
                           {ad.type === 'buy' 
-                            ? `₹${parseFloat(fiatAmount || '0').toLocaleString()}` 
-                            : `${netCryptoAmount.toFixed(4)} ${ad.asset}`
+                            ? `₹${parseFloat(fiatAmount || '0').toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+                            : `${netCryptoAmount.toFixed(8)} ${ad.asset}`
                           }
                         </span>
                       </div>

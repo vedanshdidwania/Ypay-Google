@@ -25,7 +25,7 @@ import {
   Award
 } from 'lucide-react';
 import { useAuth } from '../lib/useAuth';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { cn, formatCurrency, formatUSDT } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -93,7 +93,8 @@ export default function P2P() {
     price: 0,
     min_limit: 1000,
     max_limit: 50000,
-    payment_methods: [] as string[]
+    payment_methods: [] as string[],
+    payment_window: 15
   });
 
   useEffect(() => {
@@ -190,7 +191,20 @@ export default function P2P() {
 
   const handleCreateAd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!isSupabaseConfigured) {
+      toast.error('Supabase is not configured. Please check your environment variables.');
+      return;
+    }
+    if (!user) {
+      toast.error('Please login to post an advertisement');
+      navigate('/auth');
+      return;
+    }
+
+    if (newAd.payment_methods.length === 0) {
+      toast.error('Please select at least one payment method');
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -212,17 +226,21 @@ export default function P2P() {
         min_limit: newAd.min_limit,
         max_limit: newAd.max_limit,
         payment_methods: newAd.payment_methods,
+        payment_window: newAd.payment_window,
         status: 'active'
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error creating ad:', error);
+        throw error;
+      }
       
       setIsCreateModalOpen(false);
       fetchAds();
       toast.success('Advertisement posted successfully!');
     } catch (error: any) {
       console.error('Error creating ad:', error);
-      toast.error(error.message || 'Failed to post advertisement');
+      toast.error(error.message || 'Failed to post advertisement. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -682,6 +700,27 @@ export default function P2P() {
                           onChange={(e) => setNewAd(prev => ({ ...prev, max_limit: parseFloat(e.target.value) }))}
                           className="input-field py-4" 
                         />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Payment Window (Minutes)</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[15, 30, 45, 60].map((min) => (
+                          <button
+                            key={min}
+                            type="button"
+                            onClick={() => setNewAd(prev => ({ ...prev, payment_window: min }))}
+                            className={cn(
+                              "py-3 rounded-xl border text-[10px] font-bold transition-all",
+                              newAd.payment_window === min 
+                                ? "bg-brand/10 border-brand text-brand" 
+                                : "bg-white/5 border-white/10 text-gray-500 hover:bg-white/10"
+                            )}
+                          >
+                            {min}m
+                          </button>
+                        ))}
                       </div>
                     </div>
 
