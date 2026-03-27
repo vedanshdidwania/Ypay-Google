@@ -12,12 +12,28 @@ import QRCode from "qrcode";
 
 dotenv.config();
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+// Clean Supabase configuration (remove quotes and extra whitespace)
+const cleanValue = (val: string | undefined) => {
+  if (!val) return undefined;
+  let cleaned = val.trim();
+  if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+    cleaned = cleaned.substring(1, cleaned.length - 1);
+  }
+  if (cleaned.startsWith("'") && cleaned.endsWith("'")) {
+    cleaned = cleaned.substring(1, cleaned.length - 1);
+  }
+  return cleaned.trim();
+};
+
+const rawUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+const supabaseUrl = cleanValue(rawUrl);
+const supabaseServiceKey = cleanValue(rawKey);
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error("Supabase configuration missing in server.ts!");
-  console.error("VITE_SUPABASE_URL:", supabaseUrl ? "Present" : "Missing");
+  console.error("VITE_SUPABASE_URL:", rawUrl ? "Present" : "Missing");
   console.error("SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "Present" : "Missing");
   console.error("VITE_SUPABASE_ANON_KEY (fallback):", process.env.VITE_SUPABASE_ANON_KEY ? "Present" : "Missing");
 } else {
@@ -27,13 +43,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
   console.log("Key Length:", supabaseServiceKey.length);
   console.log("Key Prefix:", supabaseServiceKey.substring(0, 10) + "...");
   
-  // Check if keys contain quotes (common user error)
-  if (supabaseUrl.trim().startsWith('"') || supabaseUrl.trim().endsWith('"')) {
-    console.warn("WARNING: Supabase URL contains quotes. This will cause 'Invalid API key' errors.");
-  }
-  if (supabaseServiceKey.trim().startsWith('"') || supabaseServiceKey.trim().endsWith('"')) {
-    console.warn("WARNING: Supabase Key contains quotes. This will cause 'Invalid API key' errors.");
-  }
   // Check for trailing slash in URL
   if (supabaseUrl.endsWith('/')) {
     console.warn("WARNING: Supabase URL has a trailing slash. This might cause issues.");
