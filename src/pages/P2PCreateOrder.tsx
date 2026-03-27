@@ -151,10 +151,13 @@ export default function P2PCreateOrder() {
       }
 
       // Ensure exact precision for RPC validation to avoid "Amount mismatch" errors
+      let finalInr = inrAmount;
+      let finalCrypto = cryptoQty;
+
       if (inputMode === 'fiat') {
-        cryptoQty = inrAmount / ad.price;
+        finalCrypto = Number((finalInr / ad.price).toFixed(8));
       } else {
-        inrAmount = cryptoQty * ad.price;
+        finalInr = Number((finalCrypto * ad.price).toFixed(2));
       }
 
       // Check seller balance if user is selling (ad type is 'buy')
@@ -164,29 +167,29 @@ export default function P2PCreateOrder() {
           console.error('Error fetching profile balance:', profileError);
           throw new Error('Failed to verify your balance. Please try again.');
         }
-        if (profile && profile.balance_usdt < cryptoQty) {
-          toast.error(`Insufficient balance. You need ${cryptoQty.toFixed(2)} USDT to sell.`);
+        if (profile && profile.balance_usdt < finalCrypto) {
+          toast.error(`Insufficient balance. You need ${finalCrypto.toFixed(2)} USDT to sell.`);
           return;
         }
       }
 
       // Check limits
-      if (inrAmount < ad.min_limit || inrAmount > ad.max_limit) {
+      if (finalInr < ad.min_limit || finalInr > ad.max_limit) {
         toast.error(`Amount must be between ₹${ad.min_limit.toLocaleString()} and ₹${ad.max_limit.toLocaleString()}`);
         return;
       }
 
       console.log('Starting P2P trade with params:', {
         p_ad_id: ad.id,
-        p_amount_usdt: cryptoQty,
-        p_amount_inr: inrAmount,
+        p_amount_usdt: finalCrypto,
+        p_amount_inr: finalInr,
         p_rate: ad.price
       });
 
       const { data: orderId, error } = await supabase.rpc('start_p2p_trade', {
         p_ad_id: ad.id,
-        p_amount_usdt: cryptoQty,
-        p_amount_inr: inrAmount,
+        p_amount_usdt: finalCrypto,
+        p_amount_inr: finalInr,
         p_rate: ad.price
       });
 
