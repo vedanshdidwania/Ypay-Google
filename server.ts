@@ -12,9 +12,22 @@ import QRCode from "qrcode";
 
 dotenv.config();
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // Need this for backend operations
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error("Supabase configuration missing in server.ts!");
+  console.error("VITE_SUPABASE_URL:", supabaseUrl ? "Present" : "Missing");
+  console.error("SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "Present" : "Missing");
+  console.error("VITE_SUPABASE_ANON_KEY (fallback):", process.env.VITE_SUPABASE_ANON_KEY ? "Present" : "Missing");
+} else {
+  console.log("Supabase initialized in server.ts with URL:", supabaseUrl);
+  console.log("Using Service Role Key:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+  // Log first 5 characters of the key for verification (safe)
+  console.log("Key prefix:", supabaseServiceKey.substring(0, 5) + "...");
+}
+
+const supabase = createClient(supabaseUrl || "", supabaseServiceKey || "");
 
 async function ensureBucketsExist() {
   const buckets = [
@@ -70,6 +83,7 @@ async function startServer() {
 
   // Trade Expiration Logic
   const checkExpiredTrades = async () => {
+    console.log("Running checkExpiredTrades...");
     try {
       const now = new Date().toISOString();
       const { data: expiredOrders, error } = await supabase
