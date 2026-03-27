@@ -26,11 +26,11 @@ export default function Buy() {
 
   const fetchData = async () => {
     const [settingsRes, methodsRes] = await Promise.all([
-      supabase.from('app_settings').select('*').single(),
+      supabase.from('app_settings').select('*').limit(1),
       supabase.from('payment_methods').select('*').eq('is_active', true)
     ]);
 
-    if (settingsRes.data) setSettings(settingsRes.data);
+    if (settingsRes.data && settingsRes.data.length > 0) setSettings(settingsRes.data[0]);
     if (methodsRes.data) setPaymentMethods(methodsRes.data);
   };
 

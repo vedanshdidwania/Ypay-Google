@@ -95,8 +95,8 @@ export default function P2PCreateOrder() {
 
   const fetchSettings = async () => {
     try {
-      const { data } = await supabase.from('app_settings').select('platform_fee').single();
-      if (data) setPlatformFee(data.platform_fee);
+      const { data } = await supabase.from('app_settings').select('platform_fee').limit(1);
+      if (data && data.length > 0) setPlatformFee(data[0].platform_fee);
     } catch (error) {
       console.error('Error fetching settings:', error);
     }

@@ -27,8 +27,8 @@ export default function Home() {
 
   const fetchRate = async () => {
     try {
-      const { data, error } = await supabase.from('app_settings').select('buy_rate').single();
-      if (data) setRate(data.buy_rate);
+      const { data } = await supabase.from('app_settings').select('buy_rate').limit(1);
+      if (data && data.length > 0) setRate(data[0].buy_rate);
     } catch (error) {
       console.error('Error fetching rate:', error);
     }

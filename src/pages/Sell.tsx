@@ -23,8 +23,8 @@ export default function Sell() {
   }, []);
 
   const fetchSettings = async () => {
-    const { data } = await supabase.from('app_settings').select('*').single();
-    if (data) setSettings(data);
+    const { data } = await supabase.from('app_settings').select('*').limit(1);
+    if (data && data.length > 0) setSettings(data[0]);
   };
 
   const copyToClipboard = (text: string) => {

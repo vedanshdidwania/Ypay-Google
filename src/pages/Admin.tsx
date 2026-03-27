@@ -1931,8 +1931,8 @@ function AdminSettings() {
   }, []);
 
   const fetchSettings = async () => {
-    const { data } = await supabase.from('app_settings').select('*').single();
-    if (data) setSettings(data);
+    const { data } = await supabase.from('app_settings').select('*').limit(1);
+    if (data && data.length > 0) setSettings(data[0]);
   };
 
   const handleUpdate = async (e: React.FormEvent) => {

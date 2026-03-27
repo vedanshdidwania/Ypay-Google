@@ -107,33 +107,38 @@ async function startServer() {
   });
 
   // Live Prices from CoinGecko with Cache
-  let priceCache: any = null;
+  let priceCache: any = {
+    tether: { inr: 90, usd: 1 },
+    bitcoin: { inr: 6000000, usd: 70000 },
+    ethereum: { inr: 300000, usd: 3500 },
+    binancecoin: { inr: 50000, usd: 600 },
+    "usd-coin": { inr: 90, usd: 1 }
+  };
   let lastFetchTime = 0;
   const CACHE_DURATION = 60000; // 1 minute
 
   app.get("/api/prices", async (req, res) => {
     try {
       const now = Date.now();
-      if (priceCache && now - lastFetchTime < CACHE_DURATION) {
+      if (now - lastFetchTime < CACHE_DURATION) {
         return res.json(priceCache);
       }
 
       const response = await axios.get(
-        "https://api.coingecko.com/api/v3/simple/price?ids=tether,bitcoin,ethereum,binancecoin,usd-coin&vs_currencies=inr,usd"
+        "https://api.coingecko.com/api/v3/simple/price?ids=tether,bitcoin,ethereum,binancecoin,usd-coin&vs_currencies=inr,usd",
+        { timeout: 5000 } // Add timeout to avoid hanging
       );
       
-      priceCache = response.data;
-      lastFetchTime = now;
+      if (response.data && response.data.tether) {
+        priceCache = response.data;
+        lastFetchTime = now;
+      }
       res.json(priceCache);
     } catch (error: any) {
       console.error("Price fetch error:", error.message);
       
-      // If we have a cache, return it even if it's expired
-      if (priceCache) {
-        return res.json(priceCache);
-      }
-      
-      res.status(500).json({ error: "Failed to fetch prices" });
+      // Always return cache (even if it's the initial fallback) on error
+      res.json(priceCache);
     }
   });
 

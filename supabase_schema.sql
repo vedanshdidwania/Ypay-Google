@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS orders (
 
 -- Create app_settings table
 CREATE TABLE IF NOT EXISTS app_settings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   buy_rate NUMERIC DEFAULT 92.50,
   sell_rate NUMERIC DEFAULT 89.00,
   platform_fee NUMERIC DEFAULT 1.0, -- Default 1%
@@ -1247,6 +1247,6 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Initialize app_settings if empty
-INSERT INTO public.app_settings (buy_rate, sell_rate, platform_fee, referral_commission_l1, referral_commission_l2)
-SELECT 92.50, 89.00, 1.0, 10.0, 5.0
+INSERT INTO public.app_settings (id, buy_rate, sell_rate, platform_fee, referral_commission_l1, referral_commission_l2)
+SELECT 1, 92.50, 89.00, 1.0, 10.0, 5.0
 WHERE NOT EXISTS (SELECT 1 FROM public.app_settings);
