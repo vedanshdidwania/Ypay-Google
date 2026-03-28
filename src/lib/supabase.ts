@@ -13,8 +13,8 @@ const cleanValue = (val: string | undefined) => {
   return cleaned.trim();
 };
 
-const rawUrl = import.meta.env.VITE_SUPABASE_URL;
-const rawAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const rawUrl = import.meta.env.VITE_SUPABASE_URL || "https://ppktptuvpipotvjhsmho.supabase.co";
+const rawAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwa3RwdHV2cGlwb3R2amhzbWhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzI2ODksImV4cCI6MjA5MDIwODY4OX0.uSY66DcMzISbsqnVL6CWk-Ml70PJRTZZ0AgUU4QhzCw";
 
 const supabaseUrl = cleanValue(rawUrl);
 const supabaseAnonKey = cleanValue(rawAnonKey);
