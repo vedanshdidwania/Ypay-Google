@@ -12,52 +12,16 @@ import QRCode from "qrcode";
 
 dotenv.config();
 
-// Clean Supabase configuration (remove quotes and extra whitespace)
-const cleanValue = (val: string | undefined) => {
-  if (!val) return undefined;
-  let cleaned = val.trim();
-  if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
-    cleaned = cleaned.substring(1, cleaned.length - 1);
-  }
-  if (cleaned.startsWith("'") && cleaned.endsWith("'")) {
-    cleaned = cleaned.substring(1, cleaned.length - 1);
-  }
-  return cleaned.trim();
-};
+// Force correct Supabase configuration for the current project
+const supabaseUrl = "https://ppktptuvpipotvjhsmho.supabase.co";
+const supabaseServiceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwa3RwdHV2cGlwb3R2amhzbWhvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDYzMjY4OSwiZXhwIjoyMDkwMjA4Njg5fQ.vLPbK3kCLsYuYqtGS-wU4mFxSrkhkULE69cHP77JUcY";
 
-const rawUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "https://ppktptuvpipotvjhsmho.supabase.co";
-const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwa3RwdHV2cGlwb3R2amhzbWhvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDYzMjY4OSwiZXhwIjoyMDkwMjA4Njg5fQ.vLPbK3kCLsYuYqtGS-wU4mFxSrkhkULE69cHP77JUcY";
+console.log("Supabase initialized in server.ts");
+console.log("URL:", supabaseUrl);
+console.log("Key Length:", supabaseServiceKey.length);
+console.log("Key Prefix:", supabaseServiceKey.substring(0, 10) + "...");
 
-const supabaseUrl = cleanValue(rawUrl);
-const supabaseServiceKey = cleanValue(rawKey);
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error("Supabase configuration missing in server.ts!");
-  console.error("VITE_SUPABASE_URL:", rawUrl ? "Present" : "Missing");
-  console.error("SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "Present" : "Missing");
-  console.error("VITE_SUPABASE_ANON_KEY (fallback):", process.env.VITE_SUPABASE_ANON_KEY ? "Present" : "Missing");
-} else {
-  console.log("Supabase initialized in server.ts");
-  console.log("URL:", supabaseUrl);
-  console.log("Key Source:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "SUPABASE_SERVICE_ROLE_KEY" : "VITE_SUPABASE_ANON_KEY (fallback)");
-  console.log("Key Length:", supabaseServiceKey.length);
-  console.log("Key Prefix:", supabaseServiceKey.substring(0, 10) + "...");
-  
-  if (supabaseServiceKey.startsWith('sb_publishable')) {
-    console.error("CRITICAL ERROR: SUPABASE_SERVICE_ROLE_KEY or VITE_SUPABASE_ANON_KEY is set to a non-Supabase key format (starts with 'sb_publishable'). Please update your Secrets in AI Studio.");
-  }
-  
-  if (!supabaseServiceKey.includes('.')) {
-    console.warn("WARNING: Supabase key does not look like a JWT (missing dots). This will likely fail.");
-  }
-  
-  // Check for trailing slash in URL
-  if (supabaseUrl.endsWith('/')) {
-    console.warn("WARNING: Supabase URL has a trailing slash. This might cause issues.");
-  }
-}
-
-const supabase = createClient(supabaseUrl || "", supabaseServiceKey || "");
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function ensureBucketsExist() {
   const buckets = [
