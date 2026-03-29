@@ -16,6 +16,8 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [showOtpStep, setShowOtpStep] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [show2FA, setShow2FA] = useState(false);
   const [tempUserId, setTempUserId] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export default function Auth() {
           }
         }
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -66,9 +68,53 @@ export default function Auth() {
           },
         });
         if (error) throw error;
-        setSuccess('Registration successful! Please check your email for verification.');
+        
+        if (data.user && !data.session) {
+          setShowOtpStep(true);
+          setSuccess('A 6-digit verification code has been sent to your email.');
+        } else if (data.session) {
+          navigate('/dashboard');
+        }
       }
       if (isLogin && !show2FA) navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: otpCode,
+        type: 'signup',
+      });
+      if (error) throw error;
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      if (error) throw error;
+      setSuccess('Verification code resent successfully!');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -115,12 +161,14 @@ export default function Auth() {
           </div>
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-2">
-              {resetMode ? 'Reset Password' : (isLogin ? 'Welcome Back' : 'Create Account')}
+              {showOtpStep ? 'Verify Email' : (resetMode ? 'Reset Password' : (isLogin ? 'Welcome Back' : 'Create Account'))}
             </h2>
             <p className="text-gray-500">
-              {resetMode 
-                ? 'Enter your email to receive a password reset link' 
-                : (isLogin ? 'Enter your credentials to access your account' : 'Join Ypay and start trading USDT instantly')}
+              {showOtpStep 
+                ? `Enter the code sent to ${email}`
+                : (resetMode 
+                  ? 'Enter your email to receive a password reset link' 
+                  : (isLogin ? 'Enter your credentials to access your account' : 'Join Ypay and start trading USDT instantly'))}
             </p>
           </div>
 
@@ -130,7 +178,68 @@ export default function Auth() {
             </div>
           )}
 
-          <form onSubmit={resetMode ? handleResetPassword : handleAuth} className="space-y-4">
+          {showOtpStep ? (
+            <form onSubmit={handleVerifyOtp} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-500 ml-1">Verification Code</label>
+                <div className="relative">
+                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-center tracking-[1em] text-2xl font-bold"
+                    placeholder="000000"
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || otpCode.length !== 6}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center space-x-2 group"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <span>Verify & Complete</span>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={loading}
+                  className="text-sm text-blue-500 hover:text-blue-400 font-medium"
+                >
+                  Didn't receive the code? Resend
+                </button>
+              </div>
+
+              <div className="pt-4 border-t border-white/5 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowOtpStep(false)}
+                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  Back to Registration
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={resetMode ? handleResetPassword : handleAuth} className="space-y-4">
             {!isLogin && !resetMode && (
               <>
                 <div className="space-y-2">
@@ -228,24 +337,27 @@ export default function Auth() {
               )}
             </button>
           </form>
+          )}
 
-          <div className="mt-8 pt-6 border-t border-white/5 text-center space-y-4">
-            {resetMode ? (
-              <button
-                onClick={() => setResetMode(false)}
-                className="text-sm text-gray-400 hover:text-white transition-colors"
-              >
-                Back to Sign In
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-sm text-gray-400 hover:text-white transition-colors"
-              >
-                {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
-              </button>
-            )}
-          </div>
+          {!showOtpStep && (
+            <div className="mt-8 pt-6 border-t border-white/5 text-center space-y-4">
+              {resetMode ? (
+                <button
+                  onClick={() => setResetMode(false)}
+                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  Back to Sign In
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </motion.div>
 
