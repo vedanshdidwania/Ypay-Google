@@ -11,13 +11,16 @@ import {
   User as UserIcon,
   ChevronDown,
   Wallet,
+  ArrowRight,
   ShoppingCart,
   History,
-  Gift
+  Gift,
+  HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../lib/useAuth';
 import { cn } from '../lib/utils';
 import { NotificationCenter } from './Notifications';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
   const { user, profile, signOut } = useAuth();
@@ -172,40 +175,89 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-[#050505] border-b border-white/10 py-4 px-4 space-y-2">
-          {navLinks.map((link) => (
-            (!link.auth || user) && (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                  isActive(link.path) 
-                    ? "text-brand bg-brand/10" 
-                    : "text-gray-400 hover:bg-white/5"
-                )}
-              >
-                <link.icon className="w-5 h-5" />
-                {link.name}
-              </Link>
-            )
-          ))}
-          {user && (
-            <button 
-              onClick={() => {
-                handleSignOut();
-                setIsMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-400/10 transition-all"
-            >
-              <LogOut className="w-5 h-5" />
-              Sign Out
-            </button>
-          )}
-        </div>
-      )}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="md:hidden bg-[#050505] border-b border-white/10 overflow-hidden"
+          >
+            <div className="py-6 px-4 space-y-2">
+              <div className="grid grid-cols-2 gap-2 mb-6">
+                {navLinks.map((link) => (
+                  (!link.auth || user) && (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={cn(
+                        "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl text-xs font-bold transition-all border border-white/5",
+                        isActive(link.path) 
+                          ? "text-brand bg-brand/10 border-brand/20" 
+                          : "text-gray-400 bg-white/5 hover:bg-white/10"
+                      )}
+                    >
+                      <link.icon className="w-5 h-5" />
+                      {link.name}
+                    </Link>
+                  )
+                ))}
+              </div>
+
+              {user ? (
+                <div className="space-y-2">
+                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-brand rounded-xl flex items-center justify-center text-white text-lg font-bold">
+                      {user.email?.[0].toUpperCase()}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-white">{profile?.full_name || 'User'}</span>
+                      <span className="text-xs text-gray-500">{user.email}</span>
+                    </div>
+                  </div>
+                  
+                  <Link 
+                    to="/dashboard?tab=settings" 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-sm font-bold text-gray-400 bg-white/5 hover:bg-white/10 transition-all"
+                  >
+                    <UserIcon className="w-5 h-5" />
+                    Profile Settings
+                  </Link>
+                  
+                  <button 
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-sm font-bold text-red-400 bg-red-400/5 hover:bg-red-400/10 transition-all"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <Link 
+                  to="/auth" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full btn-primary py-4 flex items-center justify-center gap-2"
+                >
+                  Get Started
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              )}
+
+              <div className="pt-6 border-t border-white/5 flex items-center justify-center gap-6">
+                <a href="#" className="text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors">Support</a>
+                <a href="#" className="text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors">Terms</a>
+                <a href="#" className="text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors">Privacy</a>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }

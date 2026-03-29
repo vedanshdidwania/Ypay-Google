@@ -89,7 +89,7 @@ export default function Home() {
                 Live Market Active
               </div>
               
-              <h1 className="text-5xl lg:text-7xl font-display font-bold text-white tracking-tight leading-[1.1] mb-8">
+              <h1 className="text-4xl md:text-5xl lg:text-7xl font-display font-bold text-white tracking-tight leading-[1.1] mb-8">
                 The Future of <span className="text-brand">P2P Settlements</span> is Here.
               </h1>
               
@@ -258,10 +258,10 @@ export default function Home() {
       {/* Trust Section */}
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>
               <h2 className="text-[10px] font-bold text-brand uppercase tracking-[0.3em] mb-4">Security First</h2>
-              <h3 className="text-4xl font-display font-bold text-white mb-8">Uncompromising safety for every transaction.</h3>
+              <h3 className="text-3xl md:text-4xl font-display font-bold text-white mb-8">Uncompromising safety for every transaction.</h3>
               
               <div className="space-y-6">
                 {[
@@ -274,20 +274,20 @@ export default function Home() {
                     <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
                       <CheckCircle2 className="w-4 h-4" />
                     </div>
-                    <span className="text-lg font-medium text-gray-300">{item}</span>
+                    <span className="text-base md:text-lg font-medium text-gray-300">{item}</span>
                   </div>
                 ))}
               </div>
 
               <div className="mt-12">
-                <Link to="/p2p" className="inline-flex items-center gap-2 text-brand font-bold uppercase tracking-widest text-xs hover:gap-4 transition-all">
+                <Link to="/p2p" className="inline-flex items-center gap-2 text-brand font-bold uppercase tracking-widest text-[10px] md:text-xs hover:gap-4 transition-all">
                   Learn more about our security
                   <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div className="card p-6 bg-brand text-white border-none shadow-lg shadow-brand/20">
                   <Lock className="w-8 h-8 mb-4 opacity-50" />
@@ -300,7 +300,7 @@ export default function Home() {
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Countries</p>
                 </div>
               </div>
-              <div className="space-y-4 pt-12">
+              <div className="space-y-4 sm:pt-12">
                 <div className="card p-6">
                   <ShieldCheck className="w-8 h-8 mb-4 text-brand opacity-50" />
                   <p className="text-2xl font-bold text-white mb-1">SOC2</p>

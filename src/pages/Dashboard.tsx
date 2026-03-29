@@ -411,47 +411,47 @@ export default function Dashboard() {
                           animate={{ opacity: 1, y: 0 }}
                           className="card p-6 hover:border-brand/30 transition-all group"
                         >
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div className="flex items-center gap-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-3 sm:gap-4">
                               <div className={cn(
-                                "w-12 h-12 rounded-xl flex items-center justify-center border",
+                                "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border shrink-0",
                                 isBuyer 
                                   ? "bg-green-500/10 border-green-500/20 text-green-400" 
                                   : "bg-brand/10 border-brand/20 text-brand"
                               )}>
-                                {isBuyer ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
+                                {isBuyer ? <ArrowDownLeft className="w-5 h-5 sm:w-6 sm:h-6" /> : <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6" />}
                               </div>
-                              <div>
-                                <div className="flex items-center gap-3 mb-1">
-                                  <span className="font-bold text-white">
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                  <span className="font-bold text-white text-sm sm:text-base">
                                     {isBuyer ? 'Buy' : 'Sell'} USDT
                                   </span>
                                   <span className={cn(
-                                    "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border",
+                                    "text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border",
                                     getStatusColor(order.status)
                                   )}>
                                     {order.status}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <div className="flex items-center gap-2 text-[10px] sm:text-xs text-gray-500">
                                   <Clock className="w-3 h-3" />
                                   {new Date(order.created_at).toLocaleDateString()}
-                                  <span>•</span>
-                                  <span>ID: {order.id.slice(0, 8)}</span>
+                                  <span className="hidden sm:inline">•</span>
+                                  <span className="truncate">ID: {order.id.slice(0, 8)}</span>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="flex items-center justify-between md:justify-end gap-12">
-                              <div className="text-right">
-                                <p className="text-lg font-bold text-white">{formatUSDT(order.amount_usdt)}</p>
-                                <p className="text-xs font-medium text-gray-500">{formatCurrency(order.amount_inr)}</p>
+                            <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-12 pt-2 sm:pt-0 border-t border-white/5 sm:border-none">
+                              <div className="sm:text-right">
+                                <p className="text-base sm:text-lg font-bold text-white">{formatUSDT(order.amount_usdt)}</p>
+                                <p className="text-[10px] sm:text-xs font-medium text-gray-500">{formatCurrency(order.amount_inr)}</p>
                               </div>
                               <Link
                                 to={`/p2p/order/${order.id}`}
-                                className="p-3 bg-white/5 text-gray-500 hover:text-brand hover:bg-brand/10 rounded-xl transition-all border border-white/5"
+                                className="p-2.5 sm:p-3 bg-white/5 text-gray-500 hover:text-brand hover:bg-brand/10 rounded-xl transition-all border border-white/5"
                               >
-                                <ExternalLink className="w-5 h-5" />
+                                <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
                               </Link>
                             </div>
                           </div>

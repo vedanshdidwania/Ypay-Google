@@ -127,7 +127,8 @@ export default function Transactions() {
         </div>
 
         <div className="card overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-bottom border-white/5">
@@ -187,6 +188,54 @@ export default function Transactions() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden divide-y divide-white/5">
+            {filteredTransactions.map((tx) => (
+              <motion.div
+                key={tx.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="p-4 space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      tx.type === 'deposit' ? 'bg-green-500/10 text-green-500' : 
+                      tx.type === 'withdrawal' ? 'bg-red-500/10 text-red-500' : 
+                      'bg-blue-500/10 text-blue-500'
+                    }`}>
+                      {tx.type === 'deposit' ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white capitalize">{tx.type.replace('_', ' ')}</p>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{new Date(tx.created_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-white">{formatUSDT(tx.amount)}</p>
+                    <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest ${
+                      tx.status === 'completed' ? 'bg-green-500/10 text-green-500' : 
+                      tx.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
+                      'bg-red-500/10 text-red-500'
+                    }`}>
+                      {tx.status}
+                    </span>
+                  </div>
+                </div>
+                {tx.tx_hash && (
+                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">TX Hash</span>
+                    <div className="flex items-center gap-2 text-[10px] text-brand font-mono">
+                      {tx.tx_hash.substring(0, 16)}...
+                      <ExternalLink className="w-3 h-3" />
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+
           {filteredTransactions.length === 0 && (
             <div className="p-12 text-center">
               <History className="w-12 h-12 text-gray-700 mx-auto mb-4" />

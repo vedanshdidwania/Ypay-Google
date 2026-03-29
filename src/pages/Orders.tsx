@@ -150,29 +150,31 @@ export default function Orders() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-8">
-                  <div className="text-right hidden md:block">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Status</p>
-                    <div className="flex items-center gap-2 justify-end">
-                      {order.status === 'completed' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : 
-                       order.status === 'cancelled' ? <XCircle className="w-4 h-4 text-red-500" /> : 
-                       <Clock className="w-4 h-4 text-yellow-500" />}
-                      <span className={`text-sm font-bold capitalize ${
-                        order.status === 'completed' ? 'text-green-500' : 
-                        order.status === 'cancelled' ? 'text-red-500' : 
-                        'text-yellow-500'
-                      }`}>
-                        {order.status}
-                      </span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+                  <div className="flex items-center justify-between sm:justify-end gap-8">
+                    <div className="text-left sm:text-right">
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Status</p>
+                      <div className="flex items-center gap-2 sm:justify-end">
+                        {order.status === 'completed' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : 
+                         order.status === 'cancelled' ? <XCircle className="w-4 h-4 text-red-500" /> : 
+                         <Clock className="w-4 h-4 text-yellow-500" />}
+                        <span className={`text-sm font-bold capitalize ${
+                          order.status === 'completed' ? 'text-green-500' : 
+                          order.status === 'cancelled' ? 'text-red-500' : 
+                          'text-yellow-500'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Date</p>
+                      <p className="text-sm font-bold text-white">{new Date(order.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
 
-                  <div className="text-right hidden md:block">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Date</p>
-                    <p className="text-sm font-bold text-white">{new Date(order.created_at).toLocaleDateString()}</p>
-                  </div>
-
-                  <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 group-hover:bg-brand group-hover:text-white transition-all">
+                  <div className="hidden sm:flex w-10 h-10 bg-white/5 rounded-xl items-center justify-center text-gray-500 group-hover:bg-brand group-hover:text-white transition-all">
                     <ChevronRight className="w-5 h-5" />
                   </div>
                 </div>

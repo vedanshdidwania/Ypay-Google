@@ -400,7 +400,7 @@ export default function P2P() {
                   </div>
                 )}
 
-                <div className="grid lg:grid-cols-4 gap-8 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-center">
                   {/* Merchant Info */}
                   <div className="flex items-center gap-4">
                     <div className="relative">
@@ -459,9 +459,9 @@ export default function P2P() {
                   </div>
 
                   {/* Price Info */}
-                  <div className="lg:text-center">
+                  <div className="md:text-left lg:text-center">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Price per {selectedAsset}</p>
-                    <div className="flex flex-col lg:items-center">
+                    <div className="flex flex-col md:items-start lg:items-center">
                       <p className="text-3xl font-display font-bold text-white leading-none">
                         ₹{ad.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </p>
@@ -475,8 +475,8 @@ export default function P2P() {
                   </div>
 
                   {/* Payment & Limits */}
-                  <div>
-                    <div className="mb-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-0">
+                    <div className="mb-4 lg:mb-4">
                       <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Limits</p>
                       <p className="text-sm font-bold text-white">
                         {formatCurrency(ad.min_limit)} - {formatCurrency(ad.max_limit)}
@@ -495,7 +495,7 @@ export default function P2P() {
                   </div>
 
                   {/* Action */}
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-3 pt-4 lg:pt-0">
                     <button 
                       onClick={() => navigate(`/p2p/create/${ad.id}`)}
                       className={cn(

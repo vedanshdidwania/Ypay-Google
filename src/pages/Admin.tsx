@@ -151,7 +151,7 @@ function AdminDashboard() {
     // Subscribe to real-time order updates
     const ordersSubscription = supabase
       .channel('admin-dashboard-orders')
-      .on('postgres_changes', { event: '*', table: 'orders' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
         fetchStats();
       })
       .subscribe();

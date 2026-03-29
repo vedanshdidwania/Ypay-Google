@@ -105,9 +105,9 @@ export default function Referrals() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-5xl md:text-7xl font-display font-bold text-white mb-6 leading-[0.9] tracking-tight"
+              className="text-4xl md:text-7xl font-display font-bold text-white mb-6 leading-[1.1] md:leading-[0.9] tracking-tight"
             >
-              Earn While Your <br />
+              Earn While Your <br className="hidden md:block" />
               <span className="text-brand">Network Trades.</span>
             </motion.h1>
             <motion.p 
@@ -123,29 +123,31 @@ export default function Referrals() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-4"
+              className="flex flex-col gap-4"
             >
-              <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl px-6 py-4 flex items-center justify-between group">
-                <span className="text-sm font-mono text-gray-500 truncate mr-4">{referralLink}</span>
+              <div className="w-full bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl px-6 py-4 flex items-center justify-between group">
+                <span className="text-xs md:text-sm font-mono text-gray-500 truncate mr-4">{referralLink}</span>
                 <button
                   onClick={copyToClipboard}
-                  className="p-2 hover:bg-white/10 rounded-xl transition-all text-gray-400 hover:text-white"
+                  className="p-2 hover:bg-white/10 rounded-xl transition-all text-gray-400 hover:text-white shrink-0"
                 >
                   {copied ? <Check className="w-5 h-5 text-brand" /> : <Copy className="w-5 h-5" />}
                 </button>
               </div>
-              <button 
-                onClick={copyToClipboard}
-                className="btn-primary px-10 py-4 shadow-2xl shadow-brand/20"
-              >
-                Copy Invite Link
-              </button>
-              <button 
-                onClick={copyCode}
-                className="px-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-sm font-bold text-white hover:bg-white/10 transition-all"
-              >
-                Copy Code
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button 
+                  onClick={copyToClipboard}
+                  className="flex-1 btn-primary px-10 py-4 shadow-2xl shadow-brand/20"
+                >
+                  Copy Invite Link
+                </button>
+                <button 
+                  onClick={copyCode}
+                  className="flex-1 px-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-sm font-bold text-white hover:bg-white/10 transition-all"
+                >
+                  Copy Code
+                </button>
+              </div>
             </motion.div>
           </div>
 
@@ -182,31 +184,31 @@ export default function Referrals() {
             </div>
 
             {/* How it works */}
-            <div className="card p-10">
-              <h3 className="text-2xl font-display font-bold text-white mb-10">Commission Structure</h3>
-              <div className="grid md:grid-cols-2 gap-12">
+            <div className="card p-6 md:p-10">
+              <h3 className="text-xl md:text-2xl font-display font-bold text-white mb-8 md:mb-10">Commission Structure</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
                 <div className="space-y-8">
-                  <div className="flex gap-6">
-                    <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-brand font-display font-bold text-xl shrink-0">01</div>
+                  <div className="flex gap-4 md:gap-6">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-brand font-display font-bold text-lg md:text-xl shrink-0">01</div>
                     <div>
-                      <h4 className="text-lg font-bold text-white mb-2">Direct (L1) - 0.1%</h4>
-                      <p className="text-sm text-gray-400 leading-relaxed">Earn 0.1% of the total trade volume from users who sign up directly using your link.</p>
+                      <h4 className="text-base md:text-lg font-bold text-white mb-2">Direct (L1) - 0.1%</h4>
+                      <p className="text-xs md:text-sm text-gray-400 leading-relaxed">Earn 0.1% of the total trade volume from users who sign up directly using your link.</p>
                     </div>
                   </div>
-                  <div className="flex gap-6">
-                    <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-brand font-display font-bold text-xl shrink-0">02</div>
+                  <div className="flex gap-4 md:gap-6">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-brand font-display font-bold text-lg md:text-xl shrink-0">02</div>
                     <div>
-                      <h4 className="text-lg font-bold text-white mb-2">Indirect (L2) - 0.05%</h4>
-                      <p className="text-sm text-gray-400 leading-relaxed">Earn an additional 0.05% from users invited by your direct referrals. Build a multi-tier network.</p>
+                      <h4 className="text-base md:text-lg font-bold text-white mb-2">Indirect (L2) - 0.05%</h4>
+                      <p className="text-xs md:text-sm text-gray-400 leading-relaxed">Earn an additional 0.05% from users invited by your direct referrals. Build a multi-tier network.</p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-brand/5 border border-brand/10 rounded-[2rem] p-8 flex flex-col justify-center">
+                <div className="bg-brand/5 border border-brand/10 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
                     <span className="text-[10px] font-bold text-brand uppercase tracking-widest">Real-time Settlements</span>
                   </div>
-                  <p className="text-sm text-gray-300 leading-relaxed italic">
+                  <p className="text-xs md:text-sm text-gray-300 leading-relaxed italic">
                     "Commissions are calculated on the platform fee and settled instantly into your wallet the moment a trade is completed."
                   </p>
                 </div>
