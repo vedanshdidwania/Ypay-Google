@@ -13,8 +13,14 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import HeroBackground from '../components/HeroBackground';
+import CryptoCoin from '../components/CryptoCoin';
 
 import { supabase } from '../lib/supabase';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
   const [amount, setAmount] = useState('10000');
@@ -40,6 +46,59 @@ export default function Home() {
       setUsdt((val / rate).toFixed(2));
     }
   }, [amount, rate]);
+
+  useEffect(() => {
+    // GSAP animations for sections
+    const sections = gsap.utils.toArray('.gsap-reveal');
+    sections.forEach((section: any) => {
+      gsap.fromTo(section, 
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 85%',
+            toggleActions: 'play none none none'
+          }
+        }
+      );
+    });
+
+    // Staggered reveal for feature cards
+    gsap.fromTo('.gsap-feature-card',
+      { opacity: 0, y: 30 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.2,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: '.gsap-feature-grid',
+          start: 'top 80%'
+        }
+      }
+    );
+
+    // Parallax effect for hero text
+    gsap.to('.hero-parallax', {
+      y: -100,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.hero-section',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: true
+      }
+    });
+
+    return () => {
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
+  }, []);
 
   const features = [
     {
@@ -68,13 +127,14 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#050505] text-white">
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden hero-section">
+        <HeroBackground />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none overflow-hidden">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand/10 rounded-full blur-[120px]" />
           <div className="absolute bottom-[10%] right-[-10%] w-[30%] h-[30%] bg-brand/5 rounded-full blur-[100px]" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative hero-parallax">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -130,9 +190,17 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative"
+              className="relative flex items-center justify-center"
             >
-              <div className="card p-6 sm:p-10 shadow-2xl shadow-brand/10 relative z-10">
+              <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
+                <div className="w-[400px] h-[400px] bg-brand/10 rounded-full blur-[100px] animate-pulse" />
+              </div>
+              
+              <div className="relative z-10 hidden lg:block">
+                <CryptoCoin />
+              </div>
+
+              <div className="card p-6 sm:p-10 shadow-2xl shadow-brand/10 relative z-20 lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-[450px]">
                 <div className="flex items-center justify-between mb-8 sm:mb-10">
                   <h3 className="text-lg sm:text-xl font-bold text-white">Settlement Calculator</h3>
                   <div className="flex items-center gap-1.5 text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-green-500/20">
@@ -197,7 +265,7 @@ export default function Home() {
       </section>
 
       {/* How it Works Section */}
-      <section className="py-24 border-y border-white/5">
+      <section className="py-24 border-y border-white/5 gsap-reveal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-24">
             <h2 className="text-xs sm:text-sm font-bold text-brand uppercase tracking-[0.3em] mb-6">The Process</h2>
@@ -236,15 +304,15 @@ export default function Home() {
       {/* Features Section */}
       <section className="py-24 bg-white/[0.02]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-24">
+          <div className="text-center max-w-3xl mx-auto mb-24 gsap-reveal">
             <h2 className="text-xs sm:text-sm font-bold text-brand uppercase tracking-[0.3em] mb-6">Core Protocol</h2>
             <h3 className="text-5xl sm:text-6xl font-display font-bold text-white mb-8">Built for the next generation of digital finance.</h3>
             <p className="text-lg sm:text-xl text-gray-400">Our protocol combines decentralized trust with centralized efficiency to provide the ultimate settlement experience.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-10">
+          <div className="grid md:grid-cols-3 gap-10 gsap-feature-grid">
             {features.map((f, i) => (
-              <div key={i} className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group">
+              <div key={i} className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group gsap-feature-card">
                 <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
                   <f.icon className="w-8 h-8" />
                 </div>
@@ -257,7 +325,7 @@ export default function Home() {
       </section>
 
       {/* Trust Section */}
-      <section className="py-24">
+      <section className="py-24 gsap-reveal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>

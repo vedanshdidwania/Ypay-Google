@@ -149,26 +149,26 @@ export default function MyAds() {
   return (
     <div className="min-h-screen bg-[#050505] pt-20 sm:pt-24 pb-8 sm:pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 sm:mb-10">
-          <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 mb-10 sm:mb-14">
+          <div className="flex items-center gap-4 sm:gap-6">
             <button 
               onClick={() => navigate('/dashboard')}
-              className="p-1.5 sm:p-2 hover:bg-white/5 rounded-lg sm:rounded-xl transition-colors text-gray-400 hover:text-white"
+              className="p-2 sm:p-3 hover:bg-white/5 rounded-lg sm:rounded-xl transition-colors text-gray-400 hover:text-white"
             >
-              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             <div>
-              <h1 className="text-xl sm:text-3xl font-display font-bold text-white">My Advertisements</h1>
-              <p className="text-[10px] sm:text-sm text-gray-400 mt-0.5 sm:mt-1">Manage your active P2P listings and trade terms.</p>
+              <h1 className="text-2xl sm:text-4xl font-display font-bold text-white">My Advertisements</h1>
+              <p className="text-xs sm:text-base text-gray-400 mt-1 sm:mt-2">Manage your active P2P listings and trade terms.</p>
             </div>
           </div>
           
           <button 
             onClick={() => navigate('/p2p')}
-            className="btn-primary w-full sm:w-auto justify-center py-2.5 sm:py-3"
+            className="btn-primary w-full sm:w-auto justify-center py-3.5 sm:py-4 px-8"
           >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-xs sm:text-sm">Create New Ad</span>
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="text-sm sm:text-base">Create New Ad</span>
           </button>
         </div>
 
@@ -198,47 +198,47 @@ export default function MyAds() {
                 key={ad.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="card p-4 sm:p-6 hover:border-white/20 transition-all group"
+                className="card p-6 sm:p-8 hover:border-white/20 transition-all group"
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
-                  <div className="flex items-center gap-4 sm:gap-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 sm:gap-8">
+                  <div className="flex items-center gap-6 sm:gap-8">
                     <div className={cn(
-                      "w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-[10px] sm:text-xs",
+                      "w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center font-bold text-xs sm:text-sm",
                       ad.type === 'buy' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
                     )}>
                       {ad.type === 'buy' ? 'BUY' : 'SELL'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 sm:gap-3 mb-0.5 sm:mb-1">
-                        <span className="text-base sm:text-lg font-bold text-white">₹{ad.price.toFixed(2)}</span>
+                      <div className="flex items-center gap-3 sm:gap-4 mb-1.5 sm:mb-2">
+                        <span className="text-xl sm:text-2xl font-bold text-white">₹{ad.price.toFixed(2)}</span>
                         <span className={cn(
-                          "px-1.5 sm:px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] font-bold uppercase tracking-widest",
+                          "px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest",
                           ad.status === 'active' ? "bg-green-500/10 text-green-500" : "bg-gray-500/10 text-gray-500"
                         )}>
                           {ad.status}
                         </span>
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">
                         <span>Limit: {formatCurrency(ad.min_limit)} - {formatCurrency(ad.max_limit)}</span>
                         <span className="hidden sm:inline">•</span>
-                        <span className="truncate max-w-[150px] sm:max-w-none">{ad.payment_methods.join(', ')}</span>
+                        <span className="truncate max-w-[200px] sm:max-w-none">{ad.payment_methods.join(', ')}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 sm:pt-0 border-t sm:border-none border-white/5">
+                  <div className="flex items-center gap-3 pt-4 sm:pt-0 border-t sm:border-none border-white/5">
                     <button 
                       onClick={() => toggleAdStatus(ad.id, ad.status)}
                       className={cn(
-                        "flex-1 sm:flex-none p-2.5 sm:p-3 rounded-lg sm:rounded-xl transition-all border flex items-center justify-center",
+                        "flex-1 sm:flex-none p-3.5 sm:p-4 rounded-lg sm:rounded-xl transition-all border flex items-center justify-center",
                         ad.status === 'active' 
                           ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" 
                           : "bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20"
                       )}
                       title={ad.status === 'active' ? 'Pause Ad' : 'Resume Ad'}
                     >
-                      {ad.status === 'active' ? <Pause className="w-4 h-4 sm:w-5 sm:h-5" /> : <Play className="w-4 h-4 sm:w-5 sm:h-5" />}
-                      <span className="sm:hidden ml-2 text-[10px] font-bold uppercase tracking-widest">
+                      {ad.status === 'active' ? <Pause className="w-5 h-5 sm:w-6 sm:h-6" /> : <Play className="w-5 h-5 sm:w-6 sm:h-6" />}
+                      <span className="sm:hidden ml-2 text-xs font-bold uppercase tracking-widest">
                         {ad.status === 'active' ? 'Pause' : 'Resume'}
                       </span>
                     </button>
@@ -249,11 +249,11 @@ export default function MyAds() {
                         setAdToDelete(ad.id);
                         setShowDeleteConfirm(true);
                       }}
-                      className="flex-1 sm:flex-none p-2.5 sm:p-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg sm:rounded-xl transition-all border border-red-500/20 flex items-center justify-center"
+                      className="flex-1 sm:flex-none p-3.5 sm:p-4 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg sm:rounded-xl transition-all border border-red-500/20 flex items-center justify-center"
                       title="Delete Ad"
                     >
-                      <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="sm:hidden ml-2 text-[10px] font-bold uppercase tracking-widest">Delete</span>
+                      <Trash2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <span className="sm:hidden ml-2 text-xs font-bold uppercase tracking-widest">Delete</span>
                     </button>
                   </div>
                 </div>

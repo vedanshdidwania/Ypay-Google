@@ -305,58 +305,58 @@ export default function P2P() {
     <div className="min-h-screen bg-[#050505] pt-20 sm:pt-24 pb-8 sm:pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 sm:mb-10 md:mb-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 sm:mb-12 md:mb-14">
           <div className="text-center md:text-left">
-            <h1 className="text-4xl sm:text-4xl md:text-5xl font-display font-bold text-white tracking-tight">P2P Marketplace</h1>
-            <p className="text-base sm:text-base md:text-lg text-gray-400 mt-3 sm:mt-3 flex items-center justify-center md:justify-start gap-2.5 sm:gap-2.5">
-              <ShieldCheck className="w-6 h-6 sm:w-6 sm:h-6 text-brand" />
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-white tracking-tight">P2P Marketplace</h1>
+            <p className="text-base sm:text-lg md:text-xl text-gray-400 mt-4 sm:mt-5 flex items-center justify-center md:justify-start gap-3 sm:gap-4">
+              <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 text-brand" />
               Direct fiat-to-crypto settlements with verified merchants.
             </p>
           </div>
           
-          <div className="flex items-center gap-4 sm:gap-4">
+          <div className="flex items-center gap-4 sm:gap-5">
             <button 
               onClick={() => navigate('/wallet')}
-              className="flex-1 md:flex-none px-8 sm:px-8 py-4.5 sm:py-4 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl text-base sm:text-base font-bold text-white hover:bg-white/10 transition-all"
+              className="flex-1 md:flex-none px-8 sm:px-10 py-5 sm:py-4 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl text-base sm:text-lg font-bold text-white hover:bg-white/10 transition-all"
             >
               My Wallet
             </button>
             <button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex-1 md:flex-none btn-primary px-8 sm:px-10 py-4.5 sm:py-4 text-base sm:text-base"
+              className="flex-1 md:flex-none btn-primary px-8 sm:px-12 py-5 sm:py-4 text-base sm:text-lg"
             >
-              <Plus className="w-6 h-6 sm:w-6 sm:h-6" />
+              <Plus className="w-6 h-6 sm:w-7 sm:h-7" />
               Post Ad
             </button>
           </div>
         </div>
 
         {/* Asset Selector */}
-        <div className="flex items-center gap-4 sm:gap-5 mb-10 sm:mb-10 overflow-x-auto pb-3 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex items-center gap-4 sm:gap-6 mb-10 sm:mb-12 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
           {ASSETS.map((asset) => (
             <button
               key={asset.id}
               onClick={() => setSelectedAsset(asset.id)}
               className={cn(
-                "flex items-center gap-3 sm:gap-4 px-6 sm:px-6 py-4 sm:py-4 rounded-xl sm:rounded-2xl border transition-all shrink-0",
+                "flex items-center gap-4 sm:gap-5 px-8 sm:px-10 py-5 sm:py-5 rounded-2xl sm:rounded-3xl border transition-all shrink-0",
                 selectedAsset === asset.id 
                   ? "bg-brand/10 border-brand text-white shadow-lg shadow-brand/10" 
                   : "bg-white/5 border-white/10 text-gray-400 hover:border-white/20"
               )}
             >
-              <img src={asset.icon} alt={asset.name} className="w-7 h-7 sm:w-7 sm:h-7" referrerPolicy="no-referrer" />
-              <span className="font-bold text-base sm:text-base">{asset.id}</span>
+              <img src={asset.icon} alt={asset.name} className="w-8 h-8 sm:w-9 sm:h-9" referrerPolicy="no-referrer" />
+              <span className="font-bold text-lg sm:text-xl">{asset.id}</span>
             </button>
           ))}
         </div>
 
         {/* Filters Bar */}
-        <div className="card p-5 sm:p-5 mb-10 md:mb-10 flex flex-col lg:flex-row items-center justify-between gap-5 sm:gap-8">
-          <div className="flex items-center gap-2 p-2 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl w-full lg:w-auto">
+        <div className="card p-6 sm:p-8 mb-10 md:mb-12 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-10">
+          <div className="flex items-center gap-2.5 p-2.5 bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl w-full lg:w-auto">
             <button
               onClick={() => setFilterType('buy')}
               className={cn(
-                "flex-1 lg:flex-none px-6 sm:px-12 py-4 sm:py-3 rounded-lg sm:rounded-xl text-base sm:text-base font-bold transition-all",
+                "flex-1 lg:flex-none px-8 sm:px-16 py-4.5 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-bold transition-all",
                 filterType === 'buy' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -365,7 +365,7 @@ export default function P2P() {
             <button
               onClick={() => setFilterType('sell')}
               className={cn(
-                "flex-1 lg:flex-none px-6 sm:px-12 py-4 sm:py-3 rounded-lg sm:rounded-xl text-base sm:text-base font-bold transition-all",
+                "flex-1 lg:flex-none px-8 sm:px-16 py-4.5 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-bold transition-all",
                 filterType === 'sell' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -373,23 +373,23 @@ export default function P2P() {
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 w-full lg:w-auto">
-            <div className="relative w-full sm:flex-1 sm:min-w-[250px]">
-              <Search className="absolute left-5 sm:left-5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-5 sm:h-5 text-gray-500" />
+          <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-6 w-full lg:w-auto">
+            <div className="relative w-full sm:flex-1 sm:min-w-[300px]">
+              <Search className="absolute left-6 sm:left-6 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-6 sm:h-6 text-gray-500" />
               <input 
                 type="number" 
                 value={searchAmount}
                 onChange={(e) => setSearchAmount(e.target.value)}
                 placeholder="Enter amount (INR)..." 
-                className="w-full bg-[#050505] border border-white/10 rounded-xl sm:rounded-2xl pl-14 sm:pl-12 pr-5 py-5 sm:py-4 text-base sm:text-base focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-white"
+                className="w-full bg-[#050505] border border-white/10 rounded-2xl sm:rounded-3xl pl-16 sm:pl-16 pr-6 py-5 sm:py-5 text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-white"
               />
             </div>
             
-            <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="flex items-center gap-5 w-full sm:w-auto">
               <select 
                 value={selectedPaymentMethod}
                 onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                className="flex-1 sm:flex-none bg-[#050505] border border-white/10 rounded-xl sm:rounded-2xl px-5 sm:px-5 py-5 sm:py-4 text-base sm:text-base text-white focus:outline-none focus:border-brand"
+                className="flex-1 sm:flex-none bg-[#050505] border border-white/10 rounded-2xl sm:rounded-3xl px-6 sm:px-8 py-5 sm:py-5 text-base sm:text-lg text-white focus:outline-none focus:border-brand appearance-none"
               >
                 <option value="All">All Payments</option>
                 {PAYMENT_METHODS.map(pm => (
@@ -397,8 +397,8 @@ export default function P2P() {
                 ))}
               </select>
 
-              <button className="p-5 sm:p-4 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl text-gray-400 hover:bg-white/10 transition-all">
-                <Filter className="w-6 h-6 sm:w-6 sm:h-6" />
+              <button className="p-5 sm:p-5 bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl text-gray-400 hover:bg-white/10 transition-all">
+                <Filter className="w-6 h-6 sm:w-7 sm:h-7" />
               </button>
             </div>
           </div>
@@ -425,50 +425,50 @@ export default function P2P() {
                 key={ad.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="card p-6 sm:p-8 hover:border-brand/30 transition-all group relative overflow-hidden"
+                className="card p-6 sm:p-10 hover:border-brand/30 transition-all group relative overflow-hidden"
               >
                 {ad.user_profile?.has_verification_badge && (
-                  <div className="absolute top-0 right-0 bg-brand/10 text-brand px-4 sm:px-6 py-1.5 rounded-bl-lg sm:rounded-bl-2xl text-[11px] sm:text-[12px] font-bold uppercase tracking-widest border-l border-b border-brand/20 flex items-center gap-1.5 sm:gap-2">
-                    <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <div className="absolute top-0 right-0 bg-brand/10 text-brand px-5 sm:px-8 py-2 rounded-bl-xl sm:rounded-bl-[2rem] text-[11px] sm:text-[13px] font-bold uppercase tracking-widest border-l border-b border-brand/20 flex items-center gap-2 sm:gap-2.5">
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5" />
                     Top Merchant
                   </div>
                 )}
 
-                <div className="flex flex-col gap-6 sm:gap-8">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 sm:gap-8">
+                <div className="flex flex-col gap-8 sm:gap-10">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 sm:gap-12">
                     {/* Merchant Info */}
-                    <div className="flex items-center gap-4 sm:gap-5">
+                    <div className="flex items-center gap-5 sm:gap-6">
                       <div className="relative shrink-0">
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-white/5 rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center text-brand border border-white/10 group-hover:border-brand/30 transition-all">
-                          <User className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white/5 rounded-xl sm:rounded-2xl md:rounded-3xl flex items-center justify-center text-brand border border-white/10 group-hover:border-brand/30 transition-all">
+                          <User className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />
                         </div>
                         {ad.user_profile?.is_verified_merchant && (
-                          <div className="absolute -bottom-1.5 -right-1.5 bg-[#050505] p-1 rounded-full">
-                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-brand" />
+                          <div className="absolute -bottom-2 -right-2 bg-[#050505] p-1.5 rounded-full">
+                            <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-brand" />
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3">
-                          <span className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate">
+                        <div className="flex items-center gap-4">
+                          <span className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight truncate">
                             {ad.user_profile?.full_name || 'Anonymous'}
                           </span>
                           <button 
                             onClick={() => toggleFavorite(ad.user_id)}
                             className={cn(
-                              "p-1.5 rounded-lg transition-all",
+                              "p-2 rounded-xl transition-all",
                               favorites.includes(ad.user_id) ? "text-red-500" : "text-gray-600 hover:text-red-500"
                             )}
                           >
-                            <Heart className={cn("w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5", favorites.includes(ad.user_id) && "fill-current")} />
+                            <Heart className={cn("w-5 h-5 sm:w-5.5 sm:h-5.5 md:w-6 md:h-6", favorites.includes(ad.user_id) && "fill-current")} />
                           </button>
                         </div>
-                        <div className="flex items-center gap-3 md:gap-4 mt-1 md:mt-1.5">
-                          <span className="text-xs sm:text-[12px] md:text-[13px] font-bold text-gray-500 uppercase tracking-widest">
+                        <div className="flex items-center gap-4 md:gap-5 mt-2 md:mt-2.5">
+                          <span className="text-xs sm:text-sm md:text-base font-bold text-gray-500 uppercase tracking-widest">
                             {ad.user_profile?.trades_completed || 0} Trades
                           </span>
-                          <span className="w-1 h-1 bg-gray-700 rounded-full" />
-                          <span className="text-xs sm:text-[12px] md:text-[13px] font-bold text-brand uppercase tracking-widest">
+                          <span className="w-1.5 h-1.5 bg-gray-700 rounded-full" />
+                          <span className="text-xs sm:text-sm md:text-base font-bold text-brand uppercase tracking-widest">
                             {ad.user_profile?.completion_rate || 0}% Success
                           </span>
                         </div>
@@ -476,15 +476,15 @@ export default function P2P() {
                     </div>
 
                     {/* Price Info */}
-                    <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start border-t md:border-none border-white/5 pt-4 md:pt-0">
-                      <p className="text-xs sm:text-[12px] md:text-[13px] font-bold text-gray-500 uppercase tracking-widest mb-1 sm:mb-1.5">Price per {selectedAsset}</p>
+                    <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start border-t md:border-none border-white/5 pt-6 md:pt-0">
+                      <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-1.5 sm:mb-2">Price per {selectedAsset}</p>
                       <div className="flex flex-col items-end">
-                        <p className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white leading-none">
+                        <p className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-white leading-none">
                           ₹{ad.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </p>
                         {ad.pricing_type === 'dynamic' && (
-                          <span className="text-[10px] sm:text-[11px] md:text-[13px] font-bold text-green-500 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
-                            <Activity className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          <span className="text-[11px] sm:text-[12px] md:text-[14px] font-bold text-green-500 uppercase tracking-widest mt-2 sm:mt-2.5 flex items-center gap-2">
+                            <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             Market +{ad.margin}%
                           </span>
                         )}
@@ -492,27 +492,27 @@ export default function P2P() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-end border-t border-white/5 pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 items-end border-t border-white/5 pt-8">
                     {/* Limits & Payment */}
-                    <div className="grid grid-cols-2 md:grid-cols-1 gap-5">
+                    <div className="grid grid-cols-2 md:grid-cols-1 gap-6">
                       <div>
-                        <p className="text-xs sm:text-[12px] md:text-[13px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Available</p>
-                        <p className="text-sm sm:text-base md:text-lg font-bold text-brand">
+                        <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">Available</p>
+                        <p className="text-base sm:text-lg md:text-xl font-bold text-brand">
                           {ad.total_amount?.toFixed(2) || '0.00'} {ad.asset}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs sm:text-[12px] md:text-[13px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Limits</p>
-                        <p className="text-sm sm:text-base md:text-lg font-bold text-white">
+                        <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">Limits</p>
+                        <p className="text-base sm:text-lg md:text-xl font-bold text-white">
                           {formatCurrency(ad.min_limit)} - {formatCurrency(ad.max_limit)}
                         </p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs sm:text-[12px] md:text-[13px] font-bold text-gray-500 uppercase tracking-widest mb-2">Payment Methods</p>
-                      <div className="flex flex-wrap gap-2">
+                      <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-3">Payment Methods</p>
+                      <div className="flex flex-wrap gap-2.5">
                         {ad.payment_methods.map((pm, i) => (
-                          <span key={i} className="px-3 py-1.5 bg-white/5 text-[11px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-widest rounded-lg sm:rounded-xl border border-white/10">
+                          <span key={i} className="px-4 py-2 bg-white/5 text-[11px] sm:text-[12px] font-bold text-gray-400 uppercase tracking-widest rounded-xl sm:rounded-2xl border border-white/10">
                             {pm}
                           </span>
                         ))}
@@ -520,16 +520,16 @@ export default function P2P() {
                     </div>
 
                     {/* Ratings */}
-                    <div className="flex items-center gap-5 md:justify-center">
-                      <div className="flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-brand" />
-                        <span className="text-xs sm:text-[12px] font-bold text-gray-500 uppercase tracking-widest">
+                    <div className="flex items-center gap-6 md:justify-center">
+                      <div className="flex items-center gap-2.5">
+                        <Zap className="w-5 h-5 text-brand" />
+                        <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">
                           {ad.user_profile?.speed_rating || 5.0} Speed
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-brand" />
-                        <span className="text-xs sm:text-[12px] font-bold text-gray-500 uppercase tracking-widest">
+                      <div className="flex items-center gap-2.5">
+                        <MessageSquare className="w-5 h-5 text-brand" />
+                        <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">
                           {ad.user_profile?.comm_rating || 5.0} Comm
                         </span>
                       </div>
@@ -539,7 +539,7 @@ export default function P2P() {
                     <button 
                       onClick={() => navigate(`/p2p/create/${ad.id}`)}
                       className={cn(
-                        "w-full py-4 sm:py-5 rounded-xl sm:rounded-[2rem] font-bold text-sm sm:text-base transition-all shadow-lg",
+                        "w-full py-5 sm:py-6 rounded-2xl sm:rounded-[2.5rem] font-bold text-base sm:text-lg transition-all shadow-lg",
                         filterType === 'buy' 
                           ? "bg-green-600 hover:bg-green-700 text-white shadow-green-900/20" 
                           : "bg-red-600 hover:bg-red-700 text-white shadow-red-900/20"
@@ -555,15 +555,15 @@ export default function P2P() {
         </div>
 
         {/* Trust Banner */}
-        <div className="mt-10 sm:mt-12 p-6 sm:p-8 bg-gradient-to-r from-brand/10 to-transparent border border-brand/20 rounded-2xl sm:rounded-3xl flex flex-col md:flex-row items-center gap-6 sm:gap-6">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-brand/20 rounded-xl sm:rounded-2xl flex items-center justify-center text-brand shadow-xl border border-brand/30 shrink-0">
-            <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" />
+        <div className="mt-12 sm:mt-16 p-8 sm:p-10 bg-gradient-to-r from-brand/10 to-transparent border border-brand/20 rounded-3xl sm:rounded-[2.5rem] flex flex-col md:flex-row items-center gap-8 sm:gap-10">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand/20 rounded-2xl sm:rounded-3xl flex items-center justify-center text-brand shadow-xl border border-brand/30 shrink-0">
+            <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h4 className="text-base sm:text-lg font-bold text-white mb-1.5">Institutional-Grade Escrow Protection</h4>
-            <p className="text-xs sm:text-xs md:text-sm text-gray-400">Our automated settlement protocol locks funds the moment a trade starts. Your crypto is released only when payment is confirmed by both parties.</p>
+            <h4 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Institutional-Grade Escrow Protection</h4>
+            <p className="text-sm sm:text-base text-gray-400 leading-relaxed">Our automated settlement protocol locks funds the moment a trade starts. Your crypto is released only when payment is confirmed by both parties.</p>
           </div>
-          <button className="w-full md:w-auto px-8 py-4 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl text-sm sm:text-sm font-bold text-white transition-all">
+          <button className="w-full md:w-auto px-10 py-5 sm:py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl sm:rounded-3xl text-base sm:text-lg font-bold text-white transition-all">
             Learn More
           </button>
         </div>
@@ -571,7 +571,7 @@ export default function P2P() {
         {/* Create Ad Modal */}
         <AnimatePresence>
           {isCreateModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -583,34 +583,34 @@ export default function P2P() {
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-2xl bg-[#0a0a0a] rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10"
+                className="relative w-full max-w-4xl bg-[#0a0a0a] rounded-[3rem] md:rounded-[4rem] shadow-2xl overflow-hidden border border-white/10"
               >
-                <div className="p-6 sm:p-8 md:p-10 max-h-[90vh] overflow-y-auto no-scrollbar">
-                  <div className="flex items-center justify-between mb-6 sm:mb-8 md:mb-10">
+                <div className="p-8 sm:p-12 md:p-16 max-h-[95vh] overflow-y-auto no-scrollbar">
+                  <div className="flex items-center justify-between mb-10 sm:mb-14 md:mb-16">
                     <div>
-                      <h3 className="text-2xl sm:text-2xl font-display font-bold text-white tracking-tight">Post Advertisement</h3>
-                      <p className="text-[10px] sm:text-[10px] text-brand font-bold uppercase tracking-widest mt-1">Global Marketplace Listing</p>
+                      <h3 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-white tracking-tighter">Post Advertisement</h3>
+                      <p className="text-xs sm:text-sm text-brand font-bold uppercase tracking-[0.3em] mt-2">Global Marketplace Listing</p>
                     </div>
                     <button 
                       onClick={() => setIsCreateModalOpen(false)}
-                      className="p-3 sm:p-3 hover:bg-white/5 rounded-xl sm:rounded-2xl transition-colors border border-white/5"
+                      className="p-4 sm:p-5 hover:bg-white/5 rounded-2xl sm:rounded-[2rem] transition-colors border border-white/5"
                     >
-                      <X className="w-5 h-5 sm:w-5 sm:h-5 text-gray-500" />
+                      <X className="w-6 h-6 sm:w-7 sm:h-7 text-gray-500" />
                     </button>
                   </div>
 
-                  <form className="space-y-6 sm:space-y-8" onSubmit={handleCreateAd}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                  <form className="space-y-10 sm:space-y-14" onSubmit={handleCreateAd}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-14">
                       {/* Type & Asset */}
-                      <div className="space-y-4 sm:space-y-6">
-                        <div className="space-y-3">
-                          <label className="text-xs sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Trade Type</label>
-                          <div className="grid grid-cols-2 gap-1.5 sm:gap-2 p-1 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                      <div className="space-y-6 sm:space-y-8">
+                        <div className="space-y-4">
+                          <label className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Trade Type</label>
+                          <div className="grid grid-cols-2 gap-3 sm:gap-4 p-2 bg-white/5 rounded-[2rem] border border-white/10">
                             <button
                               type="button"
                               onClick={() => setNewAd(prev => ({ ...prev, type: 'buy' }))}
                               className={cn(
-                                "py-3 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-xs font-bold transition-all",
+                                "py-4 sm:py-5 rounded-[1.5rem] text-sm sm:text-base font-bold transition-all",
                                 newAd.type === 'buy' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-500 hover:text-white"
                               )}
                             >
@@ -620,7 +620,7 @@ export default function P2P() {
                               type="button"
                               onClick={() => setNewAd(prev => ({ ...prev, type: 'sell' }))}
                               className={cn(
-                                "py-3 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-xs font-bold transition-all",
+                                "py-4 sm:py-5 rounded-[1.5rem] text-sm sm:text-base font-bold transition-all",
                                 newAd.type === 'sell' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-500 hover:text-white"
                               )}
                             >
@@ -629,235 +629,267 @@ export default function P2P() {
                           </div>
                         </div>
 
-                        <div className="space-y-3">
-                          <label className="text-xs sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Asset to Trade</label>
-                          <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-4">
+                          <label className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Asset to Trade</label>
+                          <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             {ASSETS.map(asset => (
                               <button
                                 key={asset.id}
                                 type="button"
                                 onClick={() => setNewAd(prev => ({ ...prev, asset: asset.id }))}
                                 className={cn(
-                                  "flex items-center gap-3 px-4 sm:px-4 py-3 sm:py-3 rounded-xl sm:rounded-2xl border transition-all",
+                                  "flex items-center gap-4 px-6 sm:px-8 py-4 sm:py-5 rounded-[2rem] border transition-all",
                                   newAd.asset === asset.id ? "bg-brand/10 border-brand text-white" : "bg-white/5 border-white/10 text-gray-500"
                                 )}
                               >
-                                <img src={asset.icon} className="w-5 h-5 sm:w-4 sm:h-4" referrerPolicy="no-referrer" />
-                                <span className="text-xs sm:text-xs font-bold">{asset.id}</span>
+                                <img src={asset.icon} className="w-6 h-6 sm:w-7 sm:h-7" referrerPolicy="no-referrer" />
+                                <span className="text-sm sm:text-base font-bold">{asset.id}</span>
                               </button>
                             ))}
                           </div>
                         </div>
                       </div>
 
-                      {/* Pricing */}
-                      <div className="space-y-4 sm:space-y-6">
-                        <div className="space-y-3">
-                          <label className="text-xs sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Pricing Type</label>
-                          <div className="grid grid-cols-2 gap-1.5 sm:gap-2 p-1 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
-                            <button
-                              type="button"
-                              onClick={() => setNewAd(prev => ({ ...prev, pricing_type: 'fixed' }))}
-                              className={cn(
-                                "py-3 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-xs font-bold transition-all",
-                                newAd.pricing_type === 'fixed' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-500 hover:text-white"
-                              )}
-                            >
-                              Fixed
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setNewAd(prev => ({ ...prev, pricing_type: 'dynamic' }))}
-                              className={cn(
-                                "py-3 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-xs font-bold transition-all",
-                                newAd.pricing_type === 'dynamic' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-500 hover:text-white"
-                              )}
-                            >
-                              Dynamic
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <label className="text-xs sm:text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Ad Limit By</label>
-                          <div className="grid grid-cols-2 gap-1.5 sm:gap-2 p-1 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
-                            <button
-                              type="button"
-                              onClick={() => setAdLimitType('quantity')}
-                              className={cn(
-                                "py-3 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-xs font-bold transition-all",
-                                adLimitType === 'quantity' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-500 hover:text-white"
-                              )}
-                            >
-                              Quantity
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setAdLimitType('amount')}
-                              className={cn(
-                                "py-3 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-xs font-bold transition-all",
-                                adLimitType === 'amount' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-500 hover:text-white"
-                              )}
-                            >
-                              Amount
-                            </button>
-                          </div>
-                        </div>
+                  {/* Pricing & Ad Limit Type */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-14">
+                    <div className="space-y-4">
+                      <label className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Pricing Type</label>
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4 p-2 bg-white/5 rounded-[2rem] border border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => setNewAd(prev => ({ ...prev, pricing_type: 'fixed' }))}
+                          className={cn(
+                            "py-4 sm:py-5 rounded-[1.5rem] text-sm sm:text-base font-bold transition-all",
+                            newAd.pricing_type === 'fixed' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-500 hover:text-white"
+                          )}
+                        >
+                          Fixed
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNewAd(prev => ({ ...prev, pricing_type: 'dynamic' }))}
+                          className={cn(
+                            "py-4 sm:py-5 rounded-[1.5rem] text-sm sm:text-base font-bold transition-all",
+                            newAd.pricing_type === 'dynamic' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-500 hover:text-white"
+                          )}
+                        >
+                          Dynamic
+                        </button>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-                      <div className="space-y-4 sm:space-y-6">
-                        {adLimitType === 'quantity' ? (
-                          <div className="space-y-3">
-                            <label className="text-xs sm:text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Total Quantity ({newAd.asset})</label>
+                    <div className="space-y-4">
+                      <label className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Place Ad By</label>
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4 p-2 bg-white/5 rounded-[2rem] border border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => setAdLimitType('quantity')}
+                          className={cn(
+                            "py-4 sm:py-5 rounded-[1.5rem] text-sm sm:text-base font-bold transition-all",
+                            adLimitType === 'quantity' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-500 hover:text-white"
+                          )}
+                        >
+                          Quantity
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAdLimitType('amount')}
+                          className={cn(
+                            "py-4 sm:py-5 rounded-[1.5rem] text-sm sm:text-base font-bold transition-all",
+                            adLimitType === 'amount' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-500 hover:text-white"
+                          )}
+                        >
+                          Amount (INR)
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quantity / Amount Input */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-14">
+                    <div className="space-y-4">
+                      {adLimitType === 'quantity' ? (
+                        <div className="space-y-4">
+                          <label className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Total Quantity ({newAd.asset})</label>
+                          <div className="relative">
                             <input 
                               type="number" 
                               step="0.01"
                               value={newAd.total_amount}
                               onChange={(e) => setNewAd(prev => ({ ...prev, total_amount: parseFloat(e.target.value) }))}
-                              className="input-field py-4 sm:py-4 text-sm sm:text-sm" 
-                              placeholder="Total amount available"
+                              className="input-field py-5 sm:py-6 px-6 text-lg sm:text-xl rounded-[2rem] font-bold" 
+                              placeholder="0.00"
                             />
-                            <p className="text-xs sm:text-xs text-gray-500 mt-1">
-                              Total Value: ₹{(newAd.total_amount * (newAd.pricing_type === 'dynamic' ? (marketPrices[newAd.asset.toLowerCase()]?.inr || newAd.price) * (1 + newAd.margin / 100) : newAd.price)).toLocaleString('en-IN')}
-                            </p>
+                            <span className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-base sm:text-lg">{newAd.asset}</span>
                           </div>
-                        ) : (
-                          <div className="space-y-3">
-                            <label className="text-xs sm:text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Total Amount (INR)</label>
+                          <p className="text-xs sm:text-sm text-gray-400 mt-2 font-medium flex items-center gap-2">
+                            <TrendingUp className="w-3.5 h-3.5 text-brand" />
+                            Total Value: <span className="text-white font-bold">₹{(newAd.total_amount * (newAd.pricing_type === 'dynamic' ? (marketPrices[newAd.asset.toLowerCase()]?.inr || newAd.price) * (1 + newAd.margin / 100) : newAd.price)).toLocaleString('en-IN')}</span>
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <label className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Total Amount (INR)</label>
+                          <div className="relative">
                             <input 
                               type="number" 
                               step="1"
                               value={totalINR}
                               onChange={(e) => setTotalINR(parseFloat(e.target.value))}
-                              className="input-field py-4 sm:py-4 text-sm sm:text-sm" 
-                              placeholder="Total INR amount"
+                              className="input-field py-5 sm:py-6 px-6 text-lg sm:text-xl rounded-[2rem] font-bold" 
+                              placeholder="0"
                             />
-                            <p className="text-xs sm:text-xs text-gray-500 mt-1">
-                              Equivalent: {(totalINR / (newAd.pricing_type === 'dynamic' ? (marketPrices[newAd.asset.toLowerCase()]?.inr || newAd.price) * (1 + newAd.margin / 100) : newAd.price)).toFixed(2)} {newAd.asset}
-                            </p>
+                            <span className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-base sm:text-lg">INR</span>
                           </div>
-                        )}
-                      </div>
+                          <p className="text-xs sm:text-sm text-gray-400 mt-2 font-medium flex items-center gap-2">
+                            <Zap className="w-3.5 h-3.5 text-brand" />
+                            Equivalent: <span className="text-white font-bold">{(totalINR / (newAd.pricing_type === 'dynamic' ? (marketPrices[newAd.asset.toLowerCase()]?.inr || newAd.price) * (1 + newAd.margin / 100) : newAd.price)).toFixed(2)} {newAd.asset}</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
 
-                      <div className="space-y-4 sm:space-y-6">
-                        {newAd.pricing_type === 'fixed' ? (
-                          <div className="space-y-3">
-                            <label className="text-xs sm:text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Fixed Price (INR)</label>
+                    <div className="space-y-4">
+                      {newAd.pricing_type === 'fixed' ? (
+                        <div className="space-y-4">
+                          <label className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Fixed Price (INR)</label>
+                          <div className="relative">
                             <input 
                               type="number" 
                               step="0.01"
                               value={newAd.price}
                               onChange={(e) => setNewAd(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
-                              className="input-field py-4 sm:py-4 text-sm sm:text-sm" 
+                              className="input-field py-5 sm:py-6 px-6 text-lg sm:text-xl rounded-[2rem] font-bold" 
+                              placeholder="0.00"
+                            />
+                            <span className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-base sm:text-lg">₹</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <label className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Margin (%)</label>
+                          <div className="relative">
+                            <input 
+                              type="number" 
+                              step="0.1"
+                              value={newAd.margin}
+                              onChange={(e) => setNewAd(prev => ({ ...prev, margin: parseFloat(e.target.value) }))}
+                              className="input-field py-5 sm:py-6 px-6 text-lg sm:text-xl rounded-[2rem] font-bold" 
+                              placeholder="0.00"
+                            />
+                            <span className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-base sm:text-lg">%</span>
+                          </div>
+                          <p className="text-xs sm:text-sm text-gray-400 mt-2 font-medium">
+                            Effective Price: <span className="text-white font-bold">₹{((marketPrices[newAd.asset.toLowerCase()]?.inr || 90) * (1 + newAd.margin / 100)).toFixed(2)}</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Limits & Payment */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-14">
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <label className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Order Limits (INR)</label>
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                          <div className="space-y-2">
+                            <p className="text-[10px] sm:text-xs font-bold text-gray-600 uppercase tracking-widest ml-1">Min</p>
+                            <input 
+                              type="number" 
+                              value={newAd.min_limit}
+                              onChange={(e) => setNewAd(prev => ({ ...prev, min_limit: parseFloat(e.target.value) }))}
+                              className="input-field py-4 sm:py-5 px-5 text-sm sm:text-base rounded-2xl font-bold" 
+                              placeholder="Min"
                             />
                           </div>
-                        ) : (
-                          <div className="space-y-3">
-                            <label className="text-xs sm:text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Margin (%)</label>
-                            <div className="relative">
-                              <input 
-                                type="number" 
-                                step="0.1"
-                                value={newAd.margin}
-                                onChange={(e) => setNewAd(prev => ({ ...prev, margin: parseFloat(e.target.value) }))}
-                                className="input-field py-4 sm:py-4 pr-12 text-sm sm:text-sm" 
-                              />
-                              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-xs text-gray-500 font-bold">%</span>
-                            </div>
-                            <p className="text-xs sm:text-xs text-gray-500 mt-1">
-                              Estimated Price: ₹{(marketPrices[newAd.asset.toLowerCase()]?.inr * (1 + newAd.margin / 100)).toFixed(2)}
-                            </p>
+                          <div className="space-y-2">
+                            <p className="text-[10px] sm:text-xs font-bold text-gray-600 uppercase tracking-widest ml-1">Max</p>
+                            <input 
+                              type="number" 
+                              value={newAd.max_limit}
+                              onChange={(e) => setNewAd(prev => ({ ...prev, max_limit: parseFloat(e.target.value) }))}
+                              className="input-field py-4 sm:py-5 px-5 text-sm sm:text-base rounded-2xl font-bold" 
+                              placeholder="Max"
+                            />
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
-                      <div className="space-y-3">
-                        <label className="text-xs sm:text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Min Limit (INR)</label>
-                        <input 
-                          type="number" 
-                          value={newAd.min_limit}
-                          onChange={(e) => setNewAd(prev => ({ ...prev, min_limit: parseFloat(e.target.value) }))}
-                          className="input-field py-4 sm:py-4 text-sm sm:text-sm" 
-                        />
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-xs sm:text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Max Limit (INR)</label>
-                        <input 
-                          type="number" 
-                          value={newAd.max_limit}
-                          onChange={(e) => setNewAd(prev => ({ ...prev, max_limit: parseFloat(e.target.value) }))}
-                          className="input-field py-4 sm:py-4 text-sm sm:text-sm" 
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 sm:space-y-4">
-                      <label className="text-xs sm:text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Payment Window (Minutes)</label>
-                      <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-                        {[15, 30, 45, 60].map((min) => (
-                          <button
-                            key={min}
-                            type="button"
-                            onClick={() => setNewAd(prev => ({ ...prev, payment_window: min }))}
-                            className={cn(
-                              "py-3 sm:py-3 rounded-lg sm:rounded-xl border text-xs sm:text-[10px] font-bold transition-all",
-                              newAd.payment_window === min 
-                                ? "bg-brand/10 border-brand text-brand" 
-                                : "bg-white/5 border-white/10 text-gray-500 hover:bg-white/10"
-                            )}
-                          >
-                            {min}m
-                          </button>
-                        ))}
+                      <div className="space-y-4">
+                        <label className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Payment Window</label>
+                        <div className="grid grid-cols-4 gap-2 sm:gap-3">
+                          {[15, 30, 45, 60].map((min) => (
+                            <button
+                              key={min}
+                              type="button"
+                              onClick={() => setNewAd(prev => ({ ...prev, payment_window: min }))}
+                              className={cn(
+                                "py-3 sm:py-4 rounded-xl border text-[10px] sm:text-xs font-bold transition-all",
+                                newAd.payment_window === min 
+                                  ? "bg-brand/10 border-brand text-brand" 
+                                  : "bg-white/5 border-white/10 text-gray-500 hover:bg-white/10"
+                              )}
+                            >
+                              {min}m
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-xs sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Payment Methods</label>
-                      <div className="flex flex-wrap gap-2 sm:gap-3">
+                      <label className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Payment Methods</label>
+                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
                         {PAYMENT_METHODS.map((pm) => (
-                          <label key={pm} className={cn(
-                            "flex items-center gap-3 sm:gap-3 px-5 sm:px-5 py-3 sm:py-3 rounded-xl sm:rounded-2xl border transition-all cursor-pointer",
-                            newAd.payment_methods.includes(pm) ? "bg-brand/10 border-brand text-white" : "bg-white/5 border-white/10 text-gray-500 hover:border-white/20"
-                          )}>
-                            <input 
-                              type="checkbox" 
-                              className="hidden"
-                              checked={newAd.payment_methods.includes(pm)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setNewAd(prev => ({ ...prev, payment_methods: [...prev.payment_methods, pm] }));
-                                } else {
-                                  setNewAd(prev => ({ ...prev, payment_methods: prev.payment_methods.filter(p => p !== pm) }));
-                                }
-                              }}
-                            />
-                            <span className="text-xs sm:text-xs font-bold">{pm}</span>
-                          </label>
+                          <button
+                            key={pm}
+                            type="button"
+                            onClick={() => {
+                              const methods = newAd.payment_methods.includes(pm)
+                                ? newAd.payment_methods.filter(m => m !== pm)
+                                : [...newAd.payment_methods, pm];
+                              setNewAd(prev => ({ ...prev, payment_methods: methods }));
+                            }}
+                            className={cn(
+                              "py-3 sm:py-4 px-3 rounded-xl text-[10px] sm:text-xs font-bold transition-all border",
+                              newAd.payment_methods.includes(pm)
+                                ? "bg-brand/10 border-brand text-brand shadow-lg shadow-brand/5"
+                                : "bg-white/5 border-white/5 text-gray-500 hover:text-white hover:border-white/10"
+                            )}
+                          >
+                            {pm}
+                          </button>
                         ))}
                       </div>
                     </div>
+                  </div>
+                </div>
 
+                {/* Submit Button */}
+                  <div className="pt-6 sm:pt-10">
                     <button 
-                      type="submit" 
+                      type="submit"
                       disabled={isSubmitting || newAd.payment_methods.length === 0}
-                      className="btn-primary w-full py-4 sm:py-5 text-sm sm:text-base shadow-2xl shadow-brand/20 disabled:opacity-50"
+                      className="w-full btn-primary py-5 sm:py-6 text-base sm:text-xl rounded-[2rem] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed group flex items-center justify-center gap-4"
                     >
                       {isSubmitting ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                          Publishing...
-                        </div>
-                      ) : 'Publish Advertisement'}
+                        <>
+                          <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
+                          <span>Publishing...</span>
+                        </>
+                      ) : (
+                        <>
+                          Publish Advertisement
+                          <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-2 transition-transform" />
+                        </>
+                      )}
                     </button>
-                  </form>
-                </div>
-              </motion.div>
-            </div>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
           )}
         </AnimatePresence>
 
@@ -876,12 +908,12 @@ export default function P2P() {
         />
 
         {/* Floating Action Button for Mobile */}
-        <div className="fixed bottom-6 right-6 z-40 md:hidden">
+        <div className="fixed bottom-10 right-10 z-40 md:hidden">
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="w-14 h-14 bg-brand text-[#050505] rounded-full shadow-2xl shadow-brand/40 flex items-center justify-center active:scale-95 transition-all"
+            className="w-20 h-20 bg-brand text-[#050505] rounded-full shadow-2xl shadow-brand/40 flex items-center justify-center active:scale-95 transition-all"
           >
-            <Plus className="w-7 h-7" />
+            <Plus className="w-10 h-10" />
           </button>
         </div>
       </div>

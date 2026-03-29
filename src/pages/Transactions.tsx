@@ -95,33 +95,38 @@ export default function Transactions() {
   return (
     <div className="min-h-screen bg-[#050505] pt-24 pb-12 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Transaction History</h1>
-            <p className="text-gray-500 uppercase tracking-widest text-xs font-bold">Monitor your financial activity</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 sm:mb-14">
+          <div className="text-center md:text-left">
+            <h1 className="text-3xl sm:text-5xl font-bold text-white mb-3">Transaction History</h1>
+            <p className="text-gray-500 uppercase tracking-widest text-xs sm:text-sm font-bold">Monitor your financial activity</p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={handleExport}
-              className="p-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-              title="Export to CSV"
-            >
-              <Download className="w-5 h-5" />
-              <span className="text-xs font-bold uppercase tracking-widest hidden md:inline">Export</span>
-            </button>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <button 
+                onClick={handleExport}
+                className="flex-1 sm:flex-none p-4 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-3"
+                title="Export to CSV"
+              >
+                <Download className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-xs sm:text-sm font-bold uppercase tracking-widest">Export</span>
+              </button>
+              <button className="sm:hidden p-4 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors">
+                <Filter className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
                 type="text"
                 placeholder="Search hash or type..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-sm text-white focus:outline-none focus:border-brand/50 w-64 transition-colors"
+                className="bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-sm sm:text-base text-white focus:outline-none focus:border-brand/50 w-full sm:w-72 transition-colors"
               />
             </div>
-            <button className="p-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors">
-              <Filter className="w-5 h-5" />
+            <button className="hidden sm:block p-4 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors">
+              <Filter className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -196,25 +201,25 @@ export default function Transactions() {
                 key={tx.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="p-4 space-y-4"
+                className="p-6 space-y-5"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                       tx.type === 'deposit' ? 'bg-green-500/10 text-green-500' : 
                       tx.type === 'withdrawal' ? 'bg-red-500/10 text-red-500' : 
                       'bg-blue-500/10 text-blue-500'
                     }`}>
-                      {tx.type === 'deposit' ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                      {tx.type === 'deposit' ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-white capitalize">{tx.type.replace('_', ' ')}</p>
-                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{new Date(tx.created_at).toLocaleDateString()}</p>
+                      <p className="text-base font-bold text-white capitalize">{tx.type.replace('_', ' ')}</p>
+                      <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{new Date(tx.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-white">{formatUSDT(tx.amount)}</p>
-                    <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest ${
+                    <p className="text-lg font-bold text-white">{formatUSDT(tx.amount)}</p>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
                       tx.status === 'completed' ? 'bg-green-500/10 text-green-500' : 
                       tx.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
                       'bg-red-500/10 text-red-500'
@@ -224,11 +229,11 @@ export default function Transactions() {
                   </div>
                 </div>
                 {tx.tx_hash && (
-                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">TX Hash</span>
-                    <div className="flex items-center gap-2 text-[10px] text-brand font-mono">
+                    <div className="flex items-center gap-2 text-xs text-brand font-mono">
                       {tx.tx_hash.substring(0, 16)}...
-                      <ExternalLink className="w-3 h-3" />
+                      <ExternalLink className="w-4 h-4" />
                     </div>
                   </div>
                 )}

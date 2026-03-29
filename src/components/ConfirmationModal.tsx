@@ -54,25 +54,25 @@ export default function ConfirmationModal({
 
             <div className="flex flex-col items-center text-center">
               <div className={cn(
-                "w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border",
+                "w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-6 sm:mb-8 border",
                 variant === 'danger' ? "bg-red-500/10 border-red-500/20 text-red-500" :
                 variant === 'success' ? "bg-green-500/10 border-green-500/20 text-green-500" :
                 "bg-brand/10 border-brand/20 text-brand"
               )}>
-                <AlertCircle className="w-8 h-8" />
+                <AlertCircle className="w-8 h-8 sm:w-10 sm:h-10" />
               </div>
 
-              <h3 className="text-2xl font-display font-bold text-white mb-2">{title}</h3>
-              <p className="text-gray-400 text-sm leading-relaxed mb-10">
+              <h3 className="text-2xl sm:text-3xl font-display font-bold text-white mb-3 sm:mb-4">{title}</h3>
+              <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-10 sm:mb-12">
                 {message}
               </p>
 
-              <div className="flex flex-col w-full gap-3">
+              <div className="flex flex-col w-full gap-4 sm:gap-5">
                 <button
                   onClick={onConfirm}
                   disabled={loading}
                   className={cn(
-                    "w-full py-4 rounded-2xl font-bold transition-all shadow-lg",
+                    "w-full py-4 sm:py-5 rounded-2xl sm:rounded-3xl font-bold text-sm sm:text-lg transition-all shadow-lg",
                     variant === 'danger' ? "bg-red-600 hover:bg-red-700 shadow-red-600/20 text-white" :
                     variant === 'success' ? "bg-green-600 hover:bg-green-700 shadow-green-600/20 text-white" :
                     "bg-brand hover:bg-brand/90 shadow-brand/20 text-[#050505]"
@@ -83,7 +83,7 @@ export default function ConfirmationModal({
                 <button
                   onClick={onClose}
                   disabled={loading}
-                  className="w-full py-4 rounded-2xl font-bold text-gray-500 hover:text-white hover:bg-white/5 transition-all"
+                  className="w-full py-4 sm:py-5 rounded-2xl sm:rounded-3xl font-bold text-sm sm:text-lg text-gray-500 hover:text-white hover:bg-white/5 transition-all"
                 >
                   {cancelText}
                 </button>

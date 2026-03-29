@@ -147,47 +147,47 @@ export default function Wallet() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="cyber-card p-6 sm:p-10 group"
+            className="cyber-card p-8 sm:p-12 group relative overflow-hidden"
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 animate-gradient-x" />
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 animate-gradient-x" />
             
-            <div className="flex justify-between items-start mb-8 sm:mb-12">
-              <div className="space-y-1">
-                <h2 className="text-[9px] sm:text-[10px] font-bold text-gray-600 tracking-[0.3em] uppercase">Liquidity Reserve</h2>
-                <p className="text-[9px] sm:text-[10px] font-mono text-blue-400/50 uppercase">Network: TRON (TRC20)</p>
+            <div className="flex justify-between items-start mb-10 sm:mb-16">
+              <div className="space-y-3">
+                <h2 className="text-xs sm:text-sm font-bold text-gray-500 tracking-[0.4em] uppercase">Liquidity Reserve</h2>
+                <p className="text-[11px] sm:text-xs font-mono text-blue-400/60 uppercase">Network: TRON (TRC20)</p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
-                <WalletIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 shadow-lg shadow-blue-500/10">
+                <WalletIcon className="w-7 h-7 sm:w-8 sm:h-8" />
               </div>
             </div>
 
-            <div className="space-y-2 mb-8 sm:mb-12">
-              <div className="text-4xl sm:text-5xl font-display text-white tracking-tight">
+            <div className="space-y-4 mb-10 sm:mb-16">
+              <div className="text-6xl sm:text-8xl font-display text-white tracking-tighter leading-none">
                 {profile?.balance_usdt?.toFixed(2) || '0.00'}
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg sm:text-xl font-display text-blue-500">USDT</span>
-                <div className="h-px flex-1 bg-white/[0.05]" />
+              <div className="flex items-center gap-4">
+                <span className="text-2xl sm:text-3xl font-display text-blue-500 font-bold">USDT</span>
+                <div className="h-px flex-1 bg-white/[0.08]" />
                 <button 
                   onClick={handleDemoBalance}
-                  className="px-2 py-1 sm:px-3 sm:py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest rounded-lg border border-blue-500/20 transition-all"
+                  className="px-4 py-2 sm:px-6 sm:py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl border border-blue-500/20 transition-all shadow-lg shadow-blue-500/5 active:scale-95"
                 >
                   Demo +1000
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-                <div className="text-[8px] sm:text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-1">Escrow Balance</div>
-                <div className="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider">
+            <div className="grid grid-cols-2 gap-6 sm:gap-8">
+              <div className="p-5 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-blue-500/30 transition-colors">
+                <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Escrow Balance</div>
+                <div className="text-sm sm:text-base font-bold text-amber-400 uppercase tracking-wider font-mono">
                   {profile?.escrow_balance_usdt?.toFixed(2) || '0.00'} USDT
                 </div>
               </div>
-              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-                <div className="text-[8px] sm:text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-1">KYC Level</div>
+              <div className="p-5 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-blue-500/30 transition-colors">
+                <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">KYC Level</div>
                 <div className={cn(
-                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider",
+                  "text-sm sm:text-base font-bold uppercase tracking-wider",
                   profile?.kyc_status === 'approved' ? "text-green-400" : "text-yellow-400"
                 )}>
                   {profile?.kyc_status || 'Unverified'}
@@ -196,54 +196,54 @@ export default function Wallet() {
             </div>
 
             {/* Technical Overlay */}
-            <div className="absolute -bottom-6 -right-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.05] transition-opacity">
-              <Cpu className="w-32 h-32 text-blue-500" />
+            <div className="absolute -bottom-8 -right-8 opacity-[0.04] pointer-events-none group-hover:opacity-[0.08] transition-opacity duration-500">
+              <Cpu className="w-40 h-40 text-blue-500" />
             </div>
           </motion.div>
 
           {/* Action Module */}
-          <div className="cyber-card p-6 sm:p-8">
-            <div className="flex items-center gap-3 mb-6 sm:mb-8">
-              <Zap className="w-5 h-5 text-blue-500" />
-              <h3 className="text-base sm:text-lg font-display uppercase tracking-wider text-white">Transfer Protocol</h3>
+          <div className="cyber-card p-8 sm:p-12">
+            <div className="flex items-center gap-4 mb-10 sm:mb-12">
+              <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500" />
+              <h3 className="text-lg sm:text-xl font-display uppercase tracking-widest text-white">Transfer Protocol</h3>
             </div>
 
             {error && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="mb-6 sm:mb-8 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 rounded-xl sm:rounded-2xl flex items-center gap-3 text-red-400 text-[10px] sm:text-xs font-medium"
+                className="mb-8 sm:mb-10 p-4 sm:p-5 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-4 text-red-400 text-xs sm:text-sm font-medium"
               >
-                <AlertCircle className="w-4 h-4 shrink-0" />
+                <AlertCircle className="w-5 h-5 shrink-0" />
                 <span>{error}</span>
               </motion.div>
             )}
 
-            <div className="space-y-8 sm:space-y-10">
+            <div className="space-y-12 sm:space-y-16">
               {/* Deposit Section */}
-              <div className="space-y-4">
+              <div className="space-y-8">
                 <div className="flex justify-between items-end">
-                  <label className="text-[9px] sm:text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase">Inbound Capital</label>
-                  <span className="text-[8px] sm:text-[9px] font-mono text-green-400/50">GATEWAY: NOWPAYMENTS</span>
+                  <label className="text-xs sm:text-sm font-bold text-gray-500 tracking-[0.3em] uppercase">Inbound Capital</label>
+                  <span className="text-[10px] sm:text-xs font-mono text-green-400/60">GATEWAY: NOWPAYMENTS</span>
                 </div>
-                <form onSubmit={handleDeposit} className="space-y-4">
+                <form onSubmit={handleDeposit} className="space-y-8">
                   <div className="relative">
                     <input
                       type="number"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-xl sm:text-2xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white"
+                      className="w-full bg-white/[0.03] border border-white/[0.1] rounded-2xl px-8 sm:px-10 py-6 sm:py-8 text-4xl sm:text-5xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-gray-800"
                     />
-                    <div className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 font-display text-base sm:text-lg text-gray-600">USDT</div>
+                    <div className="absolute right-8 sm:right-10 top-1/2 -translate-y-1/2 font-display text-2xl sm:text-3xl text-gray-700">USDT</div>
                   </div>
                   <button
                     disabled={isDepositing || !depositAmount}
-                    className="w-full py-3.5 sm:py-4 bg-white text-black font-bold rounded-xl sm:rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 text-[10px] sm:text-xs uppercase tracking-widest"
+                    className="w-full py-6 sm:py-8 bg-white text-black font-bold rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-5 text-base sm:text-lg uppercase tracking-[0.2em] shadow-xl shadow-white/5"
                   >
-                    {isDepositing ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                    {isDepositing ? <Loader2 className="w-7 h-7 animate-spin" /> : (
                       <>
-                        <ArrowDownLeft className="w-4 h-4" />
+                        <ArrowDownLeft className="w-7 h-7" />
                         Initiate Deposit
                       </>
                     )}
@@ -251,28 +251,28 @@ export default function Wallet() {
                 </form>
               </div>
 
-              <div className="h-px bg-white/[0.05] relative">
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-3 sm:px-4 bg-[#0a0a0a] text-[8px] sm:text-[9px] font-bold text-gray-700 uppercase tracking-[0.3em]">OR</div>
+              <div className="h-px bg-white/[0.08] relative">
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-8 sm:px-10 bg-[#0a0a0a] text-[11px] sm:text-xs font-bold text-gray-700 uppercase tracking-[0.4em] whitespace-nowrap">SECURE GATEWAY</div>
               </div>
 
               {/* Withdraw Section */}
-              <div className="space-y-4">
+              <div className="space-y-8">
                 <div className="flex justify-between items-end">
-                  <label className="text-[9px] sm:text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase">Outbound Settlement</label>
-                  <span className="text-[8px] sm:text-[9px] font-mono text-red-400/50">NETWORK: TRC20</span>
+                  <label className="text-xs sm:text-sm font-bold text-gray-500 tracking-[0.3em] uppercase">Outbound Settlement</label>
+                  <span className="text-[10px] sm:text-xs font-mono text-red-400/60">NETWORK: TRC20</span>
                 </div>
-                <form onSubmit={handleWithdraw} className="space-y-4">
+                <form onSubmit={handleWithdraw} className="space-y-8">
                   <div className="relative">
                     <input
                       type="number"
                       value={withdrawAmount}
                       onChange={(e) => setWithdrawAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-xl sm:text-2xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white"
+                      className="w-full bg-white/[0.03] border border-white/[0.1] rounded-2xl px-8 sm:px-10 py-6 sm:py-8 text-4xl sm:text-5xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-gray-800"
                     />
-                    <div className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 font-display text-base sm:text-lg text-gray-600">USDT</div>
+                    <div className="absolute right-8 sm:right-10 top-1/2 -translate-y-1/2 font-display text-2xl sm:text-3xl text-gray-700">USDT</div>
                   </div>
-                  <div className="flex justify-between text-[8px] sm:text-[9px] font-bold uppercase tracking-tighter px-1 text-gray-600">
+                  <div className="flex justify-between text-[11px] sm:text-xs font-bold uppercase tracking-widest px-2 text-gray-600">
                     <span>Min: 10.00</span>
                     <span>Fee: 1.00</span>
                   </div>
@@ -281,15 +281,15 @@ export default function Wallet() {
                     value={withdrawAddress}
                     onChange={(e) => setWithdrawAddress(e.target.value)}
                     placeholder="Destination TRC20 Address"
-                    className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-[10px] sm:text-xs font-mono text-white focus:outline-none focus:border-blue-500/50 transition-all"
+                    className="w-full bg-white/[0.03] border border-white/[0.1] rounded-2xl px-8 sm:px-10 py-6 sm:py-8 text-base sm:text-lg font-mono text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-gray-800"
                   />
                   <button
                     disabled={isWithdrawing || !withdrawAmount || !withdrawAddress}
-                    className="w-full py-3.5 sm:py-4 bg-white/[0.03] border border-white/[0.08] text-white font-bold rounded-xl sm:rounded-2xl transition-all hover:bg-white/[0.08] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 text-[10px] sm:text-xs uppercase tracking-widest"
+                    className="w-full py-6 sm:py-8 bg-white/[0.05] border border-white/[0.1] text-white font-bold rounded-2xl transition-all hover:bg-white/[0.1] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-5 text-base sm:text-lg uppercase tracking-[0.2em]"
                   >
-                    {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                    {isWithdrawing ? <Loader2 className="w-7 h-7 animate-spin" /> : (
                       <>
-                        <ArrowUpRight className="w-4 h-4" />
+                        <ArrowUpRight className="w-7 h-7" />
                         Execute Withdrawal
                       </>
                     )}
@@ -304,13 +304,13 @@ export default function Wallet() {
         <div className="lg:col-span-8">
           <div className="cyber-card h-full flex flex-col">
             <div className="p-5 sm:p-8 border-b border-white/[0.05] flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <History className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-                <h2 className="text-lg sm:text-xl font-display uppercase tracking-wider text-white">Ledger History</h2>
+              <div className="flex items-center gap-4">
+                <History className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
+                <h2 className="text-xl sm:text-2xl font-display uppercase tracking-wider text-white">Ledger History</h2>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Live Sync</span>
+              <div className="flex items-center gap-2.5">
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Live Sync</span>
               </div>
             </div>
             
@@ -403,34 +403,34 @@ export default function Wallet() {
               </div>
 
               {/* Mobile Cards */}
-              <div className="md:hidden p-4 space-y-4">
+              <div className="md:hidden p-6 space-y-6">
                 {loading ? (
-                  <div className="py-20 text-center">
-                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Decrypting ledger...</p>
+                  <div className="py-24 text-center">
+                    <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-widest">Decrypting ledger...</p>
                   </div>
                 ) : transactions.length === 0 ? (
-                  <div className="py-20 text-center">
-                    <History className="w-12 h-12 text-gray-800 mx-auto mb-4" />
+                  <div className="py-24 text-center">
+                    <History className="w-20 h-20 text-gray-800 mx-auto mb-6" />
                     <p className="text-gray-500 font-light tracking-wide italic">No transaction records detected.</p>
                   </div>
                 ) : (
                   transactions.map((tx) => (
-                    <div key={tx.id} className="p-4 bg-white/[0.02] border border-white/[0.05] rounded-2xl space-y-4">
+                    <div key={tx.id} className="p-6 bg-white/[0.02] border border-white/[0.05] rounded-2xl space-y-6">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-5">
                           <div className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center border",
+                            "w-12 h-12 rounded-xl flex items-center justify-center border",
                             tx.type === 'deposit' 
                               ? "bg-green-500/10 border-green-500/20 text-green-400" 
                               : "bg-red-500/10 border-red-500/20 text-red-400"
                           )}>
-                            {tx.type === 'deposit' ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                            {tx.type === 'deposit' ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
                           </div>
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-white">{tx.type}</span>
+                          <span className="text-sm font-bold uppercase tracking-widest text-white">{tx.type}</span>
                         </div>
                         <span className={cn(
-                          "text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border",
+                          "text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full border",
                           tx.status === 'completed' ? "bg-green-500/10 text-green-400 border-green-500/20" :
                           tx.status === 'pending' ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
                           "bg-red-500/10 text-red-400 border-red-500/20"
@@ -441,11 +441,11 @@ export default function Wallet() {
                       
                       <div className="flex items-end justify-between">
                         <div>
-                          <div className="text-lg font-display text-white">
+                          <div className="text-2xl font-display text-white">
                             {tx.type === 'deposit' ? '+' : '-'}{tx.amount ? tx.amount.toFixed(2) : '0.00'}
-                            <span className="text-[10px] font-sans text-gray-500 ml-1">USDT</span>
+                            <span className="text-sm font-sans text-gray-500 ml-2">USDT</span>
                           </div>
-                          <div className="text-[9px] font-mono text-gray-600 uppercase mt-1">
+                          <div className="text-[11px] font-mono text-gray-600 uppercase mt-3">
                             {new Date(tx.created_at).toLocaleDateString()} {new Date(tx.created_at).toLocaleTimeString()}
                           </div>
                         </div>
@@ -455,9 +455,9 @@ export default function Wallet() {
                             href={`https://tronscan.org/#/transaction/${tx.tx_hash}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-gray-500"
+                            className="p-4 bg-white/[0.03] border border-white/[0.08] rounded-xl text-gray-500"
                           >
-                            <ExternalLink className="w-3.5 h-3.5" />
+                            <ExternalLink className="w-5 h-5" />
                           </a>
                         )}
                       </div>
@@ -478,13 +478,13 @@ export default function Wallet() {
         className="bg-[#0a0a0a] border border-white/[0.08]"
       >
         <div className="text-center space-y-8 py-6">
-          <div className="relative inline-block">
+            <div className="relative inline-block">
             <div className="absolute -inset-4 bg-blue-500/20 blur-2xl rounded-full animate-pulse" />
-            <div className="relative bg-white p-6 rounded-3xl shadow-2xl">
+            <div className="relative bg-white p-8 rounded-3xl shadow-2xl">
               {depositData?.pay_address && (
                 <QRCodeSVG 
                   value={depositData.pay_address} 
-                  size={200}
+                  size={220}
                   level="H"
                   includeMargin={true}
                 />
@@ -492,44 +492,44 @@ export default function Wallet() {
             </div>
           </div>
           
-          <div className="space-y-2">
-            <h3 className="text-2xl font-display uppercase tracking-tight text-white">Scan to Deposit</h3>
-            <p className="text-gray-500 text-xs font-light tracking-wide max-w-xs mx-auto leading-relaxed">
+          <div className="space-y-3">
+            <h3 className="text-3xl font-display uppercase tracking-tight text-white">Scan to Deposit</h3>
+            <p className="text-gray-500 text-sm font-light tracking-wide max-w-xs mx-auto leading-relaxed">
               Transfer exactly <span className="text-blue-400 font-bold">{depositData?.pay_amount} USDT</span> via the <span className="text-white font-bold">TRC20 Network</span> to the address below.
             </p>
           </div>
 
-          <div className="space-y-4">
-            <div className="cyber-card p-5 text-left relative group hover:bg-white/[0.05] transition-all">
-              <div className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-2">Target Address</div>
-              <div className="font-mono text-xs break-all pr-12 text-blue-400 leading-relaxed">
+          <div className="space-y-5">
+            <div className="cyber-card p-6 text-left relative group hover:bg-white/[0.05] transition-all">
+              <div className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-3">Target Address</div>
+              <div className="font-mono text-sm break-all pr-14 text-blue-400 leading-relaxed">
                 {depositData?.pay_address}
               </div>
               <button 
                 onClick={() => copyToClipboard(depositData?.pay_address)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl transition-all"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl transition-all"
               >
-                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                {copied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-gray-400" />}
               </button>
             </div>
 
-            <div className="cyber-card p-5 text-left relative group hover:bg-white/[0.05] transition-all">
-              <div className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-2">Exact Amount</div>
-              <div className="font-display text-2xl text-white">
-                {depositData?.pay_amount} <span className="text-xs font-sans text-gray-500">USDT</span>
+            <div className="cyber-card p-6 text-left relative group hover:bg-white/[0.05] transition-all">
+              <div className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-3">Exact Amount</div>
+              <div className="font-display text-3xl text-white">
+                {depositData?.pay_amount} <span className="text-sm font-sans text-gray-500">USDT</span>
               </div>
               <button 
                 onClick={() => copyToClipboard(depositData?.pay_amount?.toString())}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl transition-all"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl transition-all"
               >
-                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                {copied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-gray-400" />}
               </button>
             </div>
           </div>
 
-          <div className="p-5 bg-blue-500/5 border border-blue-500/10 rounded-2xl flex items-start gap-4 text-left">
-            <AlertCircle className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-            <div className="text-[10px] text-blue-300/80 leading-relaxed font-medium uppercase tracking-wider">
+          <div className="p-6 bg-blue-500/5 border border-blue-500/10 rounded-2xl flex items-start gap-4 text-left">
+            <AlertCircle className="w-6 h-6 text-blue-500 shrink-0 mt-0.5" />
+            <div className="text-xs text-blue-300/80 leading-relaxed font-medium uppercase tracking-wider">
               CRITICAL: Only send <span className="text-white font-bold underline">USDT via TRC20</span>. Assets sent via other networks (ERC20, BEP20, etc.) will be <span className="text-red-400 font-bold">permanently lost</span>.
             </div>
           </div>
@@ -555,51 +555,51 @@ export default function Wallet() {
         title="Confirm Withdrawal"
         className="bg-[#0a0a0a] border border-white/[0.08]"
       >
-        <div className="space-y-6 py-4">
-          <div className="p-6 bg-white/[0.03] border border-white/[0.08] rounded-2xl space-y-4">
+        <div className="space-y-8 py-6">
+          <div className="p-8 bg-white/[0.03] border border-white/[0.08] rounded-2xl space-y-5">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Amount</span>
-              <span className="text-lg font-bold text-white">{parseFloat(withdrawAmount).toFixed(2)} USDT</span>
+              <span className="text-base text-gray-500">Amount</span>
+              <span className="text-xl font-bold text-white">{parseFloat(withdrawAmount).toFixed(2)} USDT</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Network Fee</span>
-              <span className="text-sm font-bold text-blue-400">{NETWORK_FEE.toFixed(2)} USDT</span>
+              <span className="text-base text-gray-500">Network Fee</span>
+              <span className="text-base font-bold text-blue-400">{NETWORK_FEE.toFixed(2)} USDT</span>
             </div>
-            <div className="pt-4 border-t border-white/[0.05] flex justify-between items-center">
-              <span className="text-sm font-bold text-gray-400">Total Deducted</span>
-              <span className="text-xl font-bold text-white">{(parseFloat(withdrawAmount) + NETWORK_FEE).toFixed(2)} USDT</span>
+            <div className="pt-5 border-t border-white/[0.05] flex justify-between items-center">
+              <span className="text-base font-bold text-gray-400">Total Deducted</span>
+              <span className="text-2xl font-bold text-white">{(parseFloat(withdrawAmount) + NETWORK_FEE).toFixed(2)} USDT</span>
             </div>
           </div>
 
-          <div className="p-6 bg-white/[0.03] border border-white/[0.08] rounded-2xl space-y-2">
-            <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Recipient Address</div>
-            <div className="font-mono text-xs text-blue-400 break-all leading-relaxed">
+          <div className="p-8 bg-white/[0.03] border border-white/[0.08] rounded-2xl space-y-3">
+            <div className="text-[11px] font-bold text-gray-600 uppercase tracking-widest">Recipient Address</div>
+            <div className="font-mono text-sm text-blue-400 break-all leading-relaxed">
               {withdrawAddress}
             </div>
-            <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest pt-2">Network</div>
-            <div className="text-xs text-white font-bold">TRON (TRC20)</div>
+            <div className="text-[11px] font-bold text-gray-600 uppercase tracking-widest pt-3">Network</div>
+            <div className="text-sm text-white font-bold">TRON (TRC20)</div>
           </div>
 
-          <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-[10px] text-amber-200/70 leading-relaxed font-medium uppercase tracking-wider">
+          <div className="p-5 bg-amber-500/5 border border-amber-500/10 rounded-xl flex items-start gap-4">
+            <AlertCircle className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-200/70 leading-relaxed font-medium uppercase tracking-wider">
               Warning: Ensure the recipient address is correct. Blockchain transactions are irreversible.
             </p>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-5">
             <button
               onClick={() => setShowWithdrawConfirm(false)}
-              className="flex-1 py-4 bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold rounded-xl transition-all uppercase tracking-widest text-[10px]"
+              className="flex-1 py-5 bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold rounded-xl transition-all uppercase tracking-widest text-xs"
             >
               Cancel
             </button>
             <button
               onClick={confirmWithdraw}
               disabled={isWithdrawing}
-              className="flex-[2] py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-[10px] shadow-lg shadow-blue-600/20"
+              className="flex-[2] py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs shadow-lg shadow-blue-600/20"
             >
-              {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Withdrawal'}
+              {isWithdrawing ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirm Withdrawal'}
             </button>
           </div>
         </div>
@@ -612,20 +612,20 @@ export default function Wallet() {
         title="Withdrawal Initiated"
         className="bg-[#0a0a0a] border border-white/[0.08]"
       >
-        <div className="text-center space-y-8 py-6">
-          <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle className="w-10 h-10 text-green-500" />
+        <div className="text-center space-y-10 py-8">
+          <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle className="w-12 h-12 text-green-500" />
           </div>
 
-          <div className="space-y-2">
-            <h3 className="text-2xl font-display uppercase tracking-tight text-white">Success</h3>
-            <p className="text-gray-500 text-xs font-light tracking-wide max-w-xs mx-auto leading-relaxed">
+          <div className="space-y-3">
+            <h3 className="text-3xl font-display uppercase tracking-tight text-white">Success</h3>
+            <p className="text-gray-500 text-sm font-light tracking-wide max-w-xs mx-auto leading-relaxed">
               Your withdrawal request has been submitted to the network. It will be processed shortly.
             </p>
           </div>
 
-          <div className="cyber-card p-6 space-y-4">
-            <div className="flex justify-between items-center text-xs">
+          <div className="cyber-card p-8 space-y-6">
+            <div className="flex justify-between items-center text-sm">
               <span className="text-gray-500">Transaction Hash</span>
               <span className="text-blue-400 font-mono">{withdrawTxHash.slice(0, 8)}...{withdrawTxHash.slice(-8)}</span>
             </div>
@@ -633,16 +633,16 @@ export default function Wallet() {
               href={`https://tronscan.org/#/transaction/${withdrawTxHash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-4 bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-[10px] border border-white/[0.08]"
+              className="w-full py-5 bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold rounded-xl transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs border border-white/[0.08]"
             >
               View on Tronscan
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-5 h-5" />
             </a>
           </div>
 
           <button
             onClick={() => setShowWithdrawSuccess(false)}
-            className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-[0.2em] text-xs shadow-lg shadow-blue-600/20"
+            className="w-full py-6 bg-blue-600 text-white font-bold rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-[0.2em] text-sm shadow-lg shadow-blue-600/20"
           >
             Close
           </button>

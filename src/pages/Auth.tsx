@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { Mail, Lock, User, ArrowRight, Loader2, Shield } from 'lucide-react';
 import { cn } from '../lib/utils';
 import TwoFactorModal from '../components/TwoFactorModal';
+import Logo from '../components/Logo';
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -108,17 +109,7 @@ export default function Auth() {
       >
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl overflow-hidden border border-gray-100">
-              <img 
-                src="https://res.cloudinary.com/dvep5xtf2/image/upload/v1774265829/logo.png_l0lsdc.png" 
-                alt="Y" 
-                className="w-full h-full object-cover" 
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=Y&background=4F46E5&color=fff&bold=true';
-                }}
-              />
-            </div>
+            <Logo showText={false} size="xl" />
           </div>
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-2">

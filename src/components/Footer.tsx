@@ -10,6 +10,7 @@ import {
   Zap,
   ExternalLink
 } from 'lucide-react';
+import Logo from './Logo';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -55,21 +56,7 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-6 group">
-              <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center shadow-lg shadow-brand/10 group-hover:scale-105 transition-transform overflow-hidden border border-white/10">
-                <img 
-                src="https://res.cloudinary.com/dvep5xtf2/image/upload/v1774265829/logo.png_l0lsdc.png" 
-                  alt="Y" 
-                  className="w-full h-full object-cover" 
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=Y&background=4F46E5&color=fff&bold=true';
-                  }}
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-display font-bold text-white tracking-tight leading-none">YPAY</span>
-                <span className="text-[10px] font-bold text-brand uppercase tracking-widest mt-0.5">P2P Protocol</span>
-              </div>
+              <Logo size="md" />
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-xs">
               The most secure and efficient P2P protocol for lightning-fast fiat-to-crypto settlements. Built for the next generation of digital finance.

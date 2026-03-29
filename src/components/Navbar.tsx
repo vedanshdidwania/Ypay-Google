@@ -22,6 +22,7 @@ import { useAuth } from '../lib/useAuth';
 import { cn } from '../lib/utils';
 import { NotificationCenter } from './Notifications';
 import { motion, AnimatePresence } from 'framer-motion';
+import Logo from './Logo';
 
 export default function Navbar() {
   const { user, profile, signOut } = useAuth();
@@ -69,21 +70,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group shrink-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/5 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-brand/10 group-hover:scale-105 transition-transform overflow-hidden border border-white/10">
-              <img 
-                src="https://res.cloudinary.com/dvep5xtf2/image/upload/v1774265829/logo.png_l0lsdc.png" 
-                alt="Y" 
-                className="w-full h-full object-cover" 
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=Y&background=6366F1&color=fff&bold=true';
-                }}
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-base sm:text-lg font-display font-bold text-white tracking-tight leading-none">YPAY</span>
-              <span className="text-[10px] sm:text-[10px] font-bold text-brand uppercase tracking-widest mt-0.5">P2P Protocol</span>
-            </div>
+            <Logo size="md" />
           </Link>
 
           {/* Desktop Navigation */}

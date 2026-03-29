@@ -113,55 +113,55 @@ export default function KYC() {
   return (
     <div className="min-h-screen bg-[#050505] pt-24 pb-12">
       <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <div className="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <ShieldCheck className="w-10 h-10 text-brand" />
+        <div className="text-center mb-14 sm:mb-20">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-8 sm:mb-10">
+            <ShieldCheck className="w-12 h-12 sm:w-14 sm:h-14 text-brand" />
           </div>
-          <h1 className="text-4xl font-bold mb-4 text-white">Identity Verification</h1>
-          <p className="text-gray-400 max-w-lg mx-auto">
+          <h1 className="text-4xl sm:text-6xl font-bold mb-5 text-white">Identity Verification</h1>
+          <p className="text-base sm:text-xl text-gray-400 max-w-xl mx-auto leading-relaxed">
             Complete your KYC verification to unlock higher limits and P2P trading features.
           </p>
         </div>
 
         {submission ? (
-          <div className="card p-12 text-center">
+          <div className="card p-10 sm:p-16 text-center">
             {submission.status === 'pending' ? (
               <>
-                <div className="w-16 h-16 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Loader2 className="w-8 h-8 text-yellow-500 animate-spin" />
+                <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <Loader2 className="w-10 h-10 text-yellow-500 animate-spin" />
                 </div>
-                <h2 className="text-2xl font-bold mb-4 text-white">Verification Pending</h2>
-                <p className="text-gray-400 mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-5 text-white">Verification Pending</h2>
+                <p className="text-base sm:text-lg text-gray-400 mb-10">
                   Your documents have been submitted and are currently under review. This usually takes 24-48 hours.
                 </p>
               </>
             ) : submission.status === 'approved' ? (
               <>
-                <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 className="w-8 h-8 text-green-500" />
+                <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <CheckCircle2 className="w-10 h-10 text-green-500" />
                 </div>
-                <h2 className="text-2xl font-bold mb-4 text-white">Verification Approved</h2>
-                <p className="text-gray-400 mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-5 text-white">Verification Approved</h2>
+                <p className="text-base sm:text-lg text-gray-400 mb-10">
                   Congratulations! Your identity has been verified. You now have full access to all platform features.
                 </p>
               </>
             ) : (
               <>
-                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <AlertCircle className="w-8 h-8 text-red-500" />
+                <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <AlertCircle className="w-10 h-10 text-red-500" />
                 </div>
-                <h2 className="text-2xl font-bold mb-4 text-white">Verification Rejected</h2>
-                <p className="text-gray-400 mb-4">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-5 text-white">Verification Rejected</h2>
+                <p className="text-base sm:text-lg text-gray-400 mb-6">
                   Unfortunately, your verification was rejected.
                 </p>
                 {submission.admin_feedback && (
-                  <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-xl text-red-400 text-sm mb-8">
+                  <div className="p-6 bg-red-500/5 border border-red-500/10 rounded-xl text-red-400 text-sm sm:text-base mb-10">
                     Reason: {submission.admin_feedback}
                   </div>
                 )}
                 <button
                   onClick={() => setSubmission(null)}
-                  className="px-8 py-4 bg-brand hover:bg-brand/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand/20"
+                  className="w-full sm:w-auto px-10 py-5 bg-brand hover:bg-brand/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand/20 text-base sm:text-lg"
                 >
                   Try Again
                 </button>
@@ -172,39 +172,39 @@ export default function KYC() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="card p-8"
+            className="card p-8 sm:p-12"
           >
             {error && (
-              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 text-sm">
-                <AlertCircle className="w-5 h-5" />
+              <div className="mb-8 p-5 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-4 text-red-400 text-sm sm:text-base">
+                <AlertCircle className="w-6 h-6" />
                 <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="space-y-4">
-                <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider">Document Type</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-10">
+              <div className="space-y-5">
+                <label className="block text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wider">Document Type</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                   {['passport', 'id_card', 'drivers_license'].map((type) => (
                     <button
                       key={type}
                       type="button"
                       onClick={() => setDocType(type)}
                       className={cn(
-                        "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                        "p-6 rounded-xl border-2 transition-all flex flex-col items-center gap-3",
                         docType === type ? "bg-brand/10 border-brand text-brand" : "bg-white/5 border-white/5 text-gray-500 hover:border-white/10"
                       )}
                     >
-                      <FileText className="w-6 h-6" />
-                      <span className="text-xs font-bold uppercase tracking-wider">{type.replace('_', ' ')}</span>
+                      <FileText className="w-8 h-8" />
+                      <span className="text-xs sm:text-sm font-bold uppercase tracking-wider">{type.replace('_', ' ')}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider">Front Side</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                <div className="space-y-5">
+                  <label className="block text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wider">Front Side</label>
                   <div className="relative">
                     <input
                       type="file"
@@ -215,22 +215,22 @@ export default function KYC() {
                     />
                     <label
                       htmlFor="front-upload"
-                      className="w-full h-48 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-brand/50 transition-all overflow-hidden bg-white/5"
+                      className="w-full h-56 sm:h-64 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-brand/50 transition-all overflow-hidden bg-white/5"
                     >
                       {frontPreview ? (
                         <img src={frontPreview} alt="Front Preview" className="w-full h-full object-cover" />
                       ) : (
                         <>
-                          <Upload className="w-8 h-8 text-gray-500 mb-2" />
-                          <span className="text-xs text-gray-500">Upload Front Side</span>
+                          <Upload className="w-10 h-10 text-gray-500 mb-3" />
+                          <span className="text-sm text-gray-500">Upload Front Side</span>
                         </>
                       )}
                     </label>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider">Back Side (Optional)</label>
+                <div className="space-y-5">
+                  <label className="block text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wider">Back Side (Optional)</label>
                   <div className="relative">
                     <input
                       type="file"
@@ -241,14 +241,14 @@ export default function KYC() {
                     />
                     <label
                       htmlFor="back-upload"
-                      className="w-full h-48 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-brand/50 transition-all overflow-hidden bg-white/5"
+                      className="w-full h-56 sm:h-64 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-brand/50 transition-all overflow-hidden bg-white/5"
                     >
                       {backPreview ? (
                         <img src={backPreview} alt="Back Preview" className="w-full h-full object-cover" />
                       ) : (
                         <>
-                          <Upload className="w-8 h-8 text-gray-500 mb-2" />
-                          <span className="text-xs text-gray-500">Upload Back Side</span>
+                          <Upload className="w-10 h-10 text-gray-500 mb-3" />
+                          <span className="text-sm text-gray-500">Upload Back Side</span>
                         </>
                       )}
                     </label>
@@ -256,18 +256,18 @@ export default function KYC() {
                 </div>
               </div>
 
-              <div className="p-4 bg-brand/5 border border-brand/10 rounded-2xl flex items-start gap-3">
-                <Info className="w-5 h-5 text-brand mt-0.5" />
-                <p className="text-xs text-brand/80 leading-relaxed">
+              <div className="p-6 bg-brand/5 border border-brand/10 rounded-2xl flex items-start gap-4">
+                <Info className="w-6 h-6 text-brand mt-0.5 shrink-0" />
+                <p className="text-sm text-brand/80 leading-relaxed">
                   Make sure the document is clearly visible, all four corners are in the frame, and the information is legible. Blurred or cropped images will be rejected.
                 </p>
               </div>
 
               <button
                 disabled={isSubmitting || !frontImage}
-                className="w-full py-4 bg-brand hover:bg-brand/90 disabled:bg-brand/50 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand/20"
+                className="w-full py-5 bg-brand hover:bg-brand/90 disabled:bg-brand/50 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-3 shadow-lg shadow-brand/20 text-base sm:text-lg"
               >
-                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Submit for Verification'}
+                {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Submit for Verification'}
               </button>
             </form>
           </motion.div>

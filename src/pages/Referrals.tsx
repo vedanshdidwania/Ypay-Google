@@ -91,21 +91,21 @@ export default function Referrals() {
     <div className="min-h-screen bg-[#050505] pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
-        <div className="relative mb-16 overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand/20 via-brand/5 to-transparent border border-white/10 p-12 md:p-20">
-          <div className="relative z-10 max-w-3xl">
+        <div className="relative mb-12 md:mb-20 overflow-hidden rounded-[2.5rem] md:rounded-[3.5rem] bg-gradient-to-br from-brand/20 via-brand/5 to-transparent border border-white/10 p-8 md:p-24">
+          <div className="relative z-10 max-w-4xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand/10 border border-brand/20 text-brand text-[10px] font-bold uppercase tracking-widest mb-8"
+              className="inline-flex items-center gap-4 px-6 py-3 rounded-full bg-brand/10 border border-brand/20 text-brand text-xs md:text-sm font-bold uppercase tracking-[0.2em] mb-12"
             >
-              <Gift className="w-4 h-4" />
+              <Gift className="w-5 h-5 md:w-6 md:h-6" />
               Affiliate Program
             </motion.div>
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-4xl md:text-7xl font-display font-bold text-white mb-6 leading-[1.1] md:leading-[0.9] tracking-tight"
+              className="text-5xl md:text-9xl font-display font-bold text-white mb-10 leading-[1.1] md:leading-[0.85] tracking-tighter"
             >
               Earn While Your <br className="hidden md:block" />
               <span className="text-brand">Network Trades.</span>
@@ -114,36 +114,36 @@ export default function Referrals() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-lg text-gray-400 mb-10 leading-relaxed"
+              className="text-lg md:text-2xl text-gray-400 mb-16 leading-relaxed max-w-2xl"
             >
-              Invite your community to the most secure P2P platform and earn up to 0.1% commission on every trade they complete. Two-tier rewards for maximum growth.
+              Invite your community to the most secure P2P platform and earn up to 0.1% commission on every trade they complete.
             </motion.p>
             
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="flex flex-col gap-4"
+              className="flex flex-col gap-8"
             >
-              <div className="w-full bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl px-6 py-4 flex items-center justify-between group">
-                <span className="text-xs md:text-sm font-mono text-gray-500 truncate mr-4">{referralLink}</span>
+              <div className="w-full bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] px-8 md:px-12 py-6 md:py-8 flex items-center justify-between group hover:border-brand/30 transition-all">
+                <span className="text-sm md:text-xl font-mono text-gray-500 truncate mr-8">{referralLink}</span>
                 <button
                   onClick={copyToClipboard}
-                  className="p-2 hover:bg-white/10 rounded-xl transition-all text-gray-400 hover:text-white shrink-0"
+                  className="p-4 hover:bg-white/10 rounded-2xl transition-all text-gray-400 hover:text-white shrink-0"
                 >
-                  {copied ? <Check className="w-5 h-5 text-brand" /> : <Copy className="w-5 h-5" />}
+                  {copied ? <Check className="w-7 h-7 text-brand" /> : <Copy className="w-7 h-7" />}
                 </button>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-6">
                 <button 
                   onClick={copyToClipboard}
-                  className="flex-1 btn-primary px-10 py-4 shadow-2xl shadow-brand/20"
+                  className="flex-1 btn-primary px-12 py-6 md:py-8 shadow-2xl shadow-brand/20 text-lg md:text-xl"
                 >
                   Copy Invite Link
                 </button>
                 <button 
                   onClick={copyCode}
-                  className="flex-1 px-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-sm font-bold text-white hover:bg-white/10 transition-all"
+                  className="flex-1 px-12 py-6 md:py-8 bg-white/5 border border-white/10 rounded-[2rem] text-lg md:text-xl font-bold text-white hover:bg-white/10 transition-all"
                 >
                   Copy Code
                 </button>
@@ -152,15 +152,15 @@ export default function Referrals() {
           </div>
 
           {/* Decorative Elements */}
-          <div className="absolute top-0 right-0 w-1/2 h-full opacity-20 pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand rounded-full blur-[120px]" />
+          <div className="absolute top-0 right-0 w-1/2 h-full opacity-30 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand rounded-full blur-[150px]" />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 md:gap-16">
           {/* Stats Section */}
-          <div className="lg:col-span-2 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-10 md:space-y-16">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
               {[
                 { label: 'Direct Referrals', value: stats.l1Count, sub: 'Level 1', icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
                 { label: 'Network Size', value: stats.l2Count, sub: 'Level 2', icon: TrendingUp, color: 'text-purple-500', bg: 'bg-purple-500/10' },
@@ -171,44 +171,44 @@ export default function Referrals() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 + (i * 0.1) }}
-                  className="card p-8 group hover:border-white/20 transition-all"
+                  className="card p-10 md:p-12 group hover:border-white/20 transition-all"
                 >
-                  <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110", stat.bg, stat.color)}>
-                    <stat.icon className="w-6 h-6" />
+                  <div className={cn("w-16 h-16 md:w-20 md:h-20 rounded-3xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", stat.bg, stat.color)}>
+                    <stat.icon className="w-8 h-8 md:w-10 md:h-10" />
                   </div>
-                  <div className="text-3xl font-display font-bold text-white mb-1">{stat.value}</div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{stat.label}</div>
-                  <div className="text-[10px] text-gray-600 mt-1">{stat.sub}</div>
+                  <div className="text-5xl md:text-6xl font-display font-bold text-white mb-3">{stat.value}</div>
+                  <div className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-[0.2em]">{stat.label}</div>
+                  <div className="text-xs text-gray-600 mt-3">{stat.sub}</div>
                 </motion.div>
               ))}
             </div>
 
             {/* How it works */}
-            <div className="card p-6 md:p-10">
-              <h3 className="text-xl md:text-2xl font-display font-bold text-white mb-8 md:mb-10">Commission Structure</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-                <div className="space-y-8">
-                  <div className="flex gap-4 md:gap-6">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-brand font-display font-bold text-lg md:text-xl shrink-0">01</div>
+            <div className="card p-10 md:p-12">
+              <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-10 md:mb-12">Commission Structure</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+                <div className="space-y-10">
+                  <div className="flex gap-6 md:gap-8">
+                    <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-brand font-display font-bold text-xl md:text-2xl shrink-0">01</div>
                     <div>
-                      <h4 className="text-base md:text-lg font-bold text-white mb-2">Direct (L1) - 0.1%</h4>
-                      <p className="text-xs md:text-sm text-gray-400 leading-relaxed">Earn 0.1% of the total trade volume from users who sign up directly using your link.</p>
+                      <h4 className="text-lg md:text-xl font-bold text-white mb-3">Direct (L1) - 0.1%</h4>
+                      <p className="text-sm md:text-base text-gray-400 leading-relaxed">Earn 0.1% of the total trade volume from users who sign up directly using your link.</p>
                     </div>
                   </div>
-                  <div className="flex gap-4 md:gap-6">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-brand font-display font-bold text-lg md:text-xl shrink-0">02</div>
+                  <div className="flex gap-6 md:gap-8">
+                    <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-brand font-display font-bold text-xl md:text-2xl shrink-0">02</div>
                     <div>
-                      <h4 className="text-base md:text-lg font-bold text-white mb-2">Indirect (L2) - 0.05%</h4>
-                      <p className="text-xs md:text-sm text-gray-400 leading-relaxed">Earn an additional 0.05% from users invited by your direct referrals. Build a multi-tier network.</p>
+                      <h4 className="text-lg md:text-xl font-bold text-white mb-3">Indirect (L2) - 0.05%</h4>
+                      <p className="text-sm md:text-base text-gray-400 leading-relaxed">Earn an additional 0.05% from users invited by your direct referrals. Build a multi-tier network.</p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-brand/5 border border-brand/10 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 flex flex-col justify-center">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
-                    <span className="text-[10px] font-bold text-brand uppercase tracking-widest">Real-time Settlements</span>
+                <div className="bg-brand/5 border border-brand/10 rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-10 flex flex-col justify-center">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-2.5 h-2.5 bg-brand rounded-full animate-pulse" />
+                    <span className="text-[11px] font-bold text-brand uppercase tracking-widest">Real-time Settlements</span>
                   </div>
-                  <p className="text-xs md:text-sm text-gray-300 leading-relaxed italic">
+                  <p className="text-sm md:text-base text-gray-300 leading-relaxed italic">
                     "Commissions are calculated on the platform fee and settled instantly into your wallet the moment a trade is completed."
                   </p>
                 </div>
@@ -217,16 +217,16 @@ export default function Referrals() {
           </div>
 
           {/* Leaderboard Section */}
-          <div className="space-y-8">
-            <div className="card p-8">
-              <div className="flex items-center justify-between mb-10">
-                <h3 className="text-xl font-display font-bold text-white flex items-center gap-3">
-                  <Trophy className="w-6 h-6 text-yellow-500" />
+          <div className="space-y-10">
+            <div className="card p-10">
+              <div className="flex items-center justify-between mb-12">
+                <h3 className="text-2xl font-display font-bold text-white flex items-center gap-4">
+                  <Trophy className="w-7 h-7 text-yellow-500" />
                   Top Affiliates
                 </h3>
               </div>
               
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {leaderboard.map((user, i) => (
                   <motion.div 
                     key={i}
@@ -235,9 +235,9 @@ export default function Referrals() {
                     transition={{ delay: 0.6 + (i * 0.1) }}
                     className="flex items-center justify-between group"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-5">
                       <div className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-all group-hover:scale-110",
+                        "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-base transition-all group-hover:scale-110",
                         i === 0 ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20" :
                         i === 1 ? "bg-gray-300 text-black" :
                         i === 2 ? "bg-orange-600 text-white" :
@@ -246,13 +246,13 @@ export default function Referrals() {
                         {i + 1}
                       </div>
                       <div>
-                        <div className="font-bold text-sm text-white">{user.email}</div>
-                        <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Verified Partner</div>
+                        <div className="font-bold text-base text-white">{user.email}</div>
+                        <div className="text-[11px] text-gray-500 uppercase tracking-widest font-bold">Verified Partner</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-green-500 font-mono font-bold">${user.earnings.toFixed(2)}</div>
-                      <div className="text-[8px] text-gray-600 uppercase tracking-widest">Earned</div>
+                      <div className="text-green-500 font-mono font-bold text-lg">${user.earnings.toFixed(2)}</div>
+                      <div className="text-[9px] text-gray-600 uppercase tracking-widest">Earned</div>
                     </div>
                   </motion.div>
                 ))}
