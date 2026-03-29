@@ -82,7 +82,7 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col">
               <span className="text-base sm:text-lg font-display font-bold text-white tracking-tight leading-none">YPAY</span>
-              <span className="text-[8px] sm:text-[10px] font-bold text-brand uppercase tracking-widest mt-0.5">P2P Protocol</span>
+              <span className="text-[10px] sm:text-[10px] font-bold text-brand uppercase tracking-widest mt-0.5">P2P Protocol</span>
             </div>
           </Link>
 
@@ -134,7 +134,7 @@ export default function Navbar() {
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center gap-1.5 sm:gap-2 pl-1.5 pr-2 sm:pl-2 sm:pr-3 py-1 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl hover:bg-white/10 transition-all"
                   >
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-brand rounded-md sm:rounded-lg flex items-center justify-center text-white text-[10px] sm:text-xs font-bold">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-brand rounded-md sm:rounded-lg flex items-center justify-center text-white text-xs sm:text-xs font-bold">
                       {user.email?.[0].toUpperCase()}
                     </div>
                     <div className="hidden lg:flex flex-col items-start leading-none">
@@ -201,13 +201,13 @@ export default function Navbar() {
                       to={link.path}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
-                        "flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition-all border border-white/5",
+                        "flex flex-col items-center justify-center gap-2 p-4 sm:p-4 rounded-xl sm:rounded-2xl text-xs sm:text-xs font-bold transition-all border border-white/5",
                         isActive(link.path) 
                           ? "text-brand bg-brand/10 border-brand/20" 
                           : "text-gray-400 bg-white/5 hover:bg-white/10"
                       )}
                     >
-                      <link.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <link.icon className="w-5 h-5 sm:w-5 sm:h-5" />
                       {link.name}
                     </Link>
                   )
@@ -216,9 +216,9 @@ export default function Navbar() {
                   <Link
                     to="/p2p?create=true"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition-all border border-brand/20 text-brand bg-brand/5"
+                    className="flex flex-col items-center justify-center gap-2 p-4 sm:p-4 rounded-xl sm:rounded-2xl text-xs sm:text-xs font-bold transition-all border border-brand/20 text-brand bg-brand/5"
                   >
-                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Plus className="w-5 h-5 sm:w-5 sm:h-5" />
                     Post Ad
                   </Link>
                 )}
@@ -268,9 +268,9 @@ export default function Navbar() {
               )}
 
               <div className="pt-6 border-t border-white/5 flex items-center justify-center gap-6">
-                <a href="#" className="text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors">Support</a>
-                <a href="#" className="text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors">Terms</a>
-                <a href="#" className="text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors">Privacy</a>
+                <a href="#" className="text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors">Support</a>
+                <a href="#" className="text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors">Terms</a>
+                <a href="#" className="text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors">Privacy</a>
               </div>
             </div>
           </motion.div>

@@ -242,40 +242,40 @@ export default function P2PCreateOrder() {
       <div className="max-w-5xl mx-auto px-4">
         <button 
           onClick={() => navigate('/p2p')}
-          className="flex items-center gap-2 sm:gap-3 text-gray-400 hover:text-white mb-6 sm:mb-8 transition-all group"
+          className="flex items-center gap-3 sm:gap-4 text-gray-400 hover:text-white mb-8 sm:mb-10 transition-all group"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-white/10 transition-all">
-            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:-translate-x-0.5 transition-transform" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-white/10 transition-all">
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-0.5 transition-transform" />
           </div>
-          <span className="font-bold uppercase tracking-widest text-[8px] sm:text-[10px]">Back to Marketplace</span>
+          <span className="font-bold uppercase tracking-widest text-[10px] sm:text-xs">Back to Marketplace</span>
         </button>
 
         <div className="grid lg:grid-cols-12 gap-6 sm:gap-10">
           {/* Left Side: Ad Info */}
           <div className="lg:col-span-4 space-y-6 sm:space-y-8">
-            <div className="card p-5 sm:p-8">
-              <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="card p-6 sm:p-10">
+              <div className="flex items-center gap-4 sm:gap-5 mb-8 sm:mb-10">
                 <div className="relative shrink-0">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-brand/10 rounded-xl sm:rounded-2xl flex items-center justify-center text-brand border border-brand/20">
-                    <User className="w-6 h-6 sm:w-8 sm:h-8" />
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 bg-brand/10 rounded-xl sm:rounded-2xl flex items-center justify-center text-brand border border-brand/20">
+                    <User className="w-7 h-7 sm:w-10 sm:h-10" />
                   </div>
                   {ad.user_profile?.is_verified_merchant && (
-                    <div className="absolute -bottom-1 -right-1 bg-[#050505] p-0.5 rounded-full">
-                      <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
+                    <div className="absolute -bottom-1.5 -right-1.5 bg-[#050505] p-1 rounded-full">
+                      <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 text-brand" />
                     </div>
                   )}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-base sm:text-xl font-bold text-white tracking-tight truncate">
+                  <h3 className="text-lg sm:text-2xl font-bold text-white tracking-tight truncate">
                     {ad.user_profile?.full_name || 'Anonymous'}
                   </h3>
-                  <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+                  <div className="flex items-center gap-2 sm:gap-2.5 mt-1 sm:mt-1.5">
                     <div className="flex items-center gap-0.5">
                       {[...Array(5)].map((_, i) => (
                         <Star 
                           key={i} 
                           className={cn(
-                            "w-2.5 h-2.5 sm:w-3 h-3", 
+                            "w-3 h-3 sm:w-4 h-4", 
                             i < Math.round((ad.user_profile?.rating_sum || 0) / (ad.user_profile?.rating_count || 1)) 
                               ? "text-yellow-500 fill-current" 
                               : "text-gray-700"
@@ -283,29 +283,29 @@ export default function P2PCreateOrder() {
                         />
                       ))}
                     </div>
-                    <span className="text-[8px] sm:text-[10px] font-bold text-gray-500">({ad.user_profile?.rating_count || 0})</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-500">({ad.user_profile?.rating_count || 0})</span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4 sm:space-y-6">
+              <div className="space-y-5 sm:space-y-8">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Price</span>
-                  <span className="text-sm sm:text-xl font-bold text-white">₹{ad.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Price</span>
+                  <span className="text-base sm:text-2xl font-bold text-white">₹{ad.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Available</span>
-                  <span className="text-[10px] sm:text-sm font-bold text-brand">{ad.total_amount?.toFixed(2) || '0.00'} {ad.asset}</span>
+                  <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Available</span>
+                  <span className="text-xs sm:text-base font-bold text-brand">{ad.total_amount?.toFixed(2) || '0.00'} {ad.asset}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Limits</span>
-                  <span className="text-[10px] sm:text-sm font-bold text-white">₹{ad.min_limit.toLocaleString()} - ₹{ad.max_limit.toLocaleString()}</span>
+                  <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Limits</span>
+                  <span className="text-xs sm:text-base font-bold text-white">₹{ad.min_limit.toLocaleString()} - ₹{ad.max_limit.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-start">
-                  <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Payments</span>
-                  <div className="flex flex-wrap gap-1 sm:gap-1.5 justify-end max-w-[120px] sm:max-w-[150px]">
+                  <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mt-1.5">Payments</span>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-end max-w-[140px] sm:max-w-[180px]">
                     {ad.payment_methods.map(pm => (
-                      <span key={pm} className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-white/5 border border-white/10 rounded-md sm:rounded-lg text-[8px] sm:text-[9px] text-gray-400 font-bold uppercase tracking-widest">
+                      <span key={pm} className="px-2 py-1 sm:px-3 sm:py-1.5 bg-white/5 border border-white/10 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest">
                         {pm}
                       </span>
                     ))}
@@ -313,19 +313,19 @@ export default function P2PCreateOrder() {
                 </div>
               </div>
 
-              <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-white/5 grid grid-cols-2 gap-3 sm:gap-4">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand" />
+              <div className="mt-8 sm:mt-10 pt-8 sm:pt-10 border-t border-white/5 grid grid-cols-2 gap-4 sm:gap-5">
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-brand" />
                   <div>
-                    <p className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Speed</p>
-                    <p className="text-[10px] sm:text-xs font-bold text-white">{ad.user_profile?.speed_rating || 5.0}</p>
+                    <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Speed</p>
+                    <p className="text-xs sm:text-sm font-bold text-white">{ad.user_profile?.speed_rating || 5.0}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand" />
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-brand" />
                   <div>
-                    <p className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Comm</p>
-                    <p className="text-[10px] sm:text-xs font-bold text-white">{ad.user_profile?.comm_rating || 5.0}</p>
+                    <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Comm</p>
+                    <p className="text-xs sm:text-sm font-bold text-white">{ad.user_profile?.comm_rating || 5.0}</p>
                   </div>
                 </div>
               </div>
@@ -346,26 +346,26 @@ export default function P2PCreateOrder() {
 
           {/* Right Side: Order Form */}
           <div className="lg:col-span-8">
-            <div className="card p-5 sm:p-10">
-              <div className="flex items-center justify-between mb-6 sm:mb-10">
-                <h2 className="text-xl sm:text-3xl font-display font-bold text-white tracking-tight">
+            <div className="card p-6 sm:p-12">
+              <div className="flex items-center justify-between mb-8 sm:mb-12">
+                <h2 className="text-2xl sm:text-4xl font-display font-bold text-white tracking-tight">
                   {ad.type === 'buy' ? 'Sell' : 'Buy'} {ad.asset}
                 </h2>
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white/5 rounded-lg sm:rounded-2xl border border-white/10">
-                  <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-brand" />
-                  <span className="text-[9px] sm:text-xs font-bold text-white">{paymentWindow}m Window</span>
+                <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-3 bg-white/5 rounded-lg sm:rounded-2xl border border-white/10">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-brand" />
+                  <span className="text-[10px] sm:text-sm font-bold text-white">{paymentWindow}m Window</span>
                 </div>
               </div>
 
-              <form onSubmit={handleStartTrade} className="space-y-6 sm:space-y-10">
-                <div className="space-y-6 sm:space-y-8">
-                  <div className="flex flex-col gap-4 sm:gap-6">
-                    <div className="flex p-1 sm:p-1.5 bg-white/5 rounded-lg sm:rounded-[20px] border border-white/10 w-full shadow-inner backdrop-blur-sm">
+              <form onSubmit={handleStartTrade} className="space-y-8 sm:space-y-12">
+                <div className="space-y-8 sm:space-y-10">
+                  <div className="flex flex-col gap-6 sm:gap-8">
+                    <div className="flex p-1.5 sm:p-2 bg-white/5 rounded-xl sm:rounded-[24px] border border-white/10 w-full shadow-inner backdrop-blur-sm">
                       <button
                         type="button"
                         onClick={() => setInputMode('fiat')}
                         className={cn(
-                          "flex-1 px-4 sm:px-8 py-3 sm:py-3.5 rounded-md sm:rounded-[14px] text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2",
+                          "flex-1 px-6 sm:px-10 py-4 sm:py-4.5 rounded-lg sm:rounded-[18px] text-xs sm:text-sm font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2",
                           inputMode === 'fiat' 
                             ? "bg-brand text-[#050505] shadow-[0_0_20px_rgba(var(--brand-rgb),0.3)]" 
                             : "text-gray-500 hover:text-white hover:bg-white/5"
@@ -377,7 +377,7 @@ export default function P2PCreateOrder() {
                         type="button"
                         onClick={() => setInputMode('crypto')}
                         className={cn(
-                          "flex-1 px-4 sm:px-8 py-3 sm:py-3.5 rounded-md sm:rounded-[14px] text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2",
+                          "flex-1 px-6 sm:px-10 py-4 sm:py-4.5 rounded-lg sm:rounded-[18px] text-xs sm:text-sm font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2",
                           inputMode === 'crypto' 
                             ? "bg-brand text-[#050505] shadow-[0_0_20px_rgba(var(--brand-rgb),0.3)]" 
                             : "text-gray-500 hover:text-white hover:bg-white/5"
@@ -387,12 +387,12 @@ export default function P2PCreateOrder() {
                       </button>
                     </div>
 
-                    <div className="space-y-2 sm:space-y-4">
-                      <div className="flex justify-between items-end px-1">
-                        <label className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    <div className="space-y-3 sm:space-y-5">
+                      <div className="flex justify-between items-end px-2">
+                        <label className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">
                           {inputMode === 'fiat' ? 'I want to pay' : 'I want to receive'}
                         </label>
-                        <span className="text-[8px] sm:text-[10px] font-bold text-brand uppercase tracking-widest">
+                        <span className="text-[9px] sm:text-[11px] font-bold text-brand uppercase tracking-widest">
                           Limit: ₹{ad.min_limit.toLocaleString()} - ₹{ad.max_limit.toLocaleString()}
                         </span>
                       </div>
@@ -406,7 +406,7 @@ export default function P2PCreateOrder() {
                             max={ad.max_limit}
                             value={fiatAmount}
                             onChange={(e) => handleFiatChange(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-3xl px-4 sm:px-8 py-4 sm:py-6 text-xl sm:text-4xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-gray-800" 
+                            className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-[2.5rem] px-6 sm:px-10 py-5 sm:py-8 text-2xl sm:text-5xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-gray-800" 
                             placeholder={`${ad.min_limit.toLocaleString()} - ${ad.max_limit.toLocaleString()}`}
                           />
                         ) : (
@@ -416,11 +416,11 @@ export default function P2PCreateOrder() {
                             step="0.00000001"
                             value={cryptoAmount}
                             onChange={(e) => handleCryptoChange(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-3xl px-4 sm:px-8 py-4 sm:py-6 text-xl sm:text-4xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-gray-800" 
+                            className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-[2.5rem] px-6 sm:px-10 py-5 sm:py-8 text-2xl sm:text-5xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-gray-800" 
                             placeholder="0.00"
                           />
                         )}
-                        <div className="absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-4">
+                        <div className="absolute right-4 sm:right-10 top-1/2 -translate-y-1/2 flex items-center gap-3 sm:gap-6">
                           <button 
                             type="button"
                             onClick={() => {
@@ -430,12 +430,12 @@ export default function P2PCreateOrder() {
                                 handleCryptoChange((ad.max_limit / ad.price).toFixed(8));
                               }
                             }}
-                            className="text-[9px] sm:text-[10px] font-bold text-brand uppercase tracking-widest hover:text-brand/80 transition-colors"
+                            className="text-[10px] sm:text-xs font-bold text-brand uppercase tracking-widest hover:text-brand/80 transition-colors"
                           >
                             Max
                           </button>
-                          <div className="h-4 w-px bg-white/10" />
-                          <div className="font-display font-bold text-gray-600 text-sm sm:text-xl">
+                          <div className="h-6 w-px bg-white/10" />
+                          <div className="font-display font-bold text-gray-600 text-lg sm:text-2xl">
                             {inputMode === 'fiat' ? 'INR' : ad.asset}
                           </div>
                         </div>
@@ -443,33 +443,33 @@ export default function P2PCreateOrder() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
-                    <div className="p-4 sm:p-6 bg-white/5 rounded-xl sm:rounded-3xl border border-white/5">
-                      <p className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 sm:mb-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
+                    <div className="p-6 sm:p-8 bg-white/5 rounded-xl sm:rounded-[2.5rem] border border-white/5">
+                      <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 sm:mb-3">
                         {inputMode === 'fiat' ? `You will ${ad.type === 'buy' ? 'Send' : 'Receive'}` : 'Total Price'}
                       </p>
-                      <div className="flex items-baseline gap-1.5 sm:gap-2">
+                      <div className="flex items-baseline gap-2 sm:gap-3">
                         {inputMode === 'fiat' ? (
                           <>
-                            <p className="text-xl sm:text-3xl font-display font-bold text-brand">{parseFloat(cryptoAmount || '0').toFixed(8)}</p>
-                            <p className="text-[10px] sm:text-sm font-bold text-gray-500">{ad.asset}</p>
+                            <p className="text-2xl sm:text-4xl font-display font-bold text-brand">{parseFloat(cryptoAmount || '0').toFixed(8)}</p>
+                            <p className="text-xs sm:text-base font-bold text-gray-500">{ad.asset}</p>
                           </>
                         ) : (
                           <>
-                            <p className="text-xl sm:text-3xl font-display font-bold text-brand">₹{parseFloat(fiatAmount || '0').toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                            <p className="text-[10px] sm:text-sm font-bold text-gray-500">INR</p>
+                            <p className="text-2xl sm:text-4xl font-display font-bold text-brand">₹{parseFloat(fiatAmount || '0').toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                            <p className="text-xs sm:text-base font-bold text-gray-500">INR</p>
                           </>
                         )}
                       </div>
                     </div>
-                    <div className="p-4 sm:p-6 bg-white/5 rounded-xl sm:rounded-3xl border border-white/5 flex flex-col justify-center">
-                      <div className="flex justify-between items-center mb-1 sm:mb-2">
-                        <span className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Platform Fee</span>
-                        <span className="text-[9px] sm:text-xs font-bold text-white">{cryptoFeeAmount.toFixed(8)} {ad.asset} ({platformFee}%)</span>
+                    <div className="p-6 sm:p-8 bg-white/5 rounded-xl sm:rounded-[2.5rem] border border-white/5 flex flex-col justify-center">
+                      <div className="flex justify-between items-center mb-2 sm:mb-3">
+                        <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Platform Fee</span>
+                        <span className="text-[11px] sm:text-sm font-bold text-white">{cryptoFeeAmount.toFixed(8)} {ad.asset} ({platformFee}%)</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Net {ad.type === 'buy' ? 'INR' : ad.asset}</span>
-                        <span className="text-[9px] sm:text-xs font-bold text-brand">
+                        <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Net {ad.type === 'buy' ? 'INR' : ad.asset}</span>
+                        <span className="text-[11px] sm:text-sm font-bold text-brand">
                           {ad.type === 'buy' 
                             ? `₹${parseFloat(fiatAmount || '0').toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
                             : `${netCryptoAmount.toFixed(8)} ${ad.asset}`
@@ -480,19 +480,19 @@ export default function P2PCreateOrder() {
                   </div>
                 </div>
 
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-center gap-2 px-1">
-                    <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500" />
-                    <label className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Payment Window</label>
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="flex items-center gap-2.5 px-2">
+                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+                    <label className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Payment Window</label>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
                     {[15, 30, 45, 60].map((min) => (
                       <button
                         key={min}
                         type="button"
                         onClick={() => setPaymentWindow(min)}
                         className={cn(
-                          "py-2.5 sm:py-4 rounded-lg sm:rounded-2xl border text-[10px] sm:text-xs font-bold transition-all",
+                          "py-4 sm:py-5 rounded-lg sm:rounded-2xl border text-xs sm:text-sm font-bold transition-all",
                           paymentWindow === min 
                             ? "bg-brand/10 border-brand text-brand shadow-lg shadow-brand/10" 
                             : "bg-white/5 border-white/10 text-gray-500 hover:bg-white/10"
@@ -504,11 +504,11 @@ export default function P2PCreateOrder() {
                   </div>
                 </div>
 
-                <div className="p-4 sm:p-6 bg-yellow-500/5 border border-yellow-500/20 rounded-xl sm:rounded-3xl flex items-start gap-3 sm:gap-4">
-                  <AlertCircle className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-500 shrink-0 mt-0.5" />
-                  <div className="space-y-0.5 sm:space-y-1">
-                    <p className="text-[10px] sm:text-xs font-bold text-white">Trading Policy</p>
-                    <p className="text-[8px] sm:text-[10px] text-gray-500 leading-relaxed">
+                <div className="p-6 sm:p-8 bg-yellow-500/5 border border-yellow-500/20 rounded-xl sm:rounded-[2.5rem] flex items-start gap-4 sm:gap-5">
+                  <AlertCircle className="w-5 h-5 sm:w-7 sm:h-7 text-yellow-500 shrink-0 mt-1" />
+                  <div className="space-y-1 sm:space-y-2">
+                    <p className="text-xs sm:text-sm font-bold text-white">Trading Policy</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed">
                       Please ensure you can complete the payment within the selected window. 
                       Frequent cancellations or non-payment may lead to account suspension. 
                       Always use your own bank account for payments.
@@ -520,20 +520,20 @@ export default function P2PCreateOrder() {
                   type="submit" 
                   disabled={isTrading || !fiatAmount}
                   className={cn(
-                    "w-full py-4 sm:py-6 rounded-xl sm:rounded-3xl font-display font-bold text-white shadow-2xl transition-all flex items-center justify-center gap-3 sm:gap-4 text-sm sm:text-lg",
+                    "w-full py-5 sm:py-8 rounded-xl sm:rounded-[2.5rem] font-display font-bold text-white shadow-2xl transition-all flex items-center justify-center gap-4 sm:gap-5 text-base sm:text-xl",
                     ad.type === 'buy' ? "bg-red-600 hover:bg-red-700 shadow-red-600/20" : "bg-green-600 hover:bg-green-700 shadow-green-600/20",
                     (isTrading || !fiatAmount) && "opacity-50 cursor-not-allowed"
                   )}
                 >
                   {isTrading ? (
                     <>
-                      <Loader2 className="w-4 h-4 sm:w-6 sm:h-6 animate-spin" />
+                      <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin" />
                       <span>Initiating Trade...</span>
                     </>
                   ) : (
                     <>
                       <span>{ad.type === 'buy' ? 'Sell' : 'Buy'} {ad.asset} Now</span>
-                      <ArrowRight className="w-4 h-4 sm:w-6 sm:h-6" />
+                      <ArrowRight className="w-6 h-6 sm:w-8 sm:h-8" />
                     </>
                   )}
                 </button>

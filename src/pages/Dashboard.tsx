@@ -253,17 +253,17 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background pt-20 md:pt-24 pb-12">
       <div className="responsive-container">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 md:mb-12">
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold text-white">Account Overview</h1>
-            <p className="text-xs md:text-sm text-gray-400 mt-1">Welcome back, {profile?.full_name || 'User'}</p>
+            <h1 className="text-3xl md:text-4xl font-display font-bold text-white">Account Overview</h1>
+            <p className="text-sm md:text-base text-gray-400 mt-2">Welcome back, {profile?.full_name || 'User'}</p>
           </div>
           
-          <div className="flex items-center gap-1.5 p-1 bg-white/5 border border-white/10 rounded-xl shadow-lg w-full md:w-auto">
+          <div className="flex items-center gap-2 p-1.5 bg-white/5 border border-white/10 rounded-xl shadow-lg w-full md:w-auto">
             <button
               onClick={() => setActiveTab('orders')}
               className={cn(
-                "flex-1 md:flex-none px-6 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all",
+                "flex-1 md:flex-none px-8 py-3 rounded-lg text-sm md:text-base font-semibold transition-all",
                 activeTab === 'orders' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -272,7 +272,7 @@ export default function Dashboard() {
             <button
               onClick={() => setActiveTab('settings')}
               className={cn(
-                "flex-1 md:flex-none px-6 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all",
+                "flex-1 md:flex-none px-8 py-3 rounded-lg text-sm md:text-base font-semibold transition-all",
                 activeTab === 'settings' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -284,62 +284,62 @@ export default function Dashboard() {
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Stats Sidebar */}
           <div className="lg:col-span-4 space-y-4 md:space-y-6">
-            <div className="card p-5 md:p-6">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
-                  <Wallet className="w-5 h-5 md:w-6 md:h-6" />
+            <div className="card p-6 md:p-8">
+              <div className="flex items-center justify-between mb-6 md:mb-8">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
+                  <Wallet className="w-6 h-6 md:w-7 md:h-7" />
                 </div>
                 <div className="text-right">
-                  <p className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Total Balance</p>
-                  <p className="text-xl md:text-2xl font-bold text-white">
+                  <p className="text-[11px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Total Balance</p>
+                  <p className="text-2xl md:text-3xl font-bold text-white">
                     {formatCurrency((profile?.balance_usdt || 0) * 89)}
                   </p>
                 </div>
               </div>
-              <div className="space-y-3 md:space-y-4">
-                <div className="flex justify-between items-center text-xs md:text-sm">
+              <div className="space-y-4 md:space-y-5">
+                <div className="flex justify-between items-center text-sm md:text-base">
                   <span className="text-gray-400">Available USDT</span>
                   <span className="font-semibold text-white">{formatUSDT(profile?.balance_usdt || 0)}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs md:text-sm">
+                <div className="flex justify-between items-center text-sm md:text-base">
                   <span className="text-gray-400">Locked in Escrow</span>
                   <span className="font-semibold text-amber-500">{formatUSDT(profile?.escrow_balance_usdt || 0)}</span>
                 </div>
-                <div className="pt-3 md:pt-4 border-t border-white/5 space-y-2 md:space-y-3">
-                  <Link to="/wallet" className="w-full btn-primary py-2.5 md:py-3 text-xs md:text-sm flex items-center justify-center">
+                <div className="pt-4 md:pt-6 border-t border-white/5 space-y-3 md:space-y-4">
+                  <Link to="/wallet" className="w-full btn-primary py-3.5 md:py-4 text-sm md:text-base flex items-center justify-center">
                     Add Funds
                   </Link>
-                  <Link to="/p2p/my-ads" className="w-full bg-white/5 hover:bg-white/10 text-white py-2.5 md:py-3 rounded-xl flex items-center justify-center transition-all border border-white/5 text-[10px] md:text-sm font-bold">
+                  <Link to="/p2p/my-ads" className="w-full bg-white/5 hover:bg-white/10 text-white py-3.5 md:py-4 rounded-xl flex items-center justify-center transition-all border border-white/5 text-xs md:text-sm font-bold">
                     Manage My Ads
                   </Link>
                 </div>
               </div>
             </div>
 
-            <div className="card p-5 md:p-6">
-              <h3 className="text-[10px] md:text-sm font-bold text-white mb-4 uppercase tracking-widest">Network Status</h3>
-              <div className="space-y-3 md:space-y-4">
+            <div className="card p-6 md:p-8">
+              <h3 className="text-xs md:text-sm font-bold text-white mb-6 uppercase tracking-widest">Network Status</h3>
+              <div className="space-y-4 md:space-y-5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500" />
-                    <span className="text-xs md:text-sm text-gray-400">TRON Network</span>
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-500" />
+                    <span className="text-sm md:text-base text-gray-400">TRON Network</span>
                   </div>
-                  <span className="text-[9px] md:text-xs font-bold text-green-500">ONLINE</span>
+                  <span className="text-[11px] md:text-xs font-bold text-green-500">ONLINE</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500" />
-                    <span className="text-xs md:text-sm text-gray-400">Escrow Engine</span>
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-500" />
+                    <span className="text-sm md:text-base text-gray-400">Escrow Engine</span>
                   </div>
-                  <span className="text-[9px] md:text-xs font-bold text-green-500">ACTIVE</span>
+                  <span className="text-[11px] md:text-xs font-bold text-green-500">ACTIVE</span>
                 </div>
-                <div className="pt-2 md:pt-4">
-                  <div className="bg-white/5 rounded-lg p-2.5 md:p-3 border border-white/5">
-                    <div className="flex justify-between text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 md:mb-2">
+                <div className="pt-4 md:pt-6">
+                  <div className="bg-white/5 rounded-xl p-4 md:p-5 border border-white/5">
+                    <div className="flex justify-between text-[11px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 md:mb-3">
                       <span>Node Load</span>
                       <span>14%</span>
                     </div>
-                    <div className="w-full h-1 md:h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 md:h-2 bg-white/10 rounded-full overflow-hidden">
                       <div className="w-[14%] h-full bg-brand" />
                     </div>
                   </div>
@@ -352,33 +352,33 @@ export default function Dashboard() {
           <div className="lg:col-span-8">
             {activeTab === 'orders' ? (
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-bold text-white">Recent Activity</h2>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                  <div className="flex items-center gap-6">
+                    <h2 className="text-2xl font-bold text-white">Recent Activity</h2>
                     <div className="group relative cursor-help">
-                      <div className="px-2.5 py-1 bg-brand/10 border border-brand/20 rounded-lg flex items-center gap-2">
-                        <Wallet className="w-3.5 h-3.5 text-brand" />
-                        <span className="text-xs font-bold text-brand">{formatUSDT(profile?.balance_usdt || 0)}</span>
+                      <div className="px-3 py-1.5 bg-brand/10 border border-brand/20 rounded-lg flex items-center gap-2">
+                        <Wallet className="w-4 h-4 text-brand" />
+                        <span className="text-sm font-bold text-brand">{formatUSDT(profile?.balance_usdt || 0)}</span>
                       </div>
                       <div className="absolute left-0 top-full mt-2 opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-10">
-                        <div className="bg-[#111111] text-white px-3 py-2 rounded-xl shadow-2xl text-[10px] font-bold whitespace-nowrap border border-white/10">
+                        <div className="bg-[#111111] text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold whitespace-nowrap border border-white/10">
                           Estimated Value: {formatCurrency((profile?.balance_usdt || 0) * 89)}
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-6">
                     <button 
                       onClick={fetchDashboardData}
-                      className="text-xs font-bold text-brand uppercase tracking-widest hover:text-brand/80 transition-colors"
+                      className="text-sm font-bold text-brand uppercase tracking-widest hover:text-brand/80 transition-colors"
                     >
                       Refresh
                     </button>
                     <Link 
                       to="/wallet"
-                      className="text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1"
+                      className="text-sm font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5"
                     >
-                      View All <ExternalLink className="w-3 h-3" />
+                      View All <ExternalLink className="w-4 h-4" />
                     </Link>
                   </div>
                 </div>
@@ -411,30 +411,30 @@ export default function Dashboard() {
                           animate={{ opacity: 1, y: 0 }}
                           className="card p-6 hover:border-brand/30 transition-all group"
                         >
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
-                            <div className="flex items-center gap-3 md:gap-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 md:gap-6">
+                            <div className="flex items-center gap-4 md:gap-6">
                               <div className={cn(
-                                "w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center border shrink-0",
+                                "w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center border shrink-0",
                                 isBuyer 
                                   ? "bg-green-500/10 border-green-500/20 text-green-400" 
                                   : "bg-brand/10 border-brand/20 text-brand"
                               )}>
-                                {isBuyer ? <ArrowDownLeft className="w-5 h-5 md:w-6 md:h-6" /> : <ArrowUpRight className="w-5 h-5 md:w-6 md:h-6" />}
+                                {isBuyer ? <ArrowDownLeft className="w-6 h-6 md:w-7 md:h-7" /> : <ArrowUpRight className="w-6 h-6 md:w-7 md:h-7" />}
                               </div>
                               <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-0.5 md:mb-1">
-                                  <span className="font-bold text-white text-xs md:text-base">
+                                <div className="flex flex-wrap items-center gap-3 mb-1 md:mb-1.5">
+                                  <span className="font-bold text-white text-sm md:text-lg">
                                     {isBuyer ? 'Buy' : 'Sell'} USDT
                                   </span>
                                   <span className={cn(
-                                    "text-[8px] md:text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border",
+                                    "text-[10px] md:text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border",
                                     getStatusColor(order.status)
                                   )}>
                                     {order.status}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-[9px] md:text-xs text-gray-500">
-                                  <Clock className="w-3 h-3" />
+                                <div className="flex items-center gap-2.5 text-[11px] md:text-sm text-gray-500">
+                                  <Clock className="w-4 h-4" />
                                   {new Date(order.created_at).toLocaleDateString()}
                                   <span className="hidden sm:inline">•</span>
                                   <span className="truncate">ID: {order.id.slice(0, 8)}</span>
@@ -442,16 +442,16 @@ export default function Dashboard() {
                               </div>
                             </div>
 
-                            <div className="flex items-center justify-between sm:justify-end gap-4 md:gap-12 pt-2 md:pt-0 border-t border-white/5 sm:border-none">
+                            <div className="flex items-center justify-between sm:justify-end gap-6 md:gap-16 pt-4 md:pt-0 border-t border-white/5 sm:border-none">
                               <div className="sm:text-right">
-                                <p className="text-sm md:text-lg font-bold text-white">{formatUSDT(order.amount_usdt)}</p>
-                                <p className="text-[9px] md:text-xs font-medium text-gray-500">{formatCurrency(order.amount_inr)}</p>
+                                <p className="text-base md:text-xl font-bold text-white">{formatUSDT(order.amount_usdt)}</p>
+                                <p className="text-[11px] md:text-sm font-medium text-gray-500">{formatCurrency(order.amount_inr)}</p>
                               </div>
                               <Link
                                 to={`/p2p/order/${order.id}`}
-                                className="p-2 md:p-3 bg-white/5 text-gray-500 hover:text-brand hover:bg-brand/10 rounded-xl transition-all border border-white/5"
+                                className="p-3 md:p-4 bg-white/5 text-gray-500 hover:text-brand hover:bg-brand/10 rounded-xl transition-all border border-white/5"
                               >
-                                <ExternalLink className="w-3.5 h-3.5 md:w-5 md:h-5" />
+                                <ExternalLink className="w-4 h-4 md:w-6 md:h-6" />
                               </Link>
                             </div>
                           </div>
@@ -499,71 +499,71 @@ export default function Dashboard() {
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-                    <div className="space-y-1.5 md:space-y-2">
-                      <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Full Name</label>
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">Full Name</label>
                       <input 
                         type="text" 
                         readOnly 
                         value={profile?.full_name || ''} 
-                        className="input-field bg-white/5 text-gray-400 cursor-not-allowed border-white/5 py-2.5 md:py-3 text-xs md:text-sm"
+                        className="input-field bg-white/5 text-gray-400 cursor-not-allowed border-white/5 py-3.5 md:py-4 text-sm md:text-base"
                       />
                     </div>
-                    <div className="space-y-1.5 md:space-y-2">
-                      <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Email Address</label>
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">Email Address</label>
                       <input 
                         type="text" 
                         readOnly 
                         value={profile?.email || ''} 
-                        className="input-field bg-white/5 text-gray-400 cursor-not-allowed border-white/5 py-2.5 md:py-3 text-xs md:text-sm"
+                        className="input-field bg-white/5 text-gray-400 cursor-not-allowed border-white/5 py-3.5 md:py-4 text-sm md:text-base"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="card p-5 md:p-8">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
-                    <div className="flex items-center gap-3 md:gap-4">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
-                        <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 md:mb-10">
+                    <div className="flex items-center gap-4 md:gap-6">
+                      <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
+                        <ShoppingCart className="w-6 h-6 md:w-7 md:h-7" />
                       </div>
                       <div>
-                        <h2 className="text-lg md:text-xl font-bold text-white">My Advertisements</h2>
-                        <p className="text-[9px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Manage your active P2P ads</p>
+                        <h2 className="text-xl md:text-2xl font-bold text-white">My Advertisements</h2>
+                        <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Manage your active P2P ads</p>
                       </div>
                     </div>
                     <Link 
                       to="/p2p" 
-                      className="w-full sm:w-auto px-6 py-3 bg-brand text-white rounded-xl text-xs md:text-sm font-bold hover:bg-brand/90 transition-all shadow-lg shadow-brand/20 text-center"
+                      className="w-full sm:w-auto px-8 py-4 bg-brand text-white rounded-xl text-sm md:text-base font-bold hover:bg-brand/90 transition-all shadow-lg shadow-brand/20 text-center"
                     >
                       Create Ad
                     </Link>
                   </div>
 
-                  <div className="space-y-3 md:space-y-4">
+                  <div className="space-y-4 md:space-y-5">
                     {ads.length === 0 ? (
-                      <div className="p-8 md:p-12 text-center border border-dashed border-white/10 rounded-2xl">
-                        <p className="text-gray-500 text-xs md:text-sm">You haven't created any advertisements yet.</p>
+                      <div className="p-10 md:p-14 text-center border border-dashed border-white/10 rounded-2xl">
+                        <p className="text-gray-500 text-sm md:text-base">You haven't created any advertisements yet.</p>
                       </div>
                     ) : (
                       ads.map((ad) => (
-                        <div key={ad.id} className="p-3 md:p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between">
-                          <div className="flex items-center gap-3 md:gap-4">
+                        <div key={ad.id} className="p-4 md:p-5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-4 md:gap-6">
                             <div className={cn(
-                              "w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center font-bold text-[10px] md:text-xs",
+                              "w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center font-bold text-xs md:text-sm",
                               ad.type === 'buy' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
                             )}>
                               {ad.type.toUpperCase()}
                             </div>
                             <div>
-                              <p className="text-xs md:text-sm font-bold text-white">₹{ad.rate.toFixed(2)} / USDT</p>
-                              <p className="text-[8px] md:text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+                              <p className="text-sm md:text-base font-bold text-white">₹{ad.rate.toFixed(2)} / USDT</p>
+                              <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">
                                 Limit: ₹{ad.min_limit.toLocaleString()} - ₹{ad.max_limit.toLocaleString()}
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3">
                             <span className={cn(
-                              "text-[8px] md:text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
+                              "text-[10px] md:text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full",
                               ad.status === 'active' ? "bg-green-500/10 text-green-500" : "bg-gray-500/10 text-gray-500"
                             )}>
                               {ad.status}
@@ -576,32 +576,32 @@ export default function Dashboard() {
                 </div>
 
                 <div className="card p-5 md:p-8">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
-                    <div className="flex items-center gap-3 md:gap-4">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
-                        <TrendingUp className="w-5 h-5 md:w-6 md:h-6" />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 md:mb-10">
+                    <div className="flex items-center gap-4 md:gap-6">
+                      <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
+                        <TrendingUp className="w-6 h-6 md:w-7 md:h-7" />
                       </div>
                       <div>
-                        <h2 className="text-lg md:text-xl font-bold text-white">Referral Program</h2>
-                        <p className="text-[9px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Earn rewards for inviting friends</p>
+                        <h2 className="text-xl md:text-2xl font-bold text-white">Referral Program</h2>
+                        <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Earn rewards for inviting friends</p>
                       </div>
                     </div>
                     <Link 
                       to="/referrals" 
-                      className="w-full sm:w-auto px-6 py-3 bg-brand text-white rounded-xl text-xs md:text-sm font-bold hover:bg-brand/90 transition-all shadow-lg shadow-brand/20 text-center"
+                      className="w-full sm:w-auto px-8 py-4 bg-brand text-white rounded-xl text-sm md:text-base font-bold hover:bg-brand/90 transition-all shadow-lg shadow-brand/20 text-center"
                     >
                       View Details
                     </Link>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
-                    <div className="p-3 md:p-4 bg-white/5 border border-white/10 rounded-xl">
-                      <p className="text-[8px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total Earnings</p>
-                      <p className="text-lg md:text-xl font-bold text-green-500">${((profile?.referral_earnings_l1 || 0) + (profile?.referral_earnings_l2 || 0)).toFixed(2)}</p>
+                  <div className="grid grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+                    <div className="p-4 md:p-5 bg-white/5 border border-white/10 rounded-xl">
+                      <p className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Total Earnings</p>
+                      <p className="text-xl md:text-2xl font-bold text-green-500">${((profile?.referral_earnings_l1 || 0) + (profile?.referral_earnings_l2 || 0)).toFixed(2)}</p>
                     </div>
-                    <div className="p-3 md:p-4 bg-white/5 border border-white/10 rounded-xl">
-                      <p className="text-[8px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Referral Code</p>
-                      <p className="text-lg md:text-xl font-bold text-white font-mono">{profile?.referral_code || '---'}</p>
+                    <div className="p-4 md:p-5 bg-white/5 border border-white/10 rounded-xl">
+                      <p className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Referral Code</p>
+                      <p className="text-xl md:text-2xl font-bold text-white font-mono">{profile?.referral_code || '---'}</p>
                     </div>
                   </div>
 
@@ -626,31 +626,31 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="card p-5 md:p-8">
-                  <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
-                      <Lock className="w-5 h-5 md:w-6 md:h-6" />
+                <div className="card p-6 md:p-10">
+                  <div className="flex items-center gap-4 md:gap-6 mb-8 md:mb-10">
+                    <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
+                      <Lock className="w-6 h-6 md:w-7 md:h-7" />
                     </div>
                     <div>
-                      <h2 className="text-lg md:text-xl font-bold text-white">Security Settings</h2>
-                      <p className="text-[9px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Account protection & password</p>
+                      <h2 className="text-xl md:text-2xl font-bold text-white">Security Settings</h2>
+                      <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Account protection & password</p>
                     </div>
                   </div>
 
-                  <div className="space-y-6 md:space-y-8">
-                    <div className="p-4 md:p-6 bg-brand/5 border border-brand/10 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 md:gap-4">
+                  <div className="space-y-8 md:space-y-10">
+                    <div className="p-6 md:p-8 bg-brand/5 border border-brand/10 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-6">
+                      <div className="flex items-center gap-4 md:gap-6">
                         <div className={cn(
-                          "w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center border transition-colors",
+                          "w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center border transition-colors",
                           profile?.two_factor_enabled 
                             ? "bg-green-500/10 border-green-500/20 text-green-500" 
                             : "bg-brand/10 border-brand/20 text-brand"
                         )}>
-                          <Shield className="w-4 h-4 md:w-5 md:h-5" />
+                          <Shield className="w-5 h-5 md:w-6 md:h-6" />
                         </div>
                         <div>
-                          <p className="text-xs md:text-sm font-bold text-white">Two-Factor Authentication (2FA)</p>
-                          <p className="text-[10px] md:text-xs text-gray-500">
+                          <p className="text-sm md:text-base font-bold text-white">Two-Factor Authentication (2FA)</p>
+                          <p className="text-[11px] md:text-sm text-gray-500">
                             {profile?.two_factor_enabled 
                               ? "Your account is protected with 2FA." 
                               : "Add an extra layer of security to your account."}
@@ -660,7 +660,7 @@ export default function Dashboard() {
                       <button 
                         onClick={() => setShow2FAModal(true)}
                         className={cn(
-                          "w-full sm:w-auto px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold transition-colors",
+                          "w-full sm:w-auto px-6 py-3 rounded-lg text-xs md:text-sm font-bold transition-colors",
                           profile?.two_factor_enabled
                             ? "bg-white/5 text-gray-400 hover:text-white"
                             : "bg-brand text-white hover:bg-brand/90 shadow-lg shadow-brand/20"
@@ -670,33 +670,33 @@ export default function Dashboard() {
                       </button>
                     </div>
 
-                    <div className="space-y-4 md:space-y-6">
-                      <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-                        <div className="space-y-1.5 md:space-y-2">
-                          <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">New Password</label>
+                    <div className="space-y-6 md:space-y-8">
+                      <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+                        <div className="space-y-2 md:space-y-3">
+                          <label className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">New Password</label>
                           <input 
                             type="password" 
                             placeholder="••••••••"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            className="input-field py-2.5 md:py-3 text-xs md:text-sm"
+                            className="input-field py-3.5 md:py-4 text-sm md:text-base"
                           />
                         </div>
-                        <div className="space-y-1.5 md:space-y-2">
-                          <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Confirm Password</label>
+                        <div className="space-y-2 md:space-y-3">
+                          <label className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">Confirm Password</label>
                           <input 
                             type="password" 
                             placeholder="••••••••"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="input-field py-2.5 md:py-3 text-xs md:text-sm"
+                            className="input-field py-3.5 md:py-4 text-sm md:text-base"
                           />
                         </div>
                       </div>
                       <button 
                         onClick={handleUpdatePassword}
                         disabled={passwordLoading}
-                        className="btn-primary w-full md:w-auto px-12 py-3 text-xs md:text-sm disabled:opacity-50"
+                        className="btn-primary w-full md:w-auto px-14 py-4 text-sm md:text-base disabled:opacity-50"
                       >
                         {passwordLoading ? 'Updating...' : 'Update Password'}
                       </button>
@@ -704,48 +704,48 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="card p-5 md:p-8">
-                  <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
-                      <CreditCard className="w-5 h-5 md:w-6 md:h-6" />
+                <div className="card p-6 md:p-10">
+                  <div className="flex items-center gap-4 md:gap-6 mb-8 md:mb-10">
+                    <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
+                      <CreditCard className="w-6 h-6 md:w-7 md:h-7" />
                     </div>
                     <div>
-                      <h2 className="text-lg md:text-xl font-bold text-white">Settlement Settings</h2>
-                      <p className="text-[9px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Automated payout configuration</p>
+                      <h2 className="text-xl md:text-2xl font-bold text-white">Settlement Settings</h2>
+                      <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Automated payout configuration</p>
                     </div>
                   </div>
 
-                  <div className="space-y-4 md:space-y-6">
-                    <div className="space-y-1.5 md:space-y-2">
-                      <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Full Name</label>
+                  <div className="space-y-6 md:space-y-8">
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">Full Name</label>
                       <input 
                         type="text" 
                         placeholder="Enter your full name"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="input-field py-2.5 md:py-3 text-xs md:text-sm"
+                        className="input-field py-3.5 md:py-4 text-sm md:text-base"
                       />
                     </div>
-                    <div className="space-y-1.5 md:space-y-2">
-                      <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">TRC20 Wallet Address</label>
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">TRC20 Wallet Address</label>
                       <input 
                         type="text" 
                         placeholder="Enter TRC20 Address"
                         value={trc20Address}
                         onChange={(e) => setTrc20Address(e.target.value)}
-                        className="input-field font-mono py-2.5 md:py-3 text-xs md:text-sm"
+                        className="input-field font-mono py-3.5 md:py-4 text-sm md:text-base"
                       />
                     </div>
-                    <div className="flex items-start gap-3 p-3 md:p-4 bg-brand/10 rounded-xl border border-brand/20">
-                      <Info className="w-4 h-4 md:w-5 md:h-5 text-brand shrink-0 mt-0.5" />
-                      <p className="text-[10px] md:text-xs text-gray-300 leading-relaxed">
+                    <div className="flex items-start gap-4 p-4 md:p-6 bg-brand/10 rounded-xl border border-brand/20">
+                      <Info className="w-5 h-5 md:w-6 md:h-6 text-brand shrink-0 mt-0.5" />
+                      <p className="text-xs md:text-sm text-gray-300 leading-relaxed">
                         Ensure your TRC20 address is correct. Automated settlements are irreversible once executed on the blockchain.
                       </p>
                     </div>
                     <button 
                       onClick={handleSaveSettings}
                       disabled={saving}
-                      className="btn-primary w-full md:w-auto px-12 py-3 text-xs md:text-sm disabled:opacity-50"
+                      className="btn-primary w-full md:w-auto px-14 py-4 text-sm md:text-base disabled:opacity-50"
                     >
                       {saving ? 'Saving...' : 'Save Changes'}
                     </button>

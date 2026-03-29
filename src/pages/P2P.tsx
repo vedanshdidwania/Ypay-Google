@@ -305,58 +305,58 @@ export default function P2P() {
     <div className="min-h-screen bg-[#050505] pt-20 sm:pt-24 pb-8 sm:pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6 sm:mb-8 md:mb-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 sm:mb-10 md:mb-12">
           <div className="text-center md:text-left">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white tracking-tight">P2P Marketplace</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-400 mt-1.5 sm:mt-2 flex items-center justify-center md:justify-start gap-1.5 sm:gap-2">
-              <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-brand" />
+            <h1 className="text-4xl sm:text-4xl md:text-5xl font-display font-bold text-white tracking-tight">P2P Marketplace</h1>
+            <p className="text-base sm:text-base md:text-lg text-gray-400 mt-3 sm:mt-3 flex items-center justify-center md:justify-start gap-2.5 sm:gap-2.5">
+              <ShieldCheck className="w-6 h-6 sm:w-6 sm:h-6 text-brand" />
               Direct fiat-to-crypto settlements with verified merchants.
             </p>
           </div>
           
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-4 sm:gap-4">
             <button 
               onClick={() => navigate('/wallet')}
-              className="flex-1 md:flex-none px-4 sm:px-6 py-3 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-2xl text-xs sm:text-sm font-bold text-white hover:bg-white/10 transition-all"
+              className="flex-1 md:flex-none px-8 sm:px-8 py-4.5 sm:py-4 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl text-base sm:text-base font-bold text-white hover:bg-white/10 transition-all"
             >
               My Wallet
             </button>
             <button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex-1 md:flex-none btn-primary px-4 sm:px-8 py-3 sm:py-3 text-xs sm:text-sm"
+              className="flex-1 md:flex-none btn-primary px-8 sm:px-10 py-4.5 sm:py-4 text-base sm:text-base"
             >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Plus className="w-6 h-6 sm:w-6 sm:h-6" />
               Post Ad
             </button>
           </div>
         </div>
 
         {/* Asset Selector */}
-        <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex items-center gap-4 sm:gap-5 mb-10 sm:mb-10 overflow-x-auto pb-3 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
           {ASSETS.map((asset) => (
             <button
               key={asset.id}
               onClick={() => setSelectedAsset(asset.id)}
               className={cn(
-                "flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-3 rounded-lg sm:rounded-2xl border transition-all shrink-0",
+                "flex items-center gap-3 sm:gap-4 px-6 sm:px-6 py-4 sm:py-4 rounded-xl sm:rounded-2xl border transition-all shrink-0",
                 selectedAsset === asset.id 
                   ? "bg-brand/10 border-brand text-white shadow-lg shadow-brand/10" 
                   : "bg-white/5 border-white/10 text-gray-400 hover:border-white/20"
               )}
             >
-              <img src={asset.icon} alt={asset.name} className="w-5 h-5 sm:w-6 sm:h-6" referrerPolicy="no-referrer" />
-              <span className="font-bold text-xs sm:text-sm">{asset.id}</span>
+              <img src={asset.icon} alt={asset.name} className="w-7 h-7 sm:w-7 sm:h-7" referrerPolicy="no-referrer" />
+              <span className="font-bold text-base sm:text-base">{asset.id}</span>
             </button>
           ))}
         </div>
 
         {/* Filters Bar */}
-        <div className="card p-3 sm:p-4 mb-6 md:mb-8 flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
-          <div className="flex items-center gap-1 p-1 bg-white/5 border border-white/10 rounded-lg sm:rounded-2xl w-full lg:w-auto">
+        <div className="card p-5 sm:p-5 mb-10 md:mb-10 flex flex-col lg:flex-row items-center justify-between gap-5 sm:gap-8">
+          <div className="flex items-center gap-2 p-2 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl w-full lg:w-auto">
             <button
               onClick={() => setFilterType('buy')}
               className={cn(
-                "flex-1 lg:flex-none px-4 sm:px-10 py-2.5 sm:py-2.5 rounded-md sm:rounded-xl text-xs sm:text-sm font-bold transition-all",
+                "flex-1 lg:flex-none px-6 sm:px-12 py-4 sm:py-3 rounded-lg sm:rounded-xl text-base sm:text-base font-bold transition-all",
                 filterType === 'buy' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -365,7 +365,7 @@ export default function P2P() {
             <button
               onClick={() => setFilterType('sell')}
               className={cn(
-                "flex-1 lg:flex-none px-4 sm:px-10 py-2.5 sm:py-2.5 rounded-md sm:rounded-xl text-xs sm:text-sm font-bold transition-all",
+                "flex-1 lg:flex-none px-6 sm:px-12 py-4 sm:py-3 rounded-lg sm:rounded-xl text-base sm:text-base font-bold transition-all",
                 filterType === 'sell' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -373,23 +373,23 @@ export default function P2P() {
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full lg:w-auto">
-            <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
-              <Search className="absolute left-4 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-4 sm:h-4 text-gray-500" />
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 w-full lg:w-auto">
+            <div className="relative w-full sm:flex-1 sm:min-w-[250px]">
+              <Search className="absolute left-5 sm:left-5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-5 sm:h-5 text-gray-500" />
               <input 
                 type="number" 
                 value={searchAmount}
                 onChange={(e) => setSearchAmount(e.target.value)}
                 placeholder="Enter amount (INR)..." 
-                className="w-full bg-[#050505] border border-white/10 rounded-lg sm:rounded-2xl pl-11 sm:pl-11 pr-4 py-3 sm:py-3 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-white"
+                className="w-full bg-[#050505] border border-white/10 rounded-xl sm:rounded-2xl pl-14 sm:pl-12 pr-5 py-5 sm:py-4 text-base sm:text-base focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-white"
               />
             </div>
             
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-4 w-full sm:w-auto">
               <select 
                 value={selectedPaymentMethod}
                 onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                className="flex-1 sm:flex-none bg-[#050505] border border-white/10 rounded-lg sm:rounded-2xl px-4 sm:px-4 py-3 sm:py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-brand"
+                className="flex-1 sm:flex-none bg-[#050505] border border-white/10 rounded-xl sm:rounded-2xl px-5 sm:px-5 py-5 sm:py-4 text-base sm:text-base text-white focus:outline-none focus:border-brand"
               >
                 <option value="All">All Payments</option>
                 {PAYMENT_METHODS.map(pm => (
@@ -397,8 +397,8 @@ export default function P2P() {
                 ))}
               </select>
 
-              <button className="p-3 sm:p-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-2xl text-gray-400 hover:bg-white/10 transition-all">
-                <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
+              <button className="p-5 sm:p-4 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl text-gray-400 hover:bg-white/10 transition-all">
+                <Filter className="w-6 h-6 sm:w-6 sm:h-6" />
               </button>
             </div>
           </div>
@@ -425,50 +425,50 @@ export default function P2P() {
                 key={ad.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="card p-4 sm:p-6 hover:border-brand/30 transition-all group relative overflow-hidden"
+                className="card p-6 sm:p-8 hover:border-brand/30 transition-all group relative overflow-hidden"
               >
                 {ad.user_profile?.has_verification_badge && (
-                  <div className="absolute top-0 right-0 bg-brand/10 text-brand px-2.5 sm:px-4 py-1 rounded-bl-lg sm:rounded-bl-2xl text-[10px] sm:text-[10px] font-bold uppercase tracking-widest border-l border-b border-brand/20 flex items-center gap-1 sm:gap-1.5">
-                    <Award className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <div className="absolute top-0 right-0 bg-brand/10 text-brand px-4 sm:px-6 py-1.5 rounded-bl-lg sm:rounded-bl-2xl text-[11px] sm:text-[12px] font-bold uppercase tracking-widest border-l border-b border-brand/20 flex items-center gap-1.5 sm:gap-2">
+                    <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     Top Merchant
                   </div>
                 )}
 
-                <div className="flex flex-col gap-4 sm:gap-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+                <div className="flex flex-col gap-6 sm:gap-8">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 sm:gap-8">
                     {/* Merchant Info */}
-                    <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="flex items-center gap-4 sm:gap-5">
                       <div className="relative shrink-0">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white/5 rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center text-brand border border-white/10 group-hover:border-brand/30 transition-all">
-                          <User className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-white/5 rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center text-brand border border-white/10 group-hover:border-brand/30 transition-all">
+                          <User className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
                         </div>
                         {ad.user_profile?.is_verified_merchant && (
-                          <div className="absolute -bottom-1 -right-1 bg-[#050505] p-0.5 rounded-full">
-                            <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-brand" />
+                          <div className="absolute -bottom-1.5 -right-1.5 bg-[#050505] p-1 rounded-full">
+                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-brand" />
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm sm:text-base md:text-lg font-bold text-white tracking-tight truncate">
+                        <div className="flex items-center gap-3">
+                          <span className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate">
                             {ad.user_profile?.full_name || 'Anonymous'}
                           </span>
                           <button 
                             onClick={() => toggleFavorite(ad.user_id)}
                             className={cn(
-                              "p-1 rounded-lg transition-all",
+                              "p-1.5 rounded-lg transition-all",
                               favorites.includes(ad.user_id) ? "text-red-500" : "text-gray-600 hover:text-red-500"
                             )}
                           >
-                            <Heart className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4", favorites.includes(ad.user_id) && "fill-current")} />
+                            <Heart className={cn("w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5", favorites.includes(ad.user_id) && "fill-current")} />
                           </button>
                         </div>
-                        <div className="flex items-center gap-2 md:gap-3 mt-0.5 md:mt-1">
-                          <span className="text-xs sm:text-[11px] md:text-[12px] font-bold text-gray-500 uppercase tracking-widest">
+                        <div className="flex items-center gap-3 md:gap-4 mt-1 md:mt-1.5">
+                          <span className="text-xs sm:text-[12px] md:text-[13px] font-bold text-gray-500 uppercase tracking-widest">
                             {ad.user_profile?.trades_completed || 0} Trades
                           </span>
                           <span className="w-1 h-1 bg-gray-700 rounded-full" />
-                          <span className="text-xs sm:text-[11px] md:text-[12px] font-bold text-brand uppercase tracking-widest">
+                          <span className="text-xs sm:text-[12px] md:text-[13px] font-bold text-brand uppercase tracking-widest">
                             {ad.user_profile?.completion_rate || 0}% Success
                           </span>
                         </div>
@@ -476,15 +476,15 @@ export default function P2P() {
                     </div>
 
                     {/* Price Info */}
-                    <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start border-t md:border-none border-white/5 pt-3 md:pt-0">
-                      <p className="text-xs sm:text-[11px] md:text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-0.5 sm:mb-1">Price per {selectedAsset}</p>
+                    <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start border-t md:border-none border-white/5 pt-4 md:pt-0">
+                      <p className="text-xs sm:text-[12px] md:text-[13px] font-bold text-gray-500 uppercase tracking-widest mb-1 sm:mb-1.5">Price per {selectedAsset}</p>
                       <div className="flex flex-col items-end">
-                        <p className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white leading-none">
+                        <p className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white leading-none">
                           ₹{ad.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </p>
                         {ad.pricing_type === 'dynamic' && (
-                          <span className="text-[9px] sm:text-[10px] md:text-[12px] font-bold text-green-500 uppercase tracking-widest mt-1 flex items-center gap-1">
-                            <Activity className="w-2 h-2 sm:w-3 sm:h-3" />
+                          <span className="text-[10px] sm:text-[11px] md:text-[13px] font-bold text-green-500 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
+                            <Activity className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                             Market +{ad.margin}%
                           </span>
                         )}
@@ -492,27 +492,27 @@ export default function P2P() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-end border-t border-white/5 pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-end border-t border-white/5 pt-6">
                     {/* Limits & Payment */}
-                    <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-1 gap-5">
                       <div>
-                        <p className="text-xs sm:text-[11px] md:text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1">Available</p>
-                        <p className="text-xs sm:text-sm md:text-base font-bold text-brand">
+                        <p className="text-xs sm:text-[12px] md:text-[13px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Available</p>
+                        <p className="text-sm sm:text-base md:text-lg font-bold text-brand">
                           {ad.total_amount?.toFixed(2) || '0.00'} {ad.asset}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs sm:text-[11px] md:text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1">Limits</p>
-                        <p className="text-xs sm:text-sm md:text-base font-bold text-white">
+                        <p className="text-xs sm:text-[12px] md:text-[13px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Limits</p>
+                        <p className="text-sm sm:text-base md:text-lg font-bold text-white">
                           {formatCurrency(ad.min_limit)} - {formatCurrency(ad.max_limit)}
                         </p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs sm:text-[11px] md:text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1">Payment Methods</p>
-                      <div className="flex flex-wrap gap-1.5">
+                      <p className="text-xs sm:text-[12px] md:text-[13px] font-bold text-gray-500 uppercase tracking-widest mb-2">Payment Methods</p>
+                      <div className="flex flex-wrap gap-2">
                         {ad.payment_methods.map((pm, i) => (
-                          <span key={i} className="px-2 py-1 bg-white/5 text-[10px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest rounded sm:rounded-md border border-white/10">
+                          <span key={i} className="px-3 py-1.5 bg-white/5 text-[11px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-widest rounded-lg sm:rounded-xl border border-white/10">
                             {pm}
                           </span>
                         ))}
@@ -520,16 +520,16 @@ export default function P2P() {
                     </div>
 
                     {/* Ratings */}
-                    <div className="flex items-center gap-4 md:justify-center">
-                      <div className="flex items-center gap-1.5">
-                        <Zap className="w-3.5 h-3.5 text-brand" />
-                        <span className="text-xs sm:text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+                    <div className="flex items-center gap-5 md:justify-center">
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-brand" />
+                        <span className="text-xs sm:text-[12px] font-bold text-gray-500 uppercase tracking-widest">
                           {ad.user_profile?.speed_rating || 5.0} Speed
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <MessageSquare className="w-3.5 h-3.5 text-brand" />
-                        <span className="text-xs sm:text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-brand" />
+                        <span className="text-xs sm:text-[12px] font-bold text-gray-500 uppercase tracking-widest">
                           {ad.user_profile?.comm_rating || 5.0} Comm
                         </span>
                       </div>
@@ -539,7 +539,7 @@ export default function P2P() {
                     <button 
                       onClick={() => navigate(`/p2p/create/${ad.id}`)}
                       className={cn(
-                        "w-full py-3 sm:py-4 rounded-lg sm:rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-lg",
+                        "w-full py-4 sm:py-5 rounded-xl sm:rounded-[2rem] font-bold text-sm sm:text-base transition-all shadow-lg",
                         filterType === 'buy' 
                           ? "bg-green-600 hover:bg-green-700 text-white shadow-green-900/20" 
                           : "bg-red-600 hover:bg-red-700 text-white shadow-red-900/20"
@@ -555,15 +555,15 @@ export default function P2P() {
         </div>
 
         {/* Trust Banner */}
-        <div className="mt-8 sm:mt-12 p-5 sm:p-8 bg-gradient-to-r from-brand/10 to-transparent border border-brand/20 rounded-xl sm:rounded-3xl flex flex-col md:flex-row items-center gap-4 sm:gap-6">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-brand/20 rounded-lg sm:rounded-2xl flex items-center justify-center text-brand shadow-xl border border-brand/30 shrink-0">
-            <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8" />
+        <div className="mt-10 sm:mt-12 p-6 sm:p-8 bg-gradient-to-r from-brand/10 to-transparent border border-brand/20 rounded-2xl sm:rounded-3xl flex flex-col md:flex-row items-center gap-6 sm:gap-6">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-brand/20 rounded-xl sm:rounded-2xl flex items-center justify-center text-brand shadow-xl border border-brand/30 shrink-0">
+            <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h4 className="text-sm sm:text-lg font-bold text-white mb-1">Institutional-Grade Escrow Protection</h4>
-            <p className="text-[10px] sm:text-xs md:text-sm text-gray-400">Our automated settlement protocol locks funds the moment a trade starts. Your crypto is released only when payment is confirmed by both parties.</p>
+            <h4 className="text-base sm:text-lg font-bold text-white mb-1.5">Institutional-Grade Escrow Protection</h4>
+            <p className="text-xs sm:text-xs md:text-sm text-gray-400">Our automated settlement protocol locks funds the moment a trade starts. Your crypto is released only when payment is confirmed by both parties.</p>
           </div>
-          <button className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg sm:rounded-2xl text-[10px] sm:text-sm font-bold text-white transition-all">
+          <button className="w-full md:w-auto px-8 py-4 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl text-sm sm:text-sm font-bold text-white transition-all">
             Learn More
           </button>
         </div>

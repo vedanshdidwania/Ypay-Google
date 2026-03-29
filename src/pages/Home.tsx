@@ -90,38 +90,38 @@ export default function Home() {
                 Live Market Active
               </div>
               
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-display font-bold text-white tracking-tight leading-[1.1] mb-6 sm:mb-8">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold text-white tracking-tight leading-[1.1] mb-6 sm:mb-8">
                 The Future of <span className="text-brand">P2P Settlements</span> is Here.
               </h1>
               
-              <p className="text-base sm:text-lg lg:text-xl text-gray-400 leading-relaxed mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0">
+              <p className="text-lg sm:text-xl lg:text-2xl text-gray-400 leading-relaxed mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0">
                 Experience the most secure, automated, and lightning-fast P2P protocol for fiat-to-crypto settlements. No middlemen, just pure efficiency.
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                <Link to="/p2p" className="btn-primary w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 text-base sm:text-lg shadow-lg shadow-brand/20">
+                <Link to="/p2p" className="btn-primary w-full sm:w-auto px-10 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl shadow-lg shadow-brand/20">
                   Start Trading
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-6 h-6" />
                 </Link>
-                <Link to="/dashboard" className="btn-secondary w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 text-base sm:text-lg">
+                <Link to="/dashboard" className="btn-secondary w-full sm:w-auto px-10 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl">
                   View Dashboard
                 </Link>
               </div>
 
-              <div className="mt-10 sm:mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-8 border-t border-white/5 pt-8">
+              <div className="mt-12 sm:mt-14 flex flex-wrap items-center justify-center lg:justify-start gap-6 sm:gap-10 border-t border-white/5 pt-10">
                 <div>
-                  <p className="text-xl sm:text-2xl font-bold text-white">$2.4M+</p>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">24h Volume</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-white">$2.4M+</p>
+                  <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">24h Volume</p>
                 </div>
-                <div className="hidden sm:block w-px h-10 bg-white/5" />
+                <div className="hidden sm:block w-px h-12 bg-white/5" />
                 <div>
-                  <p className="text-xl sm:text-2xl font-bold text-white">12k+</p>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Active Traders</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-white">12k+</p>
+                  <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Active Traders</p>
                 </div>
-                <div className="hidden sm:block w-px h-10 bg-white/5" />
+                <div className="hidden sm:block w-px h-12 bg-white/5" />
                 <div>
-                  <p className="text-xl sm:text-2xl font-bold text-white">99.9%</p>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Success Rate</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-white">99.9%</p>
+                  <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Success Rate</p>
                 </div>
               </div>
             </motion.div>
@@ -132,57 +132,57 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="relative"
             >
-              <div className="card p-5 sm:p-8 shadow-2xl shadow-brand/10 relative z-10">
-                <div className="flex items-center justify-between mb-6 sm:mb-8">
-                  <h3 className="text-base sm:text-lg font-bold text-white">Settlement Calculator</h3>
-                  <div className="flex items-center gap-1 text-green-500 bg-green-500/10 px-2 py-1 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border border-green-500/20">
-                    <TrendingUp className="w-3 h-3" />
+              <div className="card p-6 sm:p-10 shadow-2xl shadow-brand/10 relative z-10">
+                <div className="flex items-center justify-between mb-8 sm:mb-10">
+                  <h3 className="text-lg sm:text-xl font-bold text-white">Settlement Calculator</h3>
+                  <div className="flex items-center gap-1.5 text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-green-500/20">
+                    <TrendingUp className="w-4 h-4" />
                     Live Rate
                   </div>
                 </div>
 
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-6 sm:space-y-8">
                   <div>
-                    <label className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 sm:mb-2 block">You Pay (INR)</label>
+                    <label className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 sm:mb-3 block">You Pay (INR)</label>
                     <div className="relative">
                       <input
                         type="number"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
-                        className="input-field text-xl sm:text-2xl font-bold pr-14 sm:pr-16 py-2.5 sm:py-3"
+                        className="input-field text-2xl sm:text-3xl font-bold pr-16 sm:pr-20 py-3.5 sm:py-4"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-gray-500 text-sm sm:text-base">INR</span>
+                      <span className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-gray-500 text-base sm:text-lg">INR</span>
                     </div>
                   </div>
 
                   <div className="flex justify-center">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/5 border border-white/10 rounded-full flex items-center justify-center text-gray-500">
-                      <ArrowLeftRight className="w-4 h-4 sm:w-5 sm:h-5 rotate-90" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/5 border border-white/10 rounded-full flex items-center justify-center text-gray-500">
+                      <ArrowLeftRight className="w-5 h-5 sm:w-6 sm:h-6 rotate-90" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 sm:mb-2 block">You Receive (USDT)</label>
+                    <label className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 sm:mb-3 block">You Receive (USDT)</label>
                     <div className="relative">
-                      <div className="input-field bg-white/5 text-xl sm:text-2xl font-bold pr-14 sm:pr-16 py-2.5 sm:py-3 text-brand">
+                      <div className="input-field bg-white/5 text-2xl sm:text-3xl font-bold pr-16 sm:pr-20 py-3.5 sm:py-4 text-brand">
                         {usdt}
                       </div>
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-brand text-sm sm:text-base">USDT</span>
+                      <span className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-brand text-base sm:text-lg">USDT</span>
                     </div>
                   </div>
 
-                  <div className="p-3 sm:p-4 bg-white/5 rounded-xl space-y-2 border border-white/5">
-                    <div className="flex justify-between text-[10px] sm:text-xs">
+                  <div className="p-4 sm:p-6 bg-white/5 rounded-2xl space-y-3 border border-white/5">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <span className="text-gray-500">Exchange Rate</span>
                       <span className="font-medium text-white">1 USDT = ₹{rate}</span>
                     </div>
-                    <div className="flex justify-between text-[10px] sm:text-xs">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <span className="text-gray-500">Network Fee</span>
                       <span className="font-medium text-green-500">Zero Fee</span>
                     </div>
                   </div>
 
-                  <Link to="/p2p" className="btn-primary w-full py-3.5 sm:py-4 shadow-lg shadow-brand/20 text-sm sm:text-base">
+                  <Link to="/p2p" className="btn-primary w-full py-4 sm:py-5 shadow-lg shadow-brand/20 text-base sm:text-lg">
                     Execute Settlement
                   </Link>
                 </div>
@@ -199,13 +199,13 @@ export default function Home() {
       {/* How it Works Section */}
       <section className="py-24 border-y border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <h2 className="text-[10px] font-bold text-brand uppercase tracking-[0.3em] mb-4">The Process</h2>
-            <h3 className="text-4xl font-display font-bold text-white mb-6">Simple. Secure. Seamless.</h3>
-            <p className="text-gray-400">Three steps to settle your digital assets with absolute confidence.</p>
+          <div className="text-center max-w-3xl mx-auto mb-24">
+            <h2 className="text-xs sm:text-sm font-bold text-brand uppercase tracking-[0.3em] mb-6">The Process</h2>
+            <h3 className="text-5xl sm:text-6xl font-display font-bold text-white mb-8">Simple. Secure. Seamless.</h3>
+            <p className="text-lg sm:text-xl text-gray-400">Three steps to settle your digital assets with absolute confidence.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="grid md:grid-cols-3 gap-16">
             {[
               {
                 step: "01",
@@ -224,9 +224,9 @@ export default function Home() {
               }
             ].map((item, i) => (
               <div key={i} className="relative">
-                <div className="text-6xl font-display font-bold text-white/5 absolute -top-8 -left-4 -z-10">{item.step}</div>
-                <h4 className="text-xl font-bold text-white mb-4">{item.title}</h4>
-                <p className="text-gray-400 leading-relaxed">{item.desc}</p>
+                <div className="text-7xl sm:text-8xl font-display font-bold text-white/5 absolute -top-10 -left-6 -z-10">{item.step}</div>
+                <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">{item.title}</h4>
+                <p className="text-lg sm:text-xl text-gray-400 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -236,20 +236,20 @@ export default function Home() {
       {/* Features Section */}
       <section className="py-24 bg-white/[0.02]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <h2 className="text-[10px] font-bold text-brand uppercase tracking-[0.3em] mb-4">Core Protocol</h2>
-            <h3 className="text-4xl font-display font-bold text-white mb-6">Built for the next generation of digital finance.</h3>
-            <p className="text-gray-400">Our protocol combines decentralized trust with centralized efficiency to provide the ultimate settlement experience.</p>
+          <div className="text-center max-w-3xl mx-auto mb-24">
+            <h2 className="text-xs sm:text-sm font-bold text-brand uppercase tracking-[0.3em] mb-6">Core Protocol</h2>
+            <h3 className="text-5xl sm:text-6xl font-display font-bold text-white mb-8">Built for the next generation of digital finance.</h3>
+            <p className="text-lg sm:text-xl text-gray-400">Our protocol combines decentralized trust with centralized efficiency to provide the ultimate settlement experience.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-10">
             {features.map((f, i) => (
-              <div key={i} className="card p-10 hover:shadow-xl hover:shadow-brand/5 transition-all group">
-                <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-8 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
-                  <f.icon className="w-7 h-7" />
+              <div key={i} className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group">
+                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
+                  <f.icon className="w-8 h-8" />
                 </div>
-                <h4 className="text-xl font-bold text-white mb-4">{f.title}</h4>
-                <p className="text-gray-400 leading-relaxed">{f.desc}</p>
+                <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">{f.title}</h4>
+                <p className="text-lg sm:text-xl text-gray-400 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -261,29 +261,29 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>
-              <h2 className="text-[10px] font-bold text-brand uppercase tracking-[0.3em] mb-4">Security First</h2>
-              <h3 className="text-3xl md:text-4xl font-display font-bold text-white mb-8">Uncompromising safety for every transaction.</h3>
+              <h2 className="text-xs sm:text-sm font-bold text-brand uppercase tracking-[0.3em] mb-6">Security First</h2>
+              <h3 className="text-4xl md:text-5xl font-display font-bold text-white mb-10">Uncompromising safety for every transaction.</h3>
               
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {[
                   "Automated Escrow Protection",
                   "Verified Merchant Network",
                   "Real-time Fraud Detection",
                   "24/7 Dispute Resolution"
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
-                      <CheckCircle2 className="w-4 h-4" />
+                  <div key={i} className="flex items-center gap-5">
+                    <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
+                      <CheckCircle2 className="w-5 h-5" />
                     </div>
-                    <span className="text-base md:text-lg font-medium text-gray-300">{item}</span>
+                    <span className="text-lg md:text-xl font-medium text-gray-300">{item}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-12">
-                <Link to="/p2p" className="inline-flex items-center gap-2 text-brand font-bold uppercase tracking-widest text-[10px] md:text-xs hover:gap-4 transition-all">
+              <div className="mt-14">
+                <Link to="/p2p" className="inline-flex items-center gap-3 text-brand font-bold uppercase tracking-widest text-xs md:text-sm hover:gap-5 transition-all">
                   Learn more about our security
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-5 h-5" />
                 </Link>
               </div>
             </div>
@@ -325,13 +325,13 @@ export default function Home() {
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
-          <h2 className="text-4xl md:text-5xl font-display font-bold mb-8">Ready to experience the future?</h2>
-          <p className="text-white/80 text-xl mb-12 max-w-2xl mx-auto">Join thousands of traders who have already switched to the most efficient P2P protocol in the market.</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/p2p" className="w-full sm:w-auto px-12 py-5 bg-white text-brand font-bold rounded-2xl hover:bg-gray-50 transition-all shadow-xl">
+          <h2 className="text-5xl md:text-6xl font-display font-bold mb-10">Ready to experience the future?</h2>
+          <p className="text-white/80 text-xl sm:text-2xl mb-14 max-w-3xl mx-auto">Join thousands of traders who have already switched to the most efficient P2P protocol in the market.</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <Link to="/p2p" className="w-full sm:w-auto px-14 py-6 bg-white text-brand font-bold rounded-2xl hover:bg-gray-50 transition-all shadow-xl text-lg">
               Create Account
             </Link>
-            <Link to="/dashboard" className="w-full sm:w-auto px-12 py-5 bg-brand-dark text-white font-bold rounded-2xl hover:bg-black transition-all border border-white/20">
+            <Link to="/dashboard" className="w-full sm:w-auto px-14 py-6 bg-brand-dark text-white font-bold rounded-2xl hover:bg-black transition-all border border-white/20 text-lg">
               Contact Sales
             </Link>
           </div>
