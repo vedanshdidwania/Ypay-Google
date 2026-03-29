@@ -11,9 +11,16 @@ const CryptoCoin: React.FC = () => {
     const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     
-    const size = 300;
-    renderer.setSize(size, size);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const resize = () => {
+      const width = containerRef.current?.clientWidth || 300;
+      const height = containerRef.current?.clientHeight || 300;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
     containerRef.current.appendChild(renderer.domElement);
 
     // Create a coin group to hold everything

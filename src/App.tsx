@@ -27,6 +27,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Support from './components/Support';
 import CustomCursor from './components/CustomCursor';
+import SmoothScroll from './components/SmoothScroll';
 import { AlertTriangle } from 'lucide-react';
 
 import ErrorBoundary from './components/ErrorBoundary';
@@ -70,44 +71,46 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <Router>
-          <div className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 relative">
-            <CustomCursor />
-            <div className="cyber-noise" />
-            <Navbar />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/p2p" element={<P2P />} />
-              <Route path="/p2p/create/:adId" element={<PrivateRoute><P2PCreateOrder /></PrivateRoute>} />
-              <Route path="/p2p/order/:id" element={<PrivateRoute><P2POrder /></PrivateRoute>} />
-              <Route path="/p2p/my-ads" element={<PrivateRoute><MyAds /></PrivateRoute>} />
-              <Route path="/orders" element={<PrivateRoute><Orders /></PrivateRoute>} />
-              <Route path="/transactions" element={<PrivateRoute><Transactions /></PrivateRoute>} />
-              <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-              <Route path="/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />
-              <Route path="/kyc" element={<PrivateRoute><KYC /></PrivateRoute>} />
-              <Route path="/referrals" element={<PrivateRoute><Referrals /></PrivateRoute>} />
-              <Route path="/buy" element={<PrivateRoute><Buy /></PrivateRoute>} />
-              <Route path="/sell" element={<PrivateRoute><Sell /></PrivateRoute>} />
-              <Route path="/admin/*" element={<PrivateRoute adminOnly><Admin /></PrivateRoute>} />
-              <Route path="/info/:slug" element={<Info />} />
-              {/* Redirect old paths to new info route */}
-              <Route path="/about" element={<Navigate to="/info/about" replace />} />
-              <Route path="/careers" element={<Navigate to="/info/careers" replace />} />
-              <Route path="/contact" element={<Navigate to="/info/contact" replace />} />
-              <Route path="/blog" element={<Navigate to="/info/blog" replace />} />
-              <Route path="/terms" element={<Navigate to="/info/terms" replace />} />
-              <Route path="/privacy" element={<Navigate to="/info/privacy" replace />} />
-              <Route path="/cookie-policy" element={<Navigate to="/info/cookie-policy" replace />} />
-              <Route path="/security" element={<Navigate to="/info/security" replace />} />
-              <Route path="/support" element={<Navigate to="/info/support" replace />} />
-              <Route path="/api-docs" element={<Navigate to="/info/api-docs" replace />} />
-              <Route path="/status" element={<Navigate to="/info/status" replace />} />
-              <Route path="/community" element={<Navigate to="/info/community" replace />} />
-            </Routes>
-            <Footer />
-            <Support />
-          </div>
+          <SmoothScroll>
+            <div className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 relative">
+              <CustomCursor />
+              <div className="cyber-noise" />
+              <Navbar />
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/p2p" element={<P2P />} />
+                <Route path="/p2p/create/:adId" element={<PrivateRoute><P2PCreateOrder /></PrivateRoute>} />
+                <Route path="/p2p/order/:id" element={<PrivateRoute><P2POrder /></PrivateRoute>} />
+                <Route path="/p2p/my-ads" element={<PrivateRoute><MyAds /></PrivateRoute>} />
+                <Route path="/orders" element={<PrivateRoute><Orders /></PrivateRoute>} />
+                <Route path="/transactions" element={<PrivateRoute><Transactions /></PrivateRoute>} />
+                <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+                <Route path="/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />
+                <Route path="/kyc" element={<PrivateRoute><KYC /></PrivateRoute>} />
+                <Route path="/referrals" element={<PrivateRoute><Referrals /></PrivateRoute>} />
+                <Route path="/buy" element={<PrivateRoute><Buy /></PrivateRoute>} />
+                <Route path="/sell" element={<PrivateRoute><Sell /></PrivateRoute>} />
+                <Route path="/admin/*" element={<PrivateRoute adminOnly><Admin /></PrivateRoute>} />
+                <Route path="/info/:slug" element={<Info />} />
+                {/* Redirect old paths to new info route */}
+                <Route path="/about" element={<Navigate to="/info/about" replace />} />
+                <Route path="/careers" element={<Navigate to="/info/careers" replace />} />
+                <Route path="/contact" element={<Navigate to="/info/contact" replace />} />
+                <Route path="/blog" element={<Navigate to="/info/blog" replace />} />
+                <Route path="/terms" element={<Navigate to="/info/terms" replace />} />
+                <Route path="/privacy" element={<Navigate to="/info/privacy" replace />} />
+                <Route path="/cookie-policy" element={<Navigate to="/info/cookie-policy" replace />} />
+                <Route path="/security" element={<Navigate to="/info/security" replace />} />
+                <Route path="/support" element={<Navigate to="/info/support" replace />} />
+                <Route path="/api-docs" element={<Navigate to="/info/api-docs" replace />} />
+                <Route path="/status" element={<Navigate to="/info/status" replace />} />
+                <Route path="/community" element={<Navigate to="/info/community" replace />} />
+              </Routes>
+              <Footer />
+              <Support />
+            </div>
+          </SmoothScroll>
         </Router>
       </AuthProvider>
     </ErrorBoundary>

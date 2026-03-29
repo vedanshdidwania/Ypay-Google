@@ -15,6 +15,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [show2FA, setShow2FA] = useState(false);
   const [tempUserId, setTempUserId] = useState<string | null>(null);
@@ -59,6 +60,7 @@ export default function Auth() {
           options: {
             data: { 
               full_name: fullName,
+              phone_number: phone || null,
               referred_by: referralCode
             },
           },
@@ -130,20 +132,36 @@ export default function Auth() {
 
           <form onSubmit={resetMode ? handleResetPassword : handleAuth} className="space-y-4">
             {!isLogin && !resetMode && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-500 ml-1">Full Name</label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="text"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
-                    placeholder="John Doe"
-                  />
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-500 ml-1">Full Name</label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                    <input
+                      type="text"
+                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
+                      placeholder="John Doe"
+                    />
+                  </div>
                 </div>
-              </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-500 ml-1">Mobile Number (Optional)</label>
+                  <div className="relative">
+                    <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
+                      placeholder="+1 234 567 890"
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             <div className="space-y-2">

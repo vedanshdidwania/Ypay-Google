@@ -17,6 +17,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import HeroBackground from '../components/HeroBackground';
 import CryptoCoin from '../components/CryptoCoin';
+import FloatingGlobe from '../components/FloatingGlobe';
 
 import { supabase } from '../lib/supabase';
 
@@ -196,7 +197,7 @@ export default function Home() {
                 <div className="w-[400px] h-[400px] bg-brand/10 rounded-full blur-[100px] animate-pulse" />
               </div>
               
-              <div className="relative z-10 hidden lg:block">
+              <div className="relative z-10 w-full max-w-[300px] sm:max-w-[400px] aspect-square">
                 <CryptoCoin />
               </div>
 
@@ -379,6 +380,40 @@ export default function Home() {
                   <TrendingUp className="w-8 h-8 mb-4 text-brand" />
                   <p className="text-2xl font-bold mb-1">24/7</p>
                   <p className="text-xs font-medium opacity-70 uppercase tracking-widest">Monitoring</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Global Reach Section */}
+      <section className="py-24 bg-brand/5 relative overflow-hidden">
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand/10 rounded-full blur-[120px]" />
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="order-2 lg:order-1">
+              <div className="aspect-square max-w-[500px] mx-auto">
+                <FloatingGlobe />
+              </div>
+            </div>
+            <div className="order-1 lg:order-2">
+              <h2 className="text-xs sm:text-sm font-bold text-brand uppercase tracking-[0.3em] mb-6">Global Reach</h2>
+              <h3 className="text-5xl sm:text-6xl font-display font-bold text-white mb-8">Settling transactions across borders.</h3>
+              <p className="text-xl text-gray-400 mb-10 leading-relaxed">
+                Ypay's protocol is designed for the global economy. We connect local fiat markets with the global crypto liquidity pool, ensuring seamless settlements in over 190 countries.
+              </p>
+              <div className="grid grid-cols-2 gap-8">
+                <div>
+                  <p className="text-4xl font-bold text-white mb-2">190+</p>
+                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Countries Supported</p>
+                </div>
+                <div>
+                  <p className="text-4xl font-bold text-white mb-2">50+</p>
+                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Fiat Currencies</p>
                 </div>
               </div>
             </div>
