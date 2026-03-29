@@ -15,7 +15,8 @@ import {
   ShoppingCart,
   History,
   Gift,
-  HelpCircle
+  HelpCircle,
+  Plus
 } from 'lucide-react';
 import { useAuth } from '../lib/useAuth';
 import { cn } from '../lib/utils';
@@ -50,6 +51,11 @@ export default function Navbar() {
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, auth: true },
   ];
 
+  const mobileActions = [
+    { name: 'Post Ad', path: '/p2p', icon: ArrowRight, action: 'post-ad' },
+    { name: 'Support', path: '#', icon: HelpCircle },
+  ];
+
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -62,8 +68,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center shadow-lg shadow-brand/10 group-hover:scale-105 transition-transform overflow-hidden border border-white/10">
+          <Link to="/" className="flex items-center gap-2 group shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/5 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-brand/10 group-hover:scale-105 transition-transform overflow-hidden border border-white/10">
               <img 
                 src="https://res.cloudinary.com/dvep5xtf2/image/upload/v1774265829/logo.png_l0lsdc.png" 
                 alt="Y" 
@@ -75,8 +81,8 @@ export default function Navbar() {
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-display font-bold text-white tracking-tight leading-none">YPAY</span>
-              <span className="text-[10px] font-bold text-brand uppercase tracking-widest mt-0.5">P2P Protocol</span>
+              <span className="text-base sm:text-lg font-display font-bold text-white tracking-tight leading-none">YPAY</span>
+              <span className="text-[8px] sm:text-[10px] font-bold text-brand uppercase tracking-widest mt-0.5">P2P Protocol</span>
             </div>
           </Link>
 
@@ -116,24 +122,26 @@ export default function Navbar() {
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {user ? (
               <>
-                <NotificationCenter />
+                <div className="scale-90 sm:scale-100 origin-right">
+                  <NotificationCenter />
+                </div>
 
                 <div className="relative">
                   <button 
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center gap-2 pl-2 pr-3 py-1.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
+                    className="flex items-center gap-1.5 sm:gap-2 pl-1.5 pr-2 sm:pl-2 sm:pr-3 py-1 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl hover:bg-white/10 transition-all"
                   >
-                    <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center text-white text-xs font-bold">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-brand rounded-md sm:rounded-lg flex items-center justify-center text-white text-[10px] sm:text-xs font-bold">
                       {user.email?.[0].toUpperCase()}
                     </div>
-                    <div className="hidden sm:flex flex-col items-start leading-none">
+                    <div className="hidden lg:flex flex-col items-start leading-none">
                       <span className="text-[10px] font-bold text-white truncate max-w-[80px]">{profile?.full_name || 'User'}</span>
                       <span className="text-[8px] text-gray-500 truncate max-w-[80px]">{user.email}</span>
                     </div>
-                    <ChevronDown className={cn("w-4 h-4 text-gray-500 transition-transform", isUserMenuOpen && "rotate-180")} />
+                    <ChevronDown className={cn("w-3 h-3 sm:w-4 sm:h-4 text-gray-500 transition-transform", isUserMenuOpen && "rotate-180")} />
                   </button>
 
                   {isUserMenuOpen && (
@@ -184,8 +192,8 @@ export default function Navbar() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="md:hidden bg-[#050505] border-b border-white/10 overflow-hidden"
           >
-            <div className="py-6 px-4 space-y-2">
-              <div className="grid grid-cols-2 gap-2 mb-6">
+            <div className="py-6 px-4 space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
                 {navLinks.map((link) => (
                   (!link.auth || user) && (
                     <Link
@@ -193,17 +201,27 @@ export default function Navbar() {
                       to={link.path}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
-                        "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl text-xs font-bold transition-all border border-white/5",
+                        "flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition-all border border-white/5",
                         isActive(link.path) 
                           ? "text-brand bg-brand/10 border-brand/20" 
                           : "text-gray-400 bg-white/5 hover:bg-white/10"
                       )}
                     >
-                      <link.icon className="w-5 h-5" />
+                      <link.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                       {link.name}
                     </Link>
                   )
                 ))}
+                {user && (
+                  <Link
+                    to="/p2p?create=true"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition-all border border-brand/20 text-brand bg-brand/5"
+                  >
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Post Ad
+                  </Link>
+                )}
               </div>
 
               {user ? (

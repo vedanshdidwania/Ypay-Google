@@ -75,13 +75,14 @@ export default function Home() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
+              className="text-center lg:text-left"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand text-xs font-bold uppercase tracking-widest mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-6">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
@@ -89,38 +90,38 @@ export default function Home() {
                 Live Market Active
               </div>
               
-              <h1 className="text-4xl md:text-5xl lg:text-7xl font-display font-bold text-white tracking-tight leading-[1.1] mb-8">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-display font-bold text-white tracking-tight leading-[1.1] mb-6 sm:mb-8">
                 The Future of <span className="text-brand">P2P Settlements</span> is Here.
               </h1>
               
-              <p className="text-xl text-gray-400 leading-relaxed mb-10 max-w-xl">
+              <p className="text-base sm:text-lg lg:text-xl text-gray-400 leading-relaxed mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0">
                 Experience the most secure, automated, and lightning-fast P2P protocol for fiat-to-crypto settlements. No middlemen, just pure efficiency.
               </p>
               
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <Link to="/p2p" className="btn-primary w-full sm:w-auto px-10 py-4 text-lg shadow-lg shadow-brand/20">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                <Link to="/p2p" className="btn-primary w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 text-base sm:text-lg shadow-lg shadow-brand/20">
                   Start Trading
                   <ArrowRight className="w-5 h-5" />
                 </Link>
-                <Link to="/dashboard" className="btn-secondary w-full sm:w-auto px-10 py-4 text-lg">
+                <Link to="/dashboard" className="btn-secondary w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 text-base sm:text-lg">
                   View Dashboard
                 </Link>
               </div>
 
-              <div className="mt-12 flex items-center gap-8 border-t border-white/5 pt-8">
+              <div className="mt-10 sm:mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-8 border-t border-white/5 pt-8">
                 <div>
-                  <p className="text-2xl font-bold text-white">$2.4M+</p>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">24h Volume</p>
+                  <p className="text-xl sm:text-2xl font-bold text-white">$2.4M+</p>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">24h Volume</p>
                 </div>
-                <div className="w-px h-10 bg-white/5" />
+                <div className="hidden sm:block w-px h-10 bg-white/5" />
                 <div>
-                  <p className="text-2xl font-bold text-white">12k+</p>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Active Traders</p>
+                  <p className="text-xl sm:text-2xl font-bold text-white">12k+</p>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Active Traders</p>
                 </div>
-                <div className="w-px h-10 bg-white/5" />
+                <div className="hidden sm:block w-px h-10 bg-white/5" />
                 <div>
-                  <p className="text-2xl font-bold text-white">99.9%</p>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Success Rate</p>
+                  <p className="text-xl sm:text-2xl font-bold text-white">99.9%</p>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Success Rate</p>
                 </div>
               </div>
             </motion.div>
@@ -131,57 +132,57 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="relative"
             >
-              <div className="card p-8 shadow-2xl shadow-brand/10 relative z-10">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-lg font-bold text-white">Settlement Calculator</h3>
-                  <div className="flex items-center gap-1 text-green-500 bg-green-500/10 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-green-500/20">
+              <div className="card p-5 sm:p-8 shadow-2xl shadow-brand/10 relative z-10">
+                <div className="flex items-center justify-between mb-6 sm:mb-8">
+                  <h3 className="text-base sm:text-lg font-bold text-white">Settlement Calculator</h3>
+                  <div className="flex items-center gap-1 text-green-500 bg-green-500/10 px-2 py-1 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border border-green-500/20">
                     <TrendingUp className="w-3 h-3" />
                     Live Rate
                   </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 block">You Pay (INR)</label>
+                    <label className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 sm:mb-2 block">You Pay (INR)</label>
                     <div className="relative">
                       <input
                         type="number"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
-                        className="input-field text-2xl font-bold pr-16"
+                        className="input-field text-xl sm:text-2xl font-bold pr-14 sm:pr-16 py-2.5 sm:py-3"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-gray-500">INR</span>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-gray-500 text-sm sm:text-base">INR</span>
                     </div>
                   </div>
 
                   <div className="flex justify-center">
-                    <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-full flex items-center justify-center text-gray-500">
-                      <ArrowLeftRight className="w-5 h-5 rotate-90" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/5 border border-white/10 rounded-full flex items-center justify-center text-gray-500">
+                      <ArrowLeftRight className="w-4 h-4 sm:w-5 sm:h-5 rotate-90" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 block">You Receive (USDT)</label>
+                    <label className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 sm:mb-2 block">You Receive (USDT)</label>
                     <div className="relative">
-                      <div className="input-field bg-white/5 text-2xl font-bold pr-16 text-brand">
+                      <div className="input-field bg-white/5 text-xl sm:text-2xl font-bold pr-14 sm:pr-16 py-2.5 sm:py-3 text-brand">
                         {usdt}
                       </div>
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-brand">USDT</span>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-brand text-sm sm:text-base">USDT</span>
                     </div>
                   </div>
 
-                  <div className="p-4 bg-white/5 rounded-xl space-y-2 border border-white/5">
-                    <div className="flex justify-between text-xs">
+                  <div className="p-3 sm:p-4 bg-white/5 rounded-xl space-y-2 border border-white/5">
+                    <div className="flex justify-between text-[10px] sm:text-xs">
                       <span className="text-gray-500">Exchange Rate</span>
                       <span className="font-medium text-white">1 USDT = ₹{rate}</span>
                     </div>
-                    <div className="flex justify-between text-xs">
+                    <div className="flex justify-between text-[10px] sm:text-xs">
                       <span className="text-gray-500">Network Fee</span>
                       <span className="font-medium text-green-500">Zero Fee</span>
                     </div>
                   </div>
 
-                  <Link to="/p2p" className="btn-primary w-full py-4 shadow-lg shadow-brand/20">
+                  <Link to="/p2p" className="btn-primary w-full py-3.5 sm:py-4 shadow-lg shadow-brand/20 text-sm sm:text-base">
                     Execute Settlement
                   </Link>
                 </div>

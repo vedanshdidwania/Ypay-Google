@@ -147,47 +147,47 @@ export default function Wallet() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="cyber-card p-10 group"
+            className="cyber-card p-6 sm:p-10 group"
           >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 animate-gradient-x" />
             
-            <div className="flex justify-between items-start mb-12">
+            <div className="flex justify-between items-start mb-8 sm:mb-12">
               <div className="space-y-1">
-                <h2 className="text-[10px] font-bold text-gray-600 tracking-[0.3em] uppercase">Liquidity Reserve</h2>
-                <p className="text-[10px] font-mono text-blue-400/50 uppercase">Network: TRON (TRC20)</p>
+                <h2 className="text-[9px] sm:text-[10px] font-bold text-gray-600 tracking-[0.3em] uppercase">Liquidity Reserve</h2>
+                <p className="text-[9px] sm:text-[10px] font-mono text-blue-400/50 uppercase">Network: TRON (TRC20)</p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
-                <WalletIcon className="w-6 h-6" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                <WalletIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
             </div>
 
-            <div className="space-y-2 mb-12">
-              <div className="text-5xl font-display text-white tracking-tight">
+            <div className="space-y-2 mb-8 sm:mb-12">
+              <div className="text-4xl sm:text-5xl font-display text-white tracking-tight">
                 {profile?.balance_usdt?.toFixed(2) || '0.00'}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-display text-blue-500">USDT</span>
+                <span className="text-lg sm:text-xl font-display text-blue-500">USDT</span>
                 <div className="h-px flex-1 bg-white/[0.05]" />
                 <button 
                   onClick={handleDemoBalance}
-                  className="px-3 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-blue-500/20 transition-all"
+                  className="px-2 py-1 sm:px-3 sm:py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest rounded-lg border border-blue-500/20 transition-all"
                 >
                   Demo +1000
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-                <div className="text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-1">Escrow Balance</div>
-                <div className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+                <div className="text-[8px] sm:text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-1">Escrow Balance</div>
+                <div className="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider">
                   {profile?.escrow_balance_usdt?.toFixed(2) || '0.00'} USDT
                 </div>
               </div>
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-                <div className="text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-1">KYC Level</div>
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+                <div className="text-[8px] sm:text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-1">KYC Level</div>
                 <div className={cn(
-                  "text-xs font-bold uppercase tracking-wider",
+                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider",
                   profile?.kyc_status === 'approved' ? "text-green-400" : "text-yellow-400"
                 )}>
                   {profile?.kyc_status || 'Unverified'}
@@ -202,29 +202,29 @@ export default function Wallet() {
           </motion.div>
 
           {/* Action Module */}
-          <div className="cyber-card p-8">
-            <div className="flex items-center gap-3 mb-8">
+          <div className="cyber-card p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6 sm:mb-8">
               <Zap className="w-5 h-5 text-blue-500" />
-              <h3 className="text-lg font-display uppercase tracking-wider text-white">Transfer Protocol</h3>
+              <h3 className="text-base sm:text-lg font-display uppercase tracking-wider text-white">Transfer Protocol</h3>
             </div>
 
             {error && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-medium"
+                className="mb-6 sm:mb-8 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 rounded-xl sm:rounded-2xl flex items-center gap-3 text-red-400 text-[10px] sm:text-xs font-medium"
               >
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </motion.div>
             )}
 
-            <div className="space-y-10">
+            <div className="space-y-8 sm:space-y-10">
               {/* Deposit Section */}
               <div className="space-y-4">
                 <div className="flex justify-between items-end">
-                  <label className="text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase">Inbound Capital</label>
-                  <span className="text-[9px] font-mono text-green-400/50">GATEWAY: NOWPAYMENTS</span>
+                  <label className="text-[9px] sm:text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase">Inbound Capital</label>
+                  <span className="text-[8px] sm:text-[9px] font-mono text-green-400/50">GATEWAY: NOWPAYMENTS</span>
                 </div>
                 <form onSubmit={handleDeposit} className="space-y-4">
                   <div className="relative">
@@ -233,13 +233,13 @@ export default function Wallet() {
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-white/[0.02] border border-white/[0.08] rounded-2xl px-6 py-4 text-2xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white"
+                      className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-xl sm:text-2xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white"
                     />
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 font-display text-lg text-gray-600">USDT</div>
+                    <div className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 font-display text-base sm:text-lg text-gray-600">USDT</div>
                   </div>
                   <button
                     disabled={isDepositing || !depositAmount}
-                    className="w-full py-4 bg-white text-black font-bold rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 text-xs uppercase tracking-widest"
+                    className="w-full py-3.5 sm:py-4 bg-white text-black font-bold rounded-xl sm:rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 text-[10px] sm:text-xs uppercase tracking-widest"
                   >
                     {isDepositing ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                       <>
@@ -252,14 +252,14 @@ export default function Wallet() {
               </div>
 
               <div className="h-px bg-white/[0.05] relative">
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-4 bg-[#0a0a0a] text-[9px] font-bold text-gray-700 uppercase tracking-[0.3em]">OR</div>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-3 sm:px-4 bg-[#0a0a0a] text-[8px] sm:text-[9px] font-bold text-gray-700 uppercase tracking-[0.3em]">OR</div>
               </div>
 
               {/* Withdraw Section */}
               <div className="space-y-4">
                 <div className="flex justify-between items-end">
-                  <label className="text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase">Outbound Settlement</label>
-                  <span className="text-[9px] font-mono text-red-400/50">NETWORK: TRC20</span>
+                  <label className="text-[9px] sm:text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase">Outbound Settlement</label>
+                  <span className="text-[8px] sm:text-[9px] font-mono text-red-400/50">NETWORK: TRC20</span>
                 </div>
                 <form onSubmit={handleWithdraw} className="space-y-4">
                   <div className="relative">
@@ -268,11 +268,11 @@ export default function Wallet() {
                       value={withdrawAmount}
                       onChange={(e) => setWithdrawAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-white/[0.02] border border-white/[0.08] rounded-2xl px-6 py-4 text-2xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white"
+                      className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-xl sm:text-2xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white"
                     />
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 font-display text-lg text-gray-600">USDT</div>
+                    <div className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 font-display text-base sm:text-lg text-gray-600">USDT</div>
                   </div>
-                  <div className="flex justify-between text-[9px] font-bold uppercase tracking-tighter px-1 text-gray-600">
+                  <div className="flex justify-between text-[8px] sm:text-[9px] font-bold uppercase tracking-tighter px-1 text-gray-600">
                     <span>Min: 10.00</span>
                     <span>Fee: 1.00</span>
                   </div>
@@ -281,11 +281,11 @@ export default function Wallet() {
                     value={withdrawAddress}
                     onChange={(e) => setWithdrawAddress(e.target.value)}
                     placeholder="Destination TRC20 Address"
-                    className="w-full bg-white/[0.02] border border-white/[0.08] rounded-2xl px-6 py-4 text-xs font-mono text-white focus:outline-none focus:border-blue-500/50 transition-all"
+                    className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-[10px] sm:text-xs font-mono text-white focus:outline-none focus:border-blue-500/50 transition-all"
                   />
                   <button
                     disabled={isWithdrawing || !withdrawAmount || !withdrawAddress}
-                    className="w-full py-4 bg-white/[0.03] border border-white/[0.08] text-white font-bold rounded-2xl transition-all hover:bg-white/[0.08] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 text-xs uppercase tracking-widest"
+                    className="w-full py-3.5 sm:py-4 bg-white/[0.03] border border-white/[0.08] text-white font-bold rounded-xl sm:rounded-2xl transition-all hover:bg-white/[0.08] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 text-[10px] sm:text-xs uppercase tracking-widest"
                   >
                     {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                       <>
@@ -303,14 +303,14 @@ export default function Wallet() {
         {/* Right Column: Transaction History */}
         <div className="lg:col-span-8">
           <div className="cyber-card h-full flex flex-col">
-            <div className="p-8 border-b border-white/[0.05] flex items-center justify-between">
+            <div className="p-5 sm:p-8 border-b border-white/[0.05] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <History className="w-5 h-5 text-blue-500" />
-                <h2 className="text-xl font-display uppercase tracking-wider text-white">Ledger History</h2>
+                <History className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                <h2 className="text-lg sm:text-xl font-display uppercase tracking-wider text-white">Ledger History</h2>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Live Sync</span>
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Live Sync</span>
               </div>
             </div>
             

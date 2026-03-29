@@ -147,97 +147,100 @@ export default function MyAds() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] pt-24 pb-12">
+    <div className="min-h-screen bg-[#050505] pt-20 sm:pt-24 pb-8 sm:pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 sm:mb-10">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button 
               onClick={() => navigate('/dashboard')}
-              className="p-2 hover:bg-white/5 rounded-xl transition-colors text-gray-400 hover:text-white"
+              className="p-1.5 sm:p-2 hover:bg-white/5 rounded-lg sm:rounded-xl transition-colors text-gray-400 hover:text-white"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <div>
-              <h1 className="text-3xl font-display font-bold text-white">My Advertisements</h1>
-              <p className="text-gray-400 mt-1">Manage your active P2P listings and trade terms.</p>
+              <h1 className="text-xl sm:text-3xl font-display font-bold text-white">My Advertisements</h1>
+              <p className="text-[10px] sm:text-sm text-gray-400 mt-0.5 sm:mt-1">Manage your active P2P listings and trade terms.</p>
             </div>
           </div>
           
           <button 
             onClick={() => navigate('/p2p')}
-            className="btn-primary"
+            className="btn-primary w-full sm:w-auto justify-center py-2.5 sm:py-3"
           >
-            <Plus className="w-5 h-5" />
-            Create New Ad
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-xs sm:text-sm">Create New Ad</span>
           </button>
         </div>
 
         {loading ? (
-          <div className="card p-20 flex flex-col items-center justify-center">
-            <Loader2 className="w-10 h-10 animate-spin text-brand mb-4" />
-            <p className="text-sm text-gray-500">Loading your ads...</p>
+          <div className="card p-12 sm:p-20 flex flex-col items-center justify-center">
+            <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin text-brand mb-3 sm:mb-4" />
+            <p className="text-[10px] sm:text-sm text-gray-500">Loading your ads...</p>
           </div>
         ) : ads.length === 0 ? (
-          <div className="card p-20 text-center">
-            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-              <AlertCircle className="w-8 h-8 text-gray-600" />
+          <div className="card p-12 sm:p-20 text-center">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 text-gray-600" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">No Ads Found</h3>
-            <p className="text-gray-500 mb-8">You haven't posted any advertisements yet.</p>
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-1.5 sm:mb-2">No Ads Found</h3>
+            <p className="text-[10px] sm:text-sm text-gray-500 mb-6 sm:mb-8">You haven't posted any advertisements yet.</p>
             <button 
               onClick={() => navigate('/p2p')}
-              className="px-8 py-3 bg-brand text-white font-bold rounded-xl hover:bg-brand/90 transition-all"
+              className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-brand text-white font-bold rounded-lg sm:rounded-xl hover:bg-brand/90 transition-all text-xs sm:text-sm"
             >
               Post Your First Ad
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
             {ads.map((ad) => (
               <motion.div
                 key={ad.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="card p-6 hover:border-white/20 transition-all group"
+                className="card p-4 sm:p-6 hover:border-white/20 transition-all group"
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="flex items-center gap-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+                  <div className="flex items-center gap-4 sm:gap-6">
                     <div className={cn(
-                      "w-12 h-12 rounded-xl flex items-center justify-center font-bold",
+                      "w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-[10px] sm:text-xs",
                       ad.type === 'buy' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
                     )}>
                       {ad.type === 'buy' ? 'BUY' : 'SELL'}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="text-lg font-bold text-white">₹{ad.price.toFixed(2)}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-0.5 sm:mb-1">
+                        <span className="text-base sm:text-lg font-bold text-white">₹{ad.price.toFixed(2)}</span>
                         <span className={cn(
-                          "px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest",
+                          "px-1.5 sm:px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] font-bold uppercase tracking-widest",
                           ad.status === 'active' ? "bg-green-500/10 text-green-500" : "bg-gray-500/10 text-gray-500"
                         )}>
                           {ad.status}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                         <span>Limit: {formatCurrency(ad.min_limit)} - {formatCurrency(ad.max_limit)}</span>
-                        <span>•</span>
-                        <span>{ad.payment_methods.join(', ')}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="truncate max-w-[150px] sm:max-w-none">{ad.payment_methods.join(', ')}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 pt-2 sm:pt-0 border-t sm:border-none border-white/5">
                     <button 
                       onClick={() => toggleAdStatus(ad.id, ad.status)}
                       className={cn(
-                        "p-3 rounded-xl transition-all border",
+                        "flex-1 sm:flex-none p-2.5 sm:p-3 rounded-lg sm:rounded-xl transition-all border flex items-center justify-center",
                         ad.status === 'active' 
                           ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" 
                           : "bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20"
                       )}
                       title={ad.status === 'active' ? 'Pause Ad' : 'Resume Ad'}
                     >
-                      {ad.status === 'active' ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                      {ad.status === 'active' ? <Pause className="w-4 h-4 sm:w-5 sm:h-5" /> : <Play className="w-4 h-4 sm:w-5 sm:h-5" />}
+                      <span className="sm:hidden ml-2 text-[10px] font-bold uppercase tracking-widest">
+                        {ad.status === 'active' ? 'Pause' : 'Resume'}
+                      </span>
                     </button>
                     <button 
                       onClick={() => {
@@ -246,10 +249,11 @@ export default function MyAds() {
                         setAdToDelete(ad.id);
                         setShowDeleteConfirm(true);
                       }}
-                      className="p-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl transition-all border border-red-500/20"
+                      className="flex-1 sm:flex-none p-2.5 sm:p-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg sm:rounded-xl transition-all border border-red-500/20 flex items-center justify-center"
                       title="Delete Ad"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="sm:hidden ml-2 text-[10px] font-bold uppercase tracking-widest">Delete</span>
                     </button>
                   </div>
                 </div>
@@ -258,13 +262,13 @@ export default function MyAds() {
           </div>
         )}
 
-        <div className="mt-12 p-6 bg-brand/5 border border-brand/10 rounded-2xl flex items-center gap-4">
-          <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-brand shadow-sm border border-white/5">
-            <AlertCircle className="w-6 h-6" />
+        <div className="mt-8 sm:mt-12 p-4 sm:p-6 bg-brand/5 border border-brand/10 rounded-xl sm:rounded-2xl flex items-center gap-3 sm:gap-4">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/5 rounded-lg sm:rounded-xl flex items-center justify-center text-brand shadow-sm border border-white/5 shrink-0">
+            <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-white">Important Note</p>
-            <p className="text-xs text-gray-400">Ensure your payment methods are up to date. Inactive ads will not be visible in the marketplace.</p>
+            <p className="text-xs sm:text-sm font-bold text-white">Important Note</p>
+            <p className="text-[10px] sm:text-xs text-gray-400">Ensure your payment methods are up to date. Inactive ads will not be visible in the marketplace.</p>
           </div>
         </div>
       </div>
