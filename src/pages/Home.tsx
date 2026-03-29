@@ -16,8 +16,7 @@ import { cn } from '../lib/utils';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import HeroBackground from '../components/HeroBackground';
-import CryptoCoin from '../components/CryptoCoin';
-import FloatingGlobe from '../components/FloatingGlobe';
+import NeuralNetwork from '../components/NeuralNetwork';
 
 import { supabase } from '../lib/supabase';
 
@@ -130,6 +129,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden hero-section">
         <HeroBackground />
+        <NeuralNetwork />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none overflow-hidden">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand/10 rounded-full blur-[120px]" />
           <div className="absolute bottom-[10%] right-[-10%] w-[30%] h-[30%] bg-brand/5 rounded-full blur-[100px]" />
@@ -197,11 +197,7 @@ export default function Home() {
                 <div className="w-[400px] h-[400px] bg-brand/10 rounded-full blur-[100px] animate-pulse" />
               </div>
               
-              <div className="relative z-10 w-full max-w-[300px] sm:max-w-[400px] aspect-square">
-                <CryptoCoin />
-              </div>
-
-              <div className="card p-6 sm:p-10 shadow-2xl shadow-brand/10 relative z-20 lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-[450px]">
+              <div className="card p-6 sm:p-10 shadow-2xl shadow-brand/10 relative z-20 lg:w-[450px]">
                 <div className="flex items-center justify-between mb-8 sm:mb-10">
                   <h3 className="text-lg sm:text-xl font-bold text-white">Settlement Calculator</h3>
                   <div className="flex items-center gap-1.5 text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-green-500/20">
@@ -302,7 +298,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features Section - Bento Grid */}
       <section className="py-24 bg-white/[0.02]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-24 gsap-reveal">
@@ -311,16 +307,48 @@ export default function Home() {
             <p className="text-lg sm:text-xl text-gray-400">Our protocol combines decentralized trust with centralized efficiency to provide the ultimate settlement experience.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-10 gsap-feature-grid">
-            {features.map((f, i) => (
-              <div key={i} className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group gsap-feature-card">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 gsap-feature-grid">
+            {/* Large Card */}
+            <div className="md:col-span-2 card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group gsap-feature-card relative overflow-hidden">
+              <div className="relative z-10">
                 <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
-                  <f.icon className="w-8 h-8" />
+                  <ShieldCheck className="w-8 h-8" />
                 </div>
-                <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">{f.title}</h4>
-                <p className="text-lg sm:text-xl text-gray-400 leading-relaxed">{f.desc}</p>
+                <h4 className="text-3xl sm:text-4xl font-bold text-white mb-6">Bank-Grade Escrow</h4>
+                <p className="text-xl text-gray-400 leading-relaxed max-w-md">Our automated escrow protocol ensures that your assets are only released when payment is verified. Zero trust required, absolute security guaranteed.</p>
               </div>
-            ))}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-3xl -mr-32 -mt-32 transition-all group-hover:bg-brand/10" />
+            </div>
+
+            {/* Small Card */}
+            <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group gsap-feature-card">
+              <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
+                <Zap className="w-8 h-8" />
+              </div>
+              <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">Instant Matching</h4>
+              <p className="text-lg text-gray-400 leading-relaxed">Proprietary engine matches you with the best rates in milliseconds.</p>
+            </div>
+
+            {/* Small Card */}
+            <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group gsap-feature-card">
+              <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
+                <Globe className="w-8 h-8" />
+              </div>
+              <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">Global Reach</h4>
+              <p className="text-lg text-gray-400 leading-relaxed">Access 50+ fiat currencies and 190+ countries seamlessly.</p>
+            </div>
+
+            {/* Large Card */}
+            <div className="md:col-span-2 card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group gsap-feature-card relative overflow-hidden">
+              <div className="relative z-10">
+                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
+                  <TrendingUp className="w-8 h-8" />
+                </div>
+                <h4 className="text-3xl sm:text-4xl font-bold text-white mb-6">Real-time Analytics</h4>
+                <p className="text-xl text-gray-400 leading-relaxed max-w-md">Track your trading performance, market trends, and settlement history with our advanced analytics suite.</p>
+              </div>
+              <div className="absolute bottom-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-3xl -mr-32 -mb-32 transition-all group-hover:bg-brand/10" />
+            </div>
           </div>
         </div>
       </section>
@@ -396,8 +424,14 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1">
-              <div className="aspect-square max-w-[500px] mx-auto">
-                <FloatingGlobe />
+              <div className="aspect-square max-w-[500px] mx-auto relative">
+                <div className="absolute inset-0 bg-brand/5 rounded-full blur-3xl animate-pulse" />
+                <div className="relative z-10 w-full h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-8xl font-display font-bold text-brand mb-4">190+</div>
+                    <div className="text-xl font-bold text-gray-400 uppercase tracking-widest">Countries</div>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="order-1 lg:order-2">
