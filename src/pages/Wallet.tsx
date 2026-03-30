@@ -147,30 +147,30 @@ export default function Wallet() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="cyber-card p-6 sm:p-10 group relative overflow-hidden"
+            className="cyber-card p-6 sm:p-8 group relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 animate-gradient-x" />
             
-            <div className="flex justify-between items-start mb-10 sm:mb-12">
-              <div className="space-y-3">
+            <div className="flex justify-between items-start mb-8 sm:mb-10">
+              <div className="space-y-2">
                 <h2 className="text-xs sm:text-sm font-bold text-gray-500 tracking-[0.4em] uppercase">Liquidity Reserve</h2>
-                <p className="text-[11px] sm:text-xs font-mono text-blue-400/60 uppercase">Network: TRON (TRC20)</p>
+                <p className="text-[10px] sm:text-xs font-mono text-blue-400/60 uppercase">Network: TRON (TRC20)</p>
               </div>
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 shadow-lg shadow-blue-500/10">
-                <WalletIcon className="w-7 h-7 sm:w-8 sm:h-8" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 shadow-lg shadow-blue-500/10">
+                <WalletIcon className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
             </div>
 
-            <div className="space-y-4 mb-10 sm:mb-12">
-              <div className="text-5xl sm:text-7xl font-display text-white tracking-tighter leading-none">
+            <div className="space-y-3 mb-8 sm:mb-10">
+              <div className="text-4xl sm:text-6xl font-display text-white tracking-tighter leading-none">
                 {profile?.balance_usdt?.toFixed(2) || '0.00'}
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-2xl sm:text-3xl font-display text-blue-500 font-bold">USDT</span>
+              <div className="flex items-center gap-3">
+                <span className="text-xl sm:text-2xl font-display text-blue-500 font-bold">USDT</span>
                 <div className="h-px flex-1 bg-white/[0.08]" />
                 <button 
                   onClick={handleDemoBalance}
-                  className="px-4 py-2 sm:px-6 sm:py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl border border-blue-500/20 transition-all shadow-lg shadow-blue-500/5 active:scale-95"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest rounded-lg border border-blue-500/20 transition-all shadow-lg shadow-blue-500/5 active:scale-95"
                 >
                   Demo +1000
                 </button>
@@ -202,10 +202,10 @@ export default function Wallet() {
           </motion.div>
 
           {/* Action Module */}
-          <div className="cyber-card p-6 sm:p-10">
-            <div className="flex items-center gap-4 mb-8 sm:mb-10">
-              <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500" />
-              <h3 className="text-lg sm:text-xl font-display uppercase tracking-widest text-white">Transfer Protocol</h3>
+          <div className="cyber-card p-5 sm:p-8">
+            <div className="flex items-center gap-3 mb-6 sm:mb-8">
+              <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
+              <h3 className="text-base sm:text-lg font-display uppercase tracking-widest text-white">Transfer Protocol</h3>
             </div>
 
             {error && (
@@ -226,24 +226,24 @@ export default function Wallet() {
                   <label className="text-xs sm:text-sm font-bold text-gray-500 tracking-[0.3em] uppercase">Inbound Capital</label>
                   <span className="text-[10px] sm:text-xs font-mono text-green-400/60">GATEWAY: NOWPAYMENTS</span>
                 </div>
-                <form onSubmit={handleDeposit} className="space-y-8">
+                <form onSubmit={handleDeposit} className="space-y-6">
                   <div className="relative">
                     <input
                       type="number"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-white/[0.03] border border-white/[0.1] rounded-2xl px-8 sm:px-10 py-6 sm:py-8 text-4xl sm:text-5xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-gray-800"
+                      className="w-full bg-white/[0.03] border border-white/[0.1] rounded-2xl px-6 sm:px-8 py-4 sm:py-5 text-2xl sm:text-3xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-gray-800"
                     />
-                    <div className="absolute right-8 sm:right-10 top-1/2 -translate-y-1/2 font-display text-2xl sm:text-3xl text-gray-700">USDT</div>
+                    <div className="absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 font-display text-lg sm:text-xl text-gray-700">USDT</div>
                   </div>
                   <button
                     disabled={isDepositing || !depositAmount}
-                    className="w-full py-6 sm:py-8 bg-white text-black font-bold rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-5 text-base sm:text-lg uppercase tracking-[0.2em] shadow-xl shadow-white/5"
+                    className="w-full py-4 sm:py-5 bg-white text-black font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 text-sm sm:text-base uppercase tracking-[0.2em] shadow-xl shadow-white/5"
                   >
-                    {isDepositing ? <Loader2 className="w-7 h-7 animate-spin" /> : (
+                    {isDepositing ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                       <>
-                        <ArrowDownLeft className="w-7 h-7" />
+                        <ArrowDownLeft className="w-5 h-5" />
                         Initiate Deposit
                       </>
                     )}
@@ -261,18 +261,18 @@ export default function Wallet() {
                   <label className="text-xs sm:text-sm font-bold text-gray-500 tracking-[0.3em] uppercase">Outbound Settlement</label>
                   <span className="text-[10px] sm:text-xs font-mono text-red-400/60">NETWORK: TRC20</span>
                 </div>
-                <form onSubmit={handleWithdraw} className="space-y-8">
+                <form onSubmit={handleWithdraw} className="space-y-6">
                   <div className="relative">
                     <input
                       type="number"
                       value={withdrawAmount}
                       onChange={(e) => setWithdrawAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-white/[0.03] border border-white/[0.1] rounded-2xl px-8 sm:px-10 py-6 sm:py-8 text-4xl sm:text-5xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-gray-800"
+                      className="w-full bg-white/[0.03] border border-white/[0.1] rounded-2xl px-6 sm:px-8 py-4 sm:py-5 text-2xl sm:text-3xl font-display focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-gray-800"
                     />
-                    <div className="absolute right-8 sm:right-10 top-1/2 -translate-y-1/2 font-display text-2xl sm:text-3xl text-gray-700">USDT</div>
+                    <div className="absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 font-display text-lg sm:text-xl text-gray-700">USDT</div>
                   </div>
-                  <div className="flex justify-between text-[11px] sm:text-xs font-bold uppercase tracking-widest px-2 text-gray-600">
+                  <div className="flex justify-between text-[10px] sm:text-xs font-bold uppercase tracking-widest px-2 text-gray-600">
                     <span>Min: 10.00</span>
                     <span>Fee: 1.00</span>
                   </div>
@@ -281,15 +281,15 @@ export default function Wallet() {
                     value={withdrawAddress}
                     onChange={(e) => setWithdrawAddress(e.target.value)}
                     placeholder="Destination TRC20 Address"
-                    className="w-full bg-white/[0.03] border border-white/[0.1] rounded-2xl px-8 sm:px-10 py-6 sm:py-8 text-base sm:text-lg font-mono text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-gray-800"
+                    className="w-full bg-white/[0.03] border border-white/[0.1] rounded-xl px-6 sm:px-8 py-4 sm:py-5 text-sm sm:text-base font-mono text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-gray-800"
                   />
                   <button
                     disabled={isWithdrawing || !withdrawAmount || !withdrawAddress}
-                    className="w-full py-6 sm:py-8 bg-white/[0.05] border border-white/[0.1] text-white font-bold rounded-2xl transition-all hover:bg-white/[0.1] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-5 text-base sm:text-lg uppercase tracking-[0.2em]"
+                    className="w-full py-4 sm:py-5 bg-white/[0.05] border border-white/[0.1] text-white font-bold rounded-xl transition-all hover:bg-white/[0.1] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 text-sm sm:text-base uppercase tracking-[0.2em]"
                   >
-                    {isWithdrawing ? <Loader2 className="w-7 h-7 animate-spin" /> : (
+                    {isWithdrawing ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                       <>
-                        <ArrowUpRight className="w-7 h-7" />
+                        <ArrowUpRight className="w-5 h-5" />
                         Execute Withdrawal
                       </>
                     )}
@@ -345,28 +345,28 @@ export default function Wallet() {
                     ) : (
                       transactions.map((tx) => (
                         <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors group">
-                          <td className="px-8 py-6">
-                            <div className="flex items-center gap-4">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
                               <div className={cn(
-                                "w-10 h-10 rounded-xl flex items-center justify-center border transition-all",
+                                "w-8 h-8 rounded-lg flex items-center justify-center border transition-all",
                                 tx.type === 'deposit' 
                                   ? "bg-green-500/10 border-green-500/20 text-green-400" 
                                   : "bg-red-500/10 border-red-500/20 text-red-400"
                               )}>
-                                {tx.type === 'deposit' ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                                {tx.type === 'deposit' ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
                               </div>
-                              <span className="text-xs font-bold uppercase tracking-widest text-white">{tx.type}</span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-white">{tx.type}</span>
                             </div>
                           </td>
-                          <td className="px-8 py-6">
-                            <div className="text-sm font-display text-white">
+                          <td className="px-6 py-4">
+                            <div className="text-xs font-display text-white">
                               {tx.type === 'deposit' ? '+' : '-'}{tx.amount ? tx.amount.toFixed(2) : '0.00'}
-                              <span className="text-[10px] font-sans text-gray-500 ml-1">USDT</span>
+                              <span className="text-[9px] font-sans text-gray-500 ml-1">USDT</span>
                             </div>
                           </td>
-                          <td className="px-8 py-6">
+                          <td className="px-6 py-4">
                             <span className={cn(
-                              "text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border",
+                              "text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border",
                               tx.status === 'completed' ? "bg-green-500/10 text-green-400 border-green-500/20" :
                               tx.status === 'pending' ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
                               "bg-red-500/10 text-red-400 border-red-500/20"
@@ -374,25 +374,25 @@ export default function Wallet() {
                               {tx.status}
                             </span>
                           </td>
-                          <td className="px-8 py-6">
-                            <div className="text-[10px] font-mono text-gray-500 uppercase">
+                          <td className="px-6 py-4">
+                            <div className="text-[9px] font-mono text-gray-500 uppercase">
                               {new Date(tx.created_at).toLocaleDateString()}
                               <span className="block opacity-50">{new Date(tx.created_at).toLocaleTimeString()}</span>
                             </div>
                           </td>
-                          <td className="px-8 py-6 text-right">
+                          <td className="px-6 py-4 text-right">
                             {tx.tx_hash ? (
                               <a 
                                 href={`https://tronscan.org/#/transaction/${tx.tx_hash}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-3 py-2 bg-white/[0.03] border border-white/[0.08] rounded-xl text-[10px] font-bold text-gray-500 hover:text-blue-400 hover:bg-white/[0.08] transition-all"
+                                className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/[0.03] border border-white/[0.08] rounded-lg text-[9px] font-bold text-gray-500 hover:text-blue-400 hover:bg-white/[0.08] transition-all"
                               >
-                                <span className="font-mono">{tx.tx_hash.slice(0, 6)}...{tx.tx_hash.slice(-4)}</span>
-                                <ExternalLink className="w-3 h-3" />
+                                <span className="font-mono">{tx.tx_hash.slice(0, 4)}...{tx.tx_hash.slice(-4)}</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
                               </a>
                             ) : (
-                              <span className="text-[10px] font-bold text-gray-800 uppercase tracking-widest">N/A</span>
+                              <span className="text-[9px] font-bold text-gray-800 uppercase tracking-widest">N/A</span>
                             )}
                           </td>
                         </tr>
@@ -403,34 +403,34 @@ export default function Wallet() {
               </div>
 
               {/* Mobile Cards */}
-              <div className="md:hidden p-6 space-y-6">
+              <div className="md:hidden p-4 space-y-4">
                 {loading ? (
-                  <div className="py-24 text-center">
-                    <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-                    <p className="text-sm font-bold text-gray-600 uppercase tracking-widest">Decrypting ledger...</p>
+                  <div className="py-16 text-center">
+                    <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-widest">Decrypting ledger...</p>
                   </div>
                 ) : transactions.length === 0 ? (
-                  <div className="py-24 text-center">
-                    <History className="w-20 h-20 text-gray-800 mx-auto mb-6" />
-                    <p className="text-gray-500 font-light tracking-wide italic">No transaction records detected.</p>
+                  <div className="py-16 text-center">
+                    <History className="w-12 h-12 text-gray-800 mx-auto mb-4" />
+                    <p className="text-gray-500 text-sm font-light tracking-wide italic">No transaction records detected.</p>
                   </div>
                 ) : (
                   transactions.map((tx) => (
-                    <div key={tx.id} className="p-6 bg-white/[0.02] border border-white/[0.05] rounded-2xl space-y-6">
+                    <div key={tx.id} className="p-4 bg-white/[0.02] border border-white/[0.05] rounded-xl space-y-4">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-5">
+                        <div className="flex items-center gap-4">
                           <div className={cn(
-                            "w-12 h-12 rounded-xl flex items-center justify-center border",
+                            "w-10 h-10 rounded-lg flex items-center justify-center border",
                             tx.type === 'deposit' 
                               ? "bg-green-500/10 border-green-500/20 text-green-400" 
                               : "bg-red-500/10 border-red-500/20 text-red-400"
                           )}>
-                            {tx.type === 'deposit' ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
+                            {tx.type === 'deposit' ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
                           </div>
-                          <span className="text-sm font-bold uppercase tracking-widest text-white">{tx.type}</span>
+                          <span className="text-xs font-bold uppercase tracking-widest text-white">{tx.type}</span>
                         </div>
                         <span className={cn(
-                          "text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full border",
+                          "text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border",
                           tx.status === 'completed' ? "bg-green-500/10 text-green-400 border-green-500/20" :
                           tx.status === 'pending' ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
                           "bg-red-500/10 text-red-400 border-red-500/20"
@@ -441,11 +441,11 @@ export default function Wallet() {
                       
                       <div className="flex items-end justify-between">
                         <div>
-                          <div className="text-2xl font-display text-white">
+                          <div className="text-xl font-display text-white">
                             {tx.type === 'deposit' ? '+' : '-'}{tx.amount ? tx.amount.toFixed(2) : '0.00'}
-                            <span className="text-sm font-sans text-gray-500 ml-2">USDT</span>
+                            <span className="text-xs font-sans text-gray-500 ml-1.5">USDT</span>
                           </div>
-                          <div className="text-[11px] font-mono text-gray-600 uppercase mt-3">
+                          <div className="text-[10px] font-mono text-gray-600 uppercase mt-2">
                             {new Date(tx.created_at).toLocaleDateString()} {new Date(tx.created_at).toLocaleTimeString()}
                           </div>
                         </div>
@@ -455,9 +455,9 @@ export default function Wallet() {
                             href={`https://tronscan.org/#/transaction/${tx.tx_hash}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-4 bg-white/[0.03] border border-white/[0.08] rounded-xl text-gray-500"
+                            className="p-3 bg-white/[0.03] border border-white/[0.08] rounded-lg text-gray-500"
                           >
-                            <ExternalLink className="w-5 h-5" />
+                            <ExternalLink className="w-4 h-4" />
                           </a>
                         )}
                       </div>

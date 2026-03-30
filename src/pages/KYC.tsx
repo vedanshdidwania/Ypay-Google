@@ -113,19 +113,19 @@ export default function KYC() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] pt-24 pb-12">
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="text-center mb-14 sm:mb-20">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-8 sm:mb-10">
-            <ShieldCheck className="w-12 h-12 sm:w-14 sm:h-14 text-brand" />
+    <div className="min-h-screen bg-[#050505] pt-20 pb-10">
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="text-center mb-8 sm:mb-10">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+            <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10 text-brand" />
           </div>
-          <h1 className="text-4xl sm:text-6xl font-bold mb-5 text-white">Identity Verification</h1>
-          <p className="text-base sm:text-xl text-gray-400 max-w-xl mx-auto leading-relaxed">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-3 text-white tracking-tight">Identity Verification</h1>
+          <p className="text-xs sm:text-sm text-gray-400 max-w-md mx-auto leading-relaxed">
             Complete your KYC verification to unlock higher limits and P2P trading features.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
           {[
             { level: 1, title: 'Level 1', limit: '$2,000', desc: 'Email Verification' },
             { level: 2, title: 'Level 2', limit: '$5,000', desc: 'ID Verification' },
@@ -134,7 +134,7 @@ export default function KYC() {
             <div 
               key={tier.level}
               className={cn(
-                "p-6 rounded-3xl border transition-all relative overflow-hidden",
+                "p-4 rounded-xl border transition-all relative overflow-hidden",
                 profile?.kyc_level >= tier.level 
                   ? "bg-green-500/10 border-green-500/20" 
                   : selectedLevel === tier.level
@@ -144,16 +144,16 @@ export default function KYC() {
               onClick={() => profile?.kyc_level < tier.level && setSelectedLevel(tier.level)}
             >
               {profile?.kyc_level >= tier.level && (
-                <div className="absolute top-4 right-4">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                <div className="absolute top-2 right-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
                 </div>
               )}
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{tier.title}</p>
-              <p className="text-2xl font-bold text-white mb-1">{tier.limit}</p>
-              <p className="text-sm text-gray-400">{tier.desc}</p>
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">{tier.title}</p>
+              <p className="text-base font-bold text-white mb-0.5">{tier.limit}</p>
+              <p className="text-[10px] text-gray-400">{tier.desc}</p>
               
               {profile?.kyc_level === tier.level - 1 && submission?.status !== 'pending' && (
-                <button className="mt-4 w-full py-2 bg-brand/20 hover:bg-brand/30 text-brand text-xs font-bold rounded-xl transition-all">
+                <button className="mt-2 w-full py-1 bg-brand/20 hover:bg-brand/30 text-brand text-[9px] font-bold rounded-lg transition-all">
                   Upgrade Now
                 </button>
               )}

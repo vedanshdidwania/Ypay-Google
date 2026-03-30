@@ -333,47 +333,47 @@ export default function P2P() {
     <div className="min-h-screen bg-[#050505] pt-20 sm:pt-24 pb-8 sm:pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 sm:mb-12 md:mb-14">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 sm:mb-10 md:mb-12">
           <div className="text-center md:text-left">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-white tracking-tight">P2P Marketplace</h1>
-            <p className="text-base sm:text-lg md:text-xl text-gray-400 mt-4 sm:mt-5 flex items-center justify-center md:justify-start gap-3 sm:gap-4">
-              <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 text-brand" />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-white tracking-tight">P2P Marketplace</h1>
+            <p className="text-sm sm:text-base md:text-lg text-gray-400 mt-3 sm:mt-4 flex items-center justify-center md:justify-start gap-2 sm:gap-3">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
               Direct fiat-to-crypto settlements with verified merchants.
             </p>
           </div>
           
-          <div className="flex items-center gap-4 sm:gap-5">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button 
               onClick={() => navigate('/wallet')}
-              className="flex-1 md:flex-none px-8 sm:px-10 py-5 sm:py-4 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl text-base sm:text-lg font-bold text-white hover:bg-white/10 transition-all"
+              className="flex-1 md:flex-none px-6 sm:px-8 py-3 sm:py-3.5 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl text-sm sm:text-base font-bold text-white hover:bg-white/10 transition-all"
             >
               My Wallet
             </button>
             <button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex-1 md:flex-none btn-primary px-8 sm:px-12 py-5 sm:py-4 text-base sm:text-lg"
+              className="flex-1 md:flex-none btn-primary px-6 sm:px-10 py-3 sm:py-3.5 text-sm sm:text-base"
             >
-              <Plus className="w-6 h-6 sm:w-7 sm:h-7" />
+              <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
               Post Ad
             </button>
           </div>
         </div>
 
         {/* Asset Selector */}
-        <div className="flex items-center gap-4 sm:gap-6 mb-10 sm:mb-12 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex items-center gap-3 sm:gap-4 mb-8 sm:mb-10 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
           {ASSETS.map((asset) => (
             <button
               key={asset.id}
               onClick={() => setSelectedAsset(asset.id)}
               className={cn(
-                "flex items-center gap-4 sm:gap-5 px-8 sm:px-10 py-5 sm:py-5 rounded-2xl sm:rounded-3xl border transition-all shrink-0",
+                "flex items-center gap-3 sm:gap-4 px-6 sm:px-8 py-4 sm:py-4 rounded-xl sm:rounded-2xl border transition-all shrink-0",
                 selectedAsset === asset.id 
                   ? "bg-brand/10 border-brand text-white shadow-lg shadow-brand/10" 
                   : "bg-white/5 border-white/10 text-gray-400 hover:border-white/20"
               )}
             >
-              <img src={asset.icon} alt={asset.name} className="w-8 h-8 sm:w-9 sm:h-9" referrerPolicy="no-referrer" />
-              <span className="font-bold text-lg sm:text-xl">{asset.id}</span>
+              <img src={asset.icon} alt={asset.name} className="w-6 h-6 sm:w-7 sm:h-7" referrerPolicy="no-referrer" />
+              <span className="font-bold text-base sm:text-lg">{asset.id}</span>
             </button>
           ))}
         </div>
@@ -497,41 +497,41 @@ export default function P2P() {
                   </div>
                 )}
 
-                <div className="flex flex-col gap-8 sm:gap-10">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 sm:gap-12">
+                <div className="flex flex-col gap-4 sm:gap-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-8">
                     {/* Merchant Info */}
-                    <div className="flex items-center gap-5 sm:gap-6">
+                    <div className="flex items-center gap-4 sm:gap-5">
                       <div className="relative shrink-0">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white/5 rounded-xl sm:rounded-2xl md:rounded-3xl flex items-center justify-center text-brand border border-white/10 group-hover:border-brand/30 transition-all">
-                          <User className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/5 rounded-lg sm:rounded-xl flex items-center justify-center text-brand border border-white/10 group-hover:border-brand/30 transition-all">
+                          <User className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
                         {ad.user_profile?.is_verified_merchant && (
-                          <div className="absolute -bottom-2 -right-2 bg-[#050505] p-1.5 rounded-full">
-                            <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-brand" />
+                          <div className="absolute -bottom-1 -right-1 bg-[#050505] p-0.5 rounded-full">
+                            <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 h-4 text-brand" />
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-4">
-                          <span className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight truncate">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm sm:text-base font-bold text-white tracking-tight truncate">
                             {ad.user_profile?.full_name || 'Anonymous'}
                           </span>
                           <button 
                             onClick={() => toggleFavorite(ad.user_id)}
                             className={cn(
-                              "p-2 rounded-xl transition-all",
+                              "p-1 rounded-lg transition-all",
                               favorites.includes(ad.user_id) ? "text-red-500" : "text-gray-600 hover:text-red-500"
                             )}
                           >
-                            <Heart className={cn("w-5 h-5 sm:w-5.5 sm:h-5.5 md:w-6 md:h-6", favorites.includes(ad.user_id) && "fill-current")} />
+                            <Heart className={cn("w-3.5 h-3.5 sm:w-4 h-4", favorites.includes(ad.user_id) && "fill-current")} />
                           </button>
                         </div>
-                        <div className="flex items-center gap-4 md:gap-5 mt-2 md:mt-2.5">
-                          <span className="text-xs sm:text-sm md:text-base font-bold text-gray-500 uppercase tracking-widest">
+                        <div className="flex items-center gap-2 md:gap-3 mt-1">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                             {ad.user_profile?.trades_completed || 0} Trades
                           </span>
-                          <span className="w-1.5 h-1.5 bg-gray-700 rounded-full" />
-                          <span className="text-xs sm:text-sm md:text-base font-bold text-brand uppercase tracking-widest">
+                          <span className="w-0.5 h-0.5 bg-gray-700 rounded-full" />
+                          <span className="text-[9px] sm:text-[10px] font-bold text-brand uppercase tracking-widest">
                             {ad.user_profile?.completion_rate || 0}% Success
                           </span>
                         </div>
@@ -539,15 +539,15 @@ export default function P2P() {
                     </div>
 
                     {/* Price Info */}
-                    <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start border-t md:border-none border-white/5 pt-6 md:pt-0">
-                      <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-1.5 sm:mb-2">Price per {selectedAsset}</p>
+                    <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start border-t md:border-none border-white/5 pt-3 md:pt-0">
+                      <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Price per {selectedAsset}</p>
                       <div className="flex flex-col items-end">
-                        <p className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-white leading-none">
+                        <p className="text-xl sm:text-2xl font-display font-bold text-white leading-none">
                           ₹{ad.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </p>
                         {ad.pricing_type === 'dynamic' && (
-                          <span className="text-[11px] sm:text-[12px] md:text-[14px] font-bold text-green-500 uppercase tracking-widest mt-2 sm:mt-2.5 flex items-center gap-2">
-                            <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <span className="text-[9px] sm:text-[10px] font-bold text-green-500 uppercase tracking-widest mt-1 flex items-center gap-1">
+                            <Activity className="w-2.5 h-2.5 sm:w-3 h-3" />
                             Market +{ad.margin}%
                           </span>
                         )}
@@ -555,27 +555,27 @@ export default function P2P() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 items-end border-t border-white/5 pt-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-end border-t border-white/5 pt-4">
                     {/* Limits & Payment */}
-                    <div className="grid grid-cols-2 md:grid-cols-1 gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
                       <div>
-                        <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">Available</p>
-                        <p className="text-base sm:text-lg md:text-xl font-bold text-brand">
+                        <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Available</p>
+                        <p className="text-sm sm:text-base font-bold text-brand">
                           {ad.total_amount?.toFixed(2) || '0.00'} {ad.asset}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">Limits</p>
-                        <p className="text-base sm:text-lg md:text-xl font-bold text-white">
+                        <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Limits</p>
+                        <p className="text-sm sm:text-base font-bold text-white">
                           {formatCurrency(ad.min_limit)} - {formatCurrency(ad.max_limit)}
                         </p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-3">Payment Methods</p>
-                      <div className="flex flex-wrap gap-2.5">
+                      <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Payment Methods</p>
+                      <div className="flex flex-wrap gap-1.5">
                         {ad.payment_methods.map((pm, i) => (
-                          <span key={i} className="px-4 py-2 bg-white/5 text-[11px] sm:text-[12px] font-bold text-gray-400 uppercase tracking-widest rounded-xl sm:rounded-2xl border border-white/10">
+                          <span key={i} className="px-2.5 py-1 bg-white/5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest rounded-lg border border-white/10">
                             {pm}
                           </span>
                         ))}
@@ -583,16 +583,16 @@ export default function P2P() {
                     </div>
 
                     {/* Ratings */}
-                    <div className="flex items-center gap-6 md:justify-center">
-                      <div className="flex items-center gap-2.5">
-                        <Zap className="w-5 h-5 text-brand" />
-                        <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">
+                    <div className="flex items-center gap-4 md:justify-center">
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-brand" />
+                        <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                           {ad.user_profile?.speed_rating || 5.0} Speed
                         </span>
                       </div>
-                      <div className="flex items-center gap-2.5">
-                        <MessageSquare className="w-5 h-5 text-brand" />
-                        <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-brand" />
+                        <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                           {ad.user_profile?.comm_rating || 5.0} Comm
                         </span>
                       </div>

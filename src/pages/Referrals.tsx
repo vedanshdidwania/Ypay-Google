@@ -105,7 +105,7 @@ export default function Referrals() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-4xl md:text-7xl font-display font-bold text-white mb-8 leading-[1.1] md:leading-[0.9] tracking-tighter"
+              className="text-2xl md:text-4xl font-display font-bold text-white mb-4 leading-[1.1] md:leading-[0.9] tracking-tighter"
             >
               Earn While Your <br className="hidden md:block" />
               <span className="text-brand">Network Trades.</span>
@@ -114,7 +114,7 @@ export default function Referrals() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-lg md:text-2xl text-gray-400 mb-16 leading-relaxed max-w-2xl"
+              className="text-sm md:text-base text-gray-400 mb-8 leading-relaxed max-w-xl"
             >
               Invite your community to the most secure P2P platform and earn up to 0.1% commission on every trade they complete.
             </motion.p>
@@ -123,27 +123,27 @@ export default function Referrals() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="flex flex-col gap-8"
+              className="flex flex-col gap-6"
             >
-              <div className="w-full bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] px-8 md:px-12 py-6 md:py-8 flex items-center justify-between group hover:border-brand/30 transition-all">
-                <span className="text-sm md:text-xl font-mono text-gray-500 truncate mr-8">{referralLink}</span>
+              <div className="w-full bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl px-6 md:px-8 py-4 md:py-5 flex items-center justify-between group hover:border-brand/30 transition-all">
+                <span className="text-xs md:text-base font-mono text-gray-500 truncate mr-6">{referralLink}</span>
                 <button
                   onClick={copyToClipboard}
-                  className="p-4 hover:bg-white/10 rounded-2xl transition-all text-gray-400 hover:text-white shrink-0"
+                  className="p-3 hover:bg-white/10 rounded-xl transition-all text-gray-400 hover:text-white shrink-0"
                 >
-                  {copied ? <Check className="w-7 h-7 text-brand" /> : <Copy className="w-7 h-7" />}
+                  {copied ? <Check className="w-5 h-5 text-brand" /> : <Copy className="w-5 h-5" />}
                 </button>
               </div>
-              <div className="flex flex-col sm:flex-row gap-6">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button 
                   onClick={copyToClipboard}
-                  className="flex-1 btn-primary px-12 py-6 md:py-8 shadow-2xl shadow-brand/20 text-lg md:text-xl"
+                  className="flex-1 btn-primary px-6 py-3 md:py-4 shadow-2xl shadow-brand/20 text-sm md:text-base"
                 >
                   Copy Invite Link
                 </button>
                 <button 
                   onClick={copyCode}
-                  className="flex-1 px-12 py-6 md:py-8 bg-white/5 border border-white/10 rounded-[2rem] text-lg md:text-xl font-bold text-white hover:bg-white/10 transition-all"
+                  className="flex-1 px-6 py-3 md:py-4 bg-white/5 border border-white/10 rounded-xl text-sm md:text-base font-bold text-white hover:bg-white/10 transition-all"
                 >
                   Copy Code
                 </button>

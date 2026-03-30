@@ -253,17 +253,17 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background pt-20 md:pt-24 pb-12">
       <div className="responsive-container">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 md:mb-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10">
           <div>
-            <h1 className="text-3xl md:text-4xl font-display font-bold text-white">Account Overview</h1>
-            <p className="text-base md:text-lg text-gray-400 mt-2">Welcome back, {profile?.full_name || 'User'}</p>
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-white">Account Overview</h1>
+            <p className="text-sm md:text-base text-gray-400 mt-1">Welcome back, {profile?.full_name || 'User'}</p>
           </div>
           
-          <div className="flex items-center gap-2 p-2 bg-white/5 border border-white/10 rounded-xl shadow-lg w-full md:w-auto">
+          <div className="flex items-center gap-1.5 p-1 bg-white/5 border border-white/10 rounded-xl shadow-lg w-full md:w-auto">
             <button
               onClick={() => setActiveTab('orders')}
               className={cn(
-                "flex-1 md:flex-none px-8 py-4 rounded-lg text-sm md:text-base font-semibold transition-all",
+                "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all",
                 activeTab === 'orders' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -272,7 +272,7 @@ export default function Dashboard() {
             <button
               onClick={() => setActiveTab('settings')}
               className={cn(
-                "flex-1 md:flex-none px-8 py-4 rounded-lg text-sm md:text-base font-semibold transition-all",
+                "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all",
                 activeTab === 'settings' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -283,63 +283,63 @@ export default function Dashboard() {
 
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Stats Sidebar */}
-          <div className="lg:col-span-4 space-y-4 md:space-y-6">
-            <div className="card p-8 md:p-10">
-              <div className="flex items-center justify-between mb-8 md:mb-10">
-                <div className="w-14 h-14 md:w-16 md:h-16 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
-                  <Wallet className="w-7 h-7 md:w-8 md:h-8" />
+          <div className="lg:col-span-4 space-y-4 md:space-y-5">
+            <div className="card p-6 md:p-8">
+              <div className="flex items-center justify-between mb-6 md:mb-8">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
+                  <Wallet className="w-6 h-6 md:w-7 md:h-7" />
                 </div>
                 <div className="text-right">
-                  <p className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">Total Balance</p>
-                  <p className="text-2xl md:text-4xl font-bold text-white">
+                  <p className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Total Balance</p>
+                  <p className="text-lg md:text-2xl font-bold text-white">
                     {formatCurrency((profile?.balance_usdt || 0) * 89)}
                   </p>
                 </div>
               </div>
-              <div className="space-y-5 md:space-y-6">
-                <div className="flex justify-between items-center text-base md:text-lg">
+              <div className="space-y-4 md:space-y-5">
+                <div className="flex justify-between items-center text-sm md:text-base">
                   <span className="text-gray-400">Available USDT</span>
                   <span className="font-semibold text-white">{formatUSDT(profile?.balance_usdt || 0)}</span>
                 </div>
-                <div className="flex justify-between items-center text-base md:text-lg">
+                <div className="flex justify-between items-center text-sm md:text-base">
                   <span className="text-gray-400">Locked in Escrow</span>
                   <span className="font-semibold text-amber-500">{formatUSDT(profile?.escrow_balance_usdt || 0)}</span>
                 </div>
-                <div className="pt-6 md:pt-8 border-t border-white/5 space-y-4 md:space-y-5">
-                  <Link to="/wallet" className="w-full btn-primary py-4 md:py-5 text-base md:text-lg flex items-center justify-center">
+                <div className="pt-4 md:pt-6 border-t border-white/5 space-y-3 md:space-y-4">
+                  <Link to="/wallet" className="w-full btn-primary py-3 md:py-4 text-sm md:text-base flex items-center justify-center">
                     Add Funds
                   </Link>
-                  <Link to="/p2p/my-ads" className="w-full bg-white/5 hover:bg-white/10 text-white py-4 md:py-5 rounded-xl flex items-center justify-center transition-all border border-white/5 text-sm md:text-base font-bold">
+                  <Link to="/p2p/my-ads" className="w-full bg-white/5 hover:bg-white/10 text-white py-3 md:py-4 rounded-xl flex items-center justify-center transition-all border border-white/5 text-xs md:text-sm font-bold">
                     Manage My Ads
                   </Link>
                 </div>
               </div>
             </div>
 
-            <div className="card p-8 md:p-10">
-              <h3 className="text-sm md:text-base font-bold text-white mb-8 uppercase tracking-widest">Network Status</h3>
-              <div className="space-y-5 md:space-y-6">
+            <div className="card p-6 md:p-8">
+              <h3 className="text-xs md:text-sm font-bold text-white mb-6 uppercase tracking-widest">Network Status</h3>
+              <div className="space-y-4 md:space-y-5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 md:gap-5">
-                    <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-green-500" />
-                    <span className="text-base md:text-lg text-gray-400">TRON Network</span>
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-500" />
+                    <span className="text-sm md:text-base text-gray-400">TRON Network</span>
                   </div>
-                  <span className="text-xs md:text-sm font-bold text-green-500">ONLINE</span>
+                  <span className="text-[10px] md:text-xs font-bold text-green-500">ONLINE</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 md:gap-5">
-                    <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-green-500" />
-                    <span className="text-base md:text-lg text-gray-400">Escrow Engine</span>
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-500" />
+                    <span className="text-sm md:text-base text-gray-400">Escrow Engine</span>
                   </div>
-                  <span className="text-xs md:text-sm font-bold text-green-500">ACTIVE</span>
+                  <span className="text-[10px] md:text-xs font-bold text-green-500">ACTIVE</span>
                 </div>
-                <div className="pt-6 md:pt-8">
-                  <div className="bg-white/5 rounded-xl p-5 md:p-6 border border-white/5">
-                    <div className="flex justify-between text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-3 md:mb-4">
+                <div className="pt-4 md:pt-6">
+                  <div className="bg-white/5 rounded-xl p-4 md:p-5 border border-white/5">
+                    <div className="flex justify-between text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 md:mb-3">
                       <span>Node Load</span>
                       <span>14%</span>
                     </div>
-                    <div className="w-full h-2 md:h-2.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 md:h-2 bg-white/10 rounded-full overflow-hidden">
                       <div className="w-[14%] h-full bg-brand" />
                     </div>
                   </div>
