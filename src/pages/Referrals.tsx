@@ -105,7 +105,7 @@ export default function Referrals() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-5xl md:text-9xl font-display font-bold text-white mb-10 leading-[1.1] md:leading-[0.85] tracking-tighter"
+              className="text-4xl md:text-7xl font-display font-bold text-white mb-8 leading-[1.1] md:leading-[0.9] tracking-tighter"
             >
               Earn While Your <br className="hidden md:block" />
               <span className="text-brand">Network Trades.</span>
@@ -176,7 +176,7 @@ export default function Referrals() {
                   <div className={cn("w-16 h-16 md:w-20 md:h-20 rounded-3xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", stat.bg, stat.color)}>
                     <stat.icon className="w-8 h-8 md:w-10 md:h-10" />
                   </div>
-                  <div className="text-5xl md:text-6xl font-display font-bold text-white mb-3">{stat.value}</div>
+                  <div className="text-4xl md:text-5xl font-display font-bold text-white mb-3">{stat.value}</div>
                   <div className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-[0.2em]">{stat.label}</div>
                   <div className="text-xs text-gray-600 mt-3">{stat.sub}</div>
                 </motion.div>

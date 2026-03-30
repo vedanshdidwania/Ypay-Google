@@ -147,11 +147,11 @@ export default function Wallet() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="cyber-card p-8 sm:p-12 group relative overflow-hidden"
+            className="cyber-card p-6 sm:p-10 group relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 animate-gradient-x" />
             
-            <div className="flex justify-between items-start mb-10 sm:mb-16">
+            <div className="flex justify-between items-start mb-10 sm:mb-12">
               <div className="space-y-3">
                 <h2 className="text-xs sm:text-sm font-bold text-gray-500 tracking-[0.4em] uppercase">Liquidity Reserve</h2>
                 <p className="text-[11px] sm:text-xs font-mono text-blue-400/60 uppercase">Network: TRON (TRC20)</p>
@@ -161,8 +161,8 @@ export default function Wallet() {
               </div>
             </div>
 
-            <div className="space-y-4 mb-10 sm:mb-16">
-              <div className="text-6xl sm:text-8xl font-display text-white tracking-tighter leading-none">
+            <div className="space-y-4 mb-10 sm:mb-12">
+              <div className="text-5xl sm:text-7xl font-display text-white tracking-tighter leading-none">
                 {profile?.balance_usdt?.toFixed(2) || '0.00'}
               </div>
               <div className="flex items-center gap-4">
@@ -202,8 +202,8 @@ export default function Wallet() {
           </motion.div>
 
           {/* Action Module */}
-          <div className="cyber-card p-8 sm:p-12">
-            <div className="flex items-center gap-4 mb-10 sm:mb-12">
+          <div className="cyber-card p-6 sm:p-10">
+            <div className="flex items-center gap-4 mb-8 sm:mb-10">
               <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500" />
               <h3 className="text-lg sm:text-xl font-display uppercase tracking-widest text-white">Transfer Protocol</h3>
             </div>

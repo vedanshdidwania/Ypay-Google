@@ -379,12 +379,12 @@ export default function P2P() {
         </div>
 
         {/* Filters Bar */}
-        <div className="card p-6 sm:p-8 mb-10 md:mb-12 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-10">
-          <div className="flex items-center gap-2.5 p-2.5 bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl w-full lg:w-auto">
+        <div className="card p-4 sm:p-6 mb-8 md:mb-10 flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
+          <div className="flex items-center gap-2 p-1.5 bg-white/5 border border-white/10 rounded-2xl w-full lg:w-auto">
             <button
               onClick={() => setFilterType('buy')}
               className={cn(
-                "flex-1 lg:flex-none px-8 sm:px-16 py-4.5 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-bold transition-all",
+                "flex-1 lg:flex-none px-6 sm:px-12 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-bold transition-all",
                 filterType === 'buy' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -393,7 +393,7 @@ export default function P2P() {
             <button
               onClick={() => setFilterType('sell')}
               className={cn(
-                "flex-1 lg:flex-none px-8 sm:px-16 py-4.5 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-bold transition-all",
+                "flex-1 lg:flex-none px-6 sm:px-12 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-bold transition-all",
                 filterType === 'sell' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -402,58 +402,58 @@ export default function P2P() {
           </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-6 w-full lg:w-auto">
-              <div className="flex items-center gap-4 w-full sm:w-auto">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button
                   onClick={() => setVerifiedOnly(!verifiedOnly)}
                   className={cn(
-                    "flex items-center gap-2 px-6 py-4 rounded-2xl sm:rounded-3xl border transition-all text-sm font-bold uppercase tracking-widest whitespace-nowrap",
+                    "flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl border transition-all text-[10px] sm:text-xs font-bold uppercase tracking-widest whitespace-nowrap",
                     verifiedOnly 
                       ? "bg-brand/10 border-brand text-brand shadow-lg shadow-brand/10" 
                       : "bg-white/5 border-white/10 text-gray-400 hover:border-white/20"
                   )}
                 >
-                  <ShieldCheck className={cn("w-5 h-5", verifiedOnly ? "text-brand" : "text-gray-500")} />
+                  <ShieldCheck className={cn("w-4 h-4", verifiedOnly ? "text-brand" : "text-gray-500")} />
                   Verified Only
                 </button>
               </div>
 
-              <div className="relative w-full sm:flex-1 sm:min-w-[250px]">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-500" />
+              <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input 
                   type="number" 
                   value={searchAmount}
                   onChange={(e) => setSearchAmount(e.target.value)}
-                  placeholder="Enter amount (INR)..." 
-                  className="w-full bg-[#050505] border border-white/10 rounded-2xl sm:rounded-3xl pl-16 pr-6 py-5 text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-white"
+                  placeholder="Amount (INR)..." 
+                  className="w-full bg-[#050505] border border-white/10 rounded-xl sm:rounded-2xl pl-11 pr-4 py-3.5 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-white"
                 />
               </div>
               
-              <div className="flex items-center gap-5 w-full sm:w-auto">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <div className="relative flex-1 sm:flex-none">
                   <select 
                     value={selectedPaymentMethod}
                     onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                    className="w-full bg-[#050505] border border-white/10 rounded-2xl sm:rounded-3xl pl-6 pr-12 py-5 text-base sm:text-lg text-white focus:outline-none focus:border-brand appearance-none"
+                    className="w-full bg-[#050505] border border-white/10 rounded-xl sm:rounded-2xl pl-4 pr-10 py-3.5 text-sm sm:text-base text-white focus:outline-none focus:border-brand appearance-none min-w-[120px]"
                   >
                     <option value="All">All Payments</option>
                     {PAYMENT_METHODS.map(pm => (
                       <option key={pm} value={pm}>{pm}</option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                 </div>
 
                 <div className="relative flex-1 sm:flex-none">
                   <select 
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="w-full bg-[#050505] border border-white/10 rounded-2xl sm:rounded-3xl pl-6 pr-12 py-5 text-base sm:text-lg text-white focus:outline-none focus:border-brand appearance-none"
+                    className="w-full bg-[#050505] border border-white/10 rounded-xl sm:rounded-2xl pl-4 pr-10 py-3.5 text-sm sm:text-base text-white focus:outline-none focus:border-brand appearance-none min-w-[120px]"
                   >
                     <option value="price">Sort by Price</option>
                     <option value="rating">Sort by Rating</option>
                     <option value="completion">Sort by Completion</option>
                   </select>
-                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                 </div>
 
                 <button 

@@ -74,20 +74,20 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-0.5">
             {navLinks.map((link) => (
               (!link.auth || user) && (
                 <Link
                   key={link.path}
                   to={link.path}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
+                    "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs xl:text-sm font-medium transition-all",
                     isActive(link.path) 
                       ? "text-brand bg-brand/10" 
                       : "text-gray-400 hover:text-white hover:bg-white/5"
                   )}
                 >
-                  <link.icon className="w-4 h-4" />
+                  <link.icon className="w-3.5 h-3.5" />
                   {link.name}
                 </Link>
               )
@@ -96,13 +96,13 @@ export default function Navbar() {
               <Link
                 to="/admin"
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
+                  "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs xl:text-sm font-medium transition-all",
                   isActive('/admin')
                     ? "text-brand bg-brand/10"
                     : "text-gray-400 hover:text-white hover:bg-white/5"
                 )}
               >
-                <ShieldCheck className="w-4 h-4" />
+                <ShieldCheck className="w-3.5 h-3.5" />
                 Admin
               </Link>
             )}
@@ -124,7 +124,7 @@ export default function Navbar() {
                     <div className="w-6 h-6 sm:w-8 sm:h-8 bg-brand rounded-md sm:rounded-lg flex items-center justify-center text-white text-xs sm:text-xs font-bold">
                       {user.email?.[0].toUpperCase()}
                     </div>
-                    <div className="hidden lg:flex flex-col items-start leading-none">
+                    <div className="hidden xl:flex flex-col items-start leading-none">
                       <span className="text-[10px] font-bold text-white truncate max-w-[80px]">{profile?.full_name || 'User'}</span>
                       <span className="text-[8px] text-gray-500 truncate max-w-[80px]">{user.email}</span>
                     </div>
@@ -161,7 +161,7 @@ export default function Navbar() {
             {/* Mobile Menu Toggle */}
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-gray-400 hover:bg-white/5 rounded-xl transition-all"
+              className="lg:hidden p-2 text-gray-400 hover:bg-white/5 rounded-xl transition-all"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -177,7 +177,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="md:hidden bg-[#050505] border-b border-white/10 overflow-hidden"
+            className="lg:hidden bg-[#050505] border-b border-white/10 overflow-hidden"
           >
             <div className="py-6 px-4 space-y-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
