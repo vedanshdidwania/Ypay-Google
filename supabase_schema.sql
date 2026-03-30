@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   total_trades INTEGER DEFAULT 0,
   completion_rate NUMERIC DEFAULT 100.0,
   kyc_status TEXT DEFAULT 'none', -- none, pending, approved, rejected
+  kyc_level INTEGER DEFAULT 0, -- 0: none, 1: basic, 2: advanced, 3: pro
   balance_usdt NUMERIC DEFAULT 0.00,
   escrow_balance_usdt NUMERIC DEFAULT 0.00,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -63,6 +64,8 @@ CREATE TABLE IF NOT EXISTS orders (
   transaction_hash TEXT,
   admin_feedback TEXT,
   payment_window INTEGER DEFAULT 15,
+  buyer_typing BOOLEAN DEFAULT FALSE,
+  seller_typing BOOLEAN DEFAULT FALSE,
   expires_at TIMESTAMP WITH TIME ZONE DEFAULT (TIMEZONE('utc'::text, NOW()) + INTERVAL '15 minutes'),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -76,6 +79,9 @@ CREATE TABLE IF NOT EXISTS app_settings (
   platform_fee NUMERIC DEFAULT 1.0, -- Default 1%
   referral_commission_l1 NUMERIC DEFAULT 10.0, -- 10% of the platform fee
   referral_commission_l2 NUMERIC DEFAULT 5.0, -- 5% of the platform fee
+  kyc_level_1_limit NUMERIC DEFAULT 2000.0, -- $2000
+  kyc_level_2_limit NUMERIC DEFAULT 5000.0, -- $5000
+  kyc_level_3_limit NUMERIC DEFAULT 1000000.0, -- $1M (Unlimited)
   admin_wallet_address TEXT,
   support_contact TEXT,
   homepage_headline TEXT DEFAULT 'Trade USDT with Zero Friction',
@@ -103,6 +109,8 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   message TEXT NOT NULL,
   image_url TEXT,
+  attachment_url TEXT,
+  attachment_type TEXT DEFAULT 'text', -- text, image, file
   is_read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
@@ -126,6 +134,7 @@ CREATE TABLE IF NOT EXISTS kyc_submissions (
   document_type TEXT NOT NULL,
   document_front_url TEXT NOT NULL,
   document_back_url TEXT,
+  kyc_level INTEGER DEFAULT 1,
   status TEXT DEFAULT 'pending', -- pending, approved, rejected
   admin_feedback TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -298,6 +307,10 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='has_verification_badge') THEN
         ALTER TABLE profiles ADD COLUMN has_verification_badge BOOLEAN DEFAULT FALSE;
     END IF;
+    -- Last Login
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='last_login_at') THEN
+        ALTER TABLE profiles ADD COLUMN last_login_at TIMESTAMP WITH TIME ZONE;
+    END IF;
     -- Orders Expiration
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='expires_at') THEN
         ALTER TABLE orders ADD COLUMN expires_at TIMESTAMP WITH TIME ZONE DEFAULT (TIMEZONE('utc'::text, NOW()) + INTERVAL '15 minutes');
@@ -342,6 +355,7 @@ CREATE TABLE IF NOT EXISTS trade_reviews (
   reviewee_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   rating INTEGER CHECK (rating >= 1 AND rating <= 5) NOT NULL,
   comment TEXT,
+  tags TEXT[], -- e.g., 'fast_payer', 'reliable', 'good_comm'
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   UNIQUE(order_id, reviewer_id)
 );
@@ -538,6 +552,20 @@ CREATE TABLE IF NOT EXISTS p2p_disputes (
   video_proof_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
+
+-- Create user_security_logs table
+CREATE TABLE IF NOT EXISTS user_security_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  event_type TEXT NOT NULL, -- login, password_change, 2fa_enable, etc.
+  ip_address TEXT,
+  user_agent TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+ALTER TABLE user_security_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own security logs" ON user_security_logs;
+CREATE POLICY "Users can view own security logs" ON user_security_logs FOR SELECT USING (auth.uid() = user_id OR public.is_admin());
 
 ALTER TABLE p2p_disputes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can read own disputes" ON p2p_disputes;
@@ -1080,6 +1108,108 @@ BEGIN
     UPDATE public.profiles SET balance_usdt = balance_usdt + v_order.amount_usdt WHERE id = v_seller_id;
     UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
   END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- P2P Disputes table
+CREATE TABLE IF NOT EXISTS public.p2p_disputes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
+    raised_by UUID REFERENCES public.profiles(id),
+    reason TEXT NOT NULL,
+    video_proof_url TEXT,
+    status TEXT DEFAULT 'open', -- open, resolved, closed
+    winner_id UUID REFERENCES public.profiles(id),
+    admin_feedback TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    resolved_at TIMESTAMPTZ
+);
+
+-- RLS for p2p_disputes
+ALTER TABLE public.p2p_disputes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own disputes"
+    ON public.p2p_disputes FOR SELECT
+    USING (auth.uid() = raised_by OR EXISTS (
+        SELECT 1 FROM public.orders o 
+        JOIN public.ads a ON o.ad_id = a.id
+        WHERE o.id = p2p_disputes.order_id AND (o.user_id = auth.uid() OR a.user_id = auth.uid())
+    ));
+
+CREATE POLICY "Admins can view all disputes"
+    ON public.p2p_disputes FOR SELECT
+    USING (public.is_admin());
+
+CREATE POLICY "Admins can update disputes"
+    ON public.p2p_disputes FOR UPDATE
+    USING (public.is_admin());
+
+-- RPC to resolve P2P disputes
+CREATE OR REPLACE FUNCTION public.resolve_p2p_dispute(
+  p_dispute_id UUID,
+  p_order_id UUID,
+  p_winner_id UUID,
+  p_admin_feedback TEXT
+)
+RETURNS void AS $$
+DECLARE
+  v_order RECORD;
+  v_seller_id UUID;
+  v_buyer_id UUID;
+  v_ad RECORD;
+  v_platform_fee_pct NUMERIC;
+  v_platform_fee_amount NUMERIC;
+  v_net_amount NUMERIC;
+BEGIN
+  -- Only admins can resolve disputes
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Only admins can resolve disputes';
+  END IF;
+
+  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
+  
+  IF v_order IS NULL THEN
+    RAISE EXCEPTION 'Order not found';
+  END IF;
+
+  SELECT * INTO v_ad FROM public.ads WHERE id = v_order.ad_id;
+  
+  IF v_ad.type = 'sell' THEN
+    v_seller_id := v_ad.user_id;
+    v_buyer_id := v_order.user_id;
+  ELSE
+    v_seller_id := v_order.user_id;
+    v_buyer_id := v_ad.user_id;
+  END IF;
+
+  -- Update dispute status
+  UPDATE public.p2p_disputes 
+  SET status = 'resolved', resolved_at = NOW(), winner_id = p_winner_id, admin_feedback = p_admin_feedback 
+  WHERE id = p_dispute_id;
+
+  IF p_winner_id = v_buyer_id THEN
+    -- Release to buyer (with fee)
+    SELECT platform_fee INTO v_platform_fee_pct FROM public.app_settings LIMIT 1;
+    v_platform_fee_amount := (v_order.amount_usdt * v_platform_fee_pct) / 100.0;
+    v_net_amount := v_order.amount_usdt - v_platform_fee_amount;
+
+    UPDATE public.orders 
+    SET status = 'completed', 
+        updated_at = NOW(),
+        escrow_released_at = NOW(),
+        platform_fee_amount = v_platform_fee_amount 
+    WHERE id = p_order_id;
+
+    UPDATE public.profiles SET balance_usdt = balance_usdt + v_net_amount WHERE id = v_buyer_id;
+    UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
+    UPDATE public.profiles SET trades_completed = trades_completed + 1 WHERE id = v_seller_id;
+  ELSE
+    -- Return to seller (no fee)
+    UPDATE public.orders SET status = 'cancelled', updated_at = NOW() WHERE id = p_order_id;
+    UPDATE public.profiles SET balance_usdt = balance_usdt + v_order.amount_usdt WHERE id = v_seller_id;
+    UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
+  END IF;
+
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

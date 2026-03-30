@@ -17,6 +17,8 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import HeroBackground from '../components/HeroBackground';
 import NeuralNetwork from '../components/NeuralNetwork';
+import { TiltCard } from '../components/TiltCard';
+import FloatingUSDT from '../components/FloatingUSDT';
 
 import { supabase } from '../lib/supabase';
 
@@ -194,68 +196,68 @@ export default function Home() {
               className="relative flex items-center justify-center"
             >
               <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
-                <div className="w-[400px] h-[400px] bg-brand/10 rounded-full blur-[100px] animate-pulse" />
+                <div className="w-[500px] h-[500px] opacity-60">
+                  <FloatingUSDT />
+                </div>
               </div>
               
-              <div className="card p-6 sm:p-10 shadow-2xl shadow-brand/10 relative z-20 lg:w-[450px]">
-                <div className="flex items-center justify-between mb-8 sm:mb-10">
-                  <h3 className="text-lg sm:text-xl font-bold text-white">Settlement Calculator</h3>
-                  <div className="flex items-center gap-1.5 text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-green-500/20">
-                    <TrendingUp className="w-4 h-4" />
-                    Live Rate
-                  </div>
-                </div>
-
-                <div className="space-y-6 sm:space-y-8">
-                  <div>
-                    <label className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 sm:mb-3 block">You Pay (INR)</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className="input-field text-2xl sm:text-3xl font-bold pr-16 sm:pr-20 py-3.5 sm:py-4"
-                      />
-                      <span className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-gray-500 text-base sm:text-lg">INR</span>
+              <TiltCard className="relative z-20 lg:w-[450px]">
+                <div className="card p-6 sm:p-10 shadow-2xl shadow-brand/10">
+                  <div className="flex items-center justify-between mb-8 sm:mb-10">
+                    <h3 className="text-lg sm:text-xl font-bold text-white">Settlement Calculator</h3>
+                    <div className="flex items-center gap-1.5 text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-green-500/20">
+                      <TrendingUp className="w-4 h-4" />
+                      Live Rate
                     </div>
                   </div>
 
-                  <div className="flex justify-center">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/5 border border-white/10 rounded-full flex items-center justify-center text-gray-500">
-                      <ArrowLeftRight className="w-5 h-5 sm:w-6 sm:h-6 rotate-90" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 sm:mb-3 block">You Receive (USDT)</label>
-                    <div className="relative">
-                      <div className="input-field bg-white/5 text-2xl sm:text-3xl font-bold pr-16 sm:pr-20 py-3.5 sm:py-4 text-brand">
-                        {usdt}
+                  <div className="space-y-6 sm:space-y-8">
+                    <div>
+                      <label className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 sm:mb-3 block">You Pay (INR)</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                          className="input-field text-2xl sm:text-3xl font-bold pr-16 sm:pr-20 py-3.5 sm:py-4"
+                        />
+                        <span className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-gray-500 text-base sm:text-lg">INR</span>
                       </div>
-                      <span className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-brand text-base sm:text-lg">USDT</span>
                     </div>
-                  </div>
 
-                  <div className="p-4 sm:p-6 bg-white/5 rounded-2xl space-y-3 border border-white/5">
-                    <div className="flex justify-between text-xs sm:text-sm">
-                      <span className="text-gray-500">Exchange Rate</span>
-                      <span className="font-medium text-white">1 USDT = ₹{rate}</span>
+                    <div className="flex justify-center">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/5 border border-white/10 rounded-full flex items-center justify-center text-gray-500">
+                        <ArrowLeftRight className="w-5 h-5 sm:w-6 sm:h-6 rotate-90" />
+                      </div>
                     </div>
-                    <div className="flex justify-between text-xs sm:text-sm">
-                      <span className="text-gray-500">Network Fee</span>
-                      <span className="font-medium text-green-500">Zero Fee</span>
-                    </div>
-                  </div>
 
-                  <Link to="/p2p" className="btn-primary w-full py-4 sm:py-5 shadow-lg shadow-brand/20 text-base sm:text-lg">
-                    Execute Settlement
-                  </Link>
+                    <div>
+                      <label className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 sm:mb-3 block">You Receive (USDT)</label>
+                      <div className="relative">
+                        <div className="input-field bg-white/5 text-2xl sm:text-3xl font-bold pr-16 sm:pr-20 py-3.5 sm:py-4 text-brand">
+                          {usdt}
+                        </div>
+                        <span className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-brand text-base sm:text-lg">USDT</span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 sm:p-6 bg-white/5 rounded-2xl space-y-3 border border-white/5">
+                      <div className="flex justify-between text-xs sm:text-sm">
+                        <span className="text-gray-500">Exchange Rate</span>
+                        <span className="font-medium text-white">1 USDT = ₹{rate}</span>
+                      </div>
+                      <div className="flex justify-between text-xs sm:text-sm">
+                        <span className="text-gray-500">Network Fee</span>
+                        <span className="font-medium text-green-500">Zero Fee</span>
+                      </div>
+                    </div>
+
+                    <Link to="/p2p" className="btn-primary w-full py-4 sm:py-5 shadow-lg shadow-brand/20 text-base sm:text-lg">
+                      Execute Settlement
+                    </Link>
+                  </div>
                 </div>
-              </div>
-
-              {/* Decorative elements */}
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand/10 rounded-full blur-3xl" />
-              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-brand/5 rounded-full blur-3xl" />
+              </TiltCard>
             </motion.div>
           </div>
         </div>
@@ -309,46 +311,54 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 gsap-feature-grid">
             {/* Large Card */}
-            <div className="md:col-span-2 card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group gsap-feature-card relative overflow-hidden">
-              <div className="relative z-10">
-                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
-                  <ShieldCheck className="w-8 h-8" />
+            <TiltCard className="md:col-span-2 gsap-feature-card">
+              <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group relative overflow-hidden h-full">
+                <div className="relative z-10">
+                  <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
+                    <ShieldCheck className="w-8 h-8" />
+                  </div>
+                  <h4 className="text-3xl sm:text-4xl font-bold text-white mb-6">Bank-Grade Escrow</h4>
+                  <p className="text-xl text-gray-400 leading-relaxed max-w-md">Our automated escrow protocol ensures that your assets are only released when payment is verified. Zero trust required, absolute security guaranteed.</p>
                 </div>
-                <h4 className="text-3xl sm:text-4xl font-bold text-white mb-6">Bank-Grade Escrow</h4>
-                <p className="text-xl text-gray-400 leading-relaxed max-w-md">Our automated escrow protocol ensures that your assets are only released when payment is verified. Zero trust required, absolute security guaranteed.</p>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-3xl -mr-32 -mt-32 transition-all group-hover:bg-brand/10" />
               </div>
-              <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-3xl -mr-32 -mt-32 transition-all group-hover:bg-brand/10" />
-            </div>
+            </TiltCard>
 
             {/* Small Card */}
-            <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group gsap-feature-card">
-              <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
-                <Zap className="w-8 h-8" />
+            <TiltCard className="gsap-feature-card">
+              <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group h-full">
+                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
+                  <Zap className="w-8 h-8" />
+                </div>
+                <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">Instant Matching</h4>
+                <p className="text-lg text-gray-400 leading-relaxed">Proprietary engine matches you with the best rates in milliseconds.</p>
               </div>
-              <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">Instant Matching</h4>
-              <p className="text-lg text-gray-400 leading-relaxed">Proprietary engine matches you with the best rates in milliseconds.</p>
-            </div>
+            </TiltCard>
 
             {/* Small Card */}
-            <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group gsap-feature-card">
-              <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
-                <Globe className="w-8 h-8" />
+            <TiltCard className="gsap-feature-card">
+              <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group h-full">
+                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
+                  <Globe className="w-8 h-8" />
+                </div>
+                <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">Global Reach</h4>
+                <p className="text-lg text-gray-400 leading-relaxed">Access 50+ fiat currencies and 190+ countries seamlessly.</p>
               </div>
-              <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">Global Reach</h4>
-              <p className="text-lg text-gray-400 leading-relaxed">Access 50+ fiat currencies and 190+ countries seamlessly.</p>
-            </div>
+            </TiltCard>
 
             {/* Large Card */}
-            <div className="md:col-span-2 card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group gsap-feature-card relative overflow-hidden">
-              <div className="relative z-10">
-                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
-                  <TrendingUp className="w-8 h-8" />
+            <TiltCard className="md:col-span-2 gsap-feature-card">
+              <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group relative overflow-hidden h-full">
+                <div className="relative z-10">
+                  <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
+                    <TrendingUp className="w-8 h-8" />
+                  </div>
+                  <h4 className="text-3xl sm:text-4xl font-bold text-white mb-6">Real-time Analytics</h4>
+                  <p className="text-xl text-gray-400 leading-relaxed max-w-md">Track your trading performance, market trends, and settlement history with our advanced analytics suite.</p>
                 </div>
-                <h4 className="text-3xl sm:text-4xl font-bold text-white mb-6">Real-time Analytics</h4>
-                <p className="text-xl text-gray-400 leading-relaxed max-w-md">Track your trading performance, market trends, and settlement history with our advanced analytics suite.</p>
+                <div className="absolute bottom-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-3xl -mr-32 -mb-32 transition-all group-hover:bg-brand/10" />
               </div>
-              <div className="absolute bottom-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-3xl -mr-32 -mb-32 transition-all group-hover:bg-brand/10" />
-            </div>
+            </TiltCard>
           </div>
         </div>
       </section>

@@ -12,6 +12,7 @@ export default function KYC() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<number>(1);
 
   const [docType, setDocType] = useState('passport');
   const [frontImage, setFrontImage] = useState<File | null>(null);
@@ -86,6 +87,7 @@ export default function KYC() {
         document_type: docType,
         document_front_url: frontUrl,
         document_back_url: backUrl,
+        kyc_level: selectedLevel,
         status: 'pending'
       });
 
@@ -121,6 +123,42 @@ export default function KYC() {
           <p className="text-base sm:text-xl text-gray-400 max-w-xl mx-auto leading-relaxed">
             Complete your KYC verification to unlock higher limits and P2P trading features.
           </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+          {[
+            { level: 1, title: 'Level 1', limit: '$2,000', desc: 'Email Verification' },
+            { level: 2, title: 'Level 2', limit: '$5,000', desc: 'ID Verification' },
+            { level: 3, title: 'Level 3', limit: 'Unlimited', desc: 'Video/Address' }
+          ].map((tier) => (
+            <div 
+              key={tier.level}
+              className={cn(
+                "p-6 rounded-3xl border transition-all relative overflow-hidden",
+                profile?.kyc_level >= tier.level 
+                  ? "bg-green-500/10 border-green-500/20" 
+                  : selectedLevel === tier.level
+                    ? "bg-brand/10 border-brand"
+                    : "bg-white/5 border-white/10"
+              )}
+              onClick={() => profile?.kyc_level < tier.level && setSelectedLevel(tier.level)}
+            >
+              {profile?.kyc_level >= tier.level && (
+                <div className="absolute top-4 right-4">
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                </div>
+              )}
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{tier.title}</p>
+              <p className="text-2xl font-bold text-white mb-1">{tier.limit}</p>
+              <p className="text-sm text-gray-400">{tier.desc}</p>
+              
+              {profile?.kyc_level === tier.level - 1 && submission?.status !== 'pending' && (
+                <button className="mt-4 w-full py-2 bg-brand/20 hover:bg-brand/30 text-brand text-xs font-bold rounded-xl transition-all">
+                  Upgrade Now
+                </button>
+              )}
+            </div>
+          ))}
         </div>
 
         {submission ? (

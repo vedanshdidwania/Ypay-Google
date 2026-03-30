@@ -430,6 +430,12 @@ function AdminDashboard() {
 function AdminAnalytics() {
   const [data, setData] = useState<any[]>([]);
   const [pieData, setPieData] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    avgTrade: 0,
+    merchants: 0,
+    disputeRate: 0,
+    successRate: 0
+  });
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -440,10 +446,18 @@ function AdminAnalytics() {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('*')
-        .gte('created_at', thirtyDaysAgo.toISOString());
+      const [ordersRes, merchantsRes] = await Promise.all([
+        supabase
+          .from('orders')
+          .select('*')
+          .gte('created_at', thirtyDaysAgo.toISOString()),
+        supabase
+          .from('profiles')
+          .select('id', { count: 'exact' })
+          .eq('is_verified_merchant', true)
+      ]);
+
+      const orders = ordersRes.data;
 
       if (orders) {
         // Group by date
@@ -466,16 +480,33 @@ function AdminAnalytics() {
 
         setData(chartData);
 
+        // Calculate stats
+        const completedOrders = orders.filter(o => o.status === 'completed');
+        const disputedOrders = orders.filter(o => o.status === 'disputed');
+        const avgTrade = completedOrders.length > 0 
+          ? completedOrders.reduce((acc, o) => acc + (o.amount_inr || 0), 0) / completedOrders.length 
+          : 0;
+        const successRate = orders.length > 0 ? (completedOrders.length / orders.length) * 100 : 0;
+        const disputeRate = orders.length > 0 ? (disputedOrders.length / orders.length) * 100 : 0;
+
+        setStats({
+          avgTrade,
+          merchants: merchantsRes.count || 0,
+          disputeRate,
+          successRate
+        });
+
         // Status distribution
         const statusCounts = orders.reduce((acc: any, order) => {
           acc[order.status] = (acc[order.status] || 0) + 1;
           return acc;
         }, {});
 
+        const total = orders.length || 1;
         setPieData([
-          { name: 'Completed', value: statusCounts.completed || 0, fill: '#00FF00' },
-          { name: 'Pending', value: statusCounts.pending || 0, fill: '#F59E0B' },
-          { name: 'Cancelled', value: statusCounts.cancelled || 0, fill: '#EF4444' }
+          { name: 'Completed', value: Math.round(((statusCounts.completed || 0) / total) * 100), fill: '#00FF00' },
+          { name: 'Pending', value: Math.round(((statusCounts.pending || 0) / total) * 100), fill: '#F59E0B' },
+          { name: 'Cancelled', value: Math.round(((statusCounts.cancelled || 0) / total) * 100), fill: '#EF4444' }
         ]);
       }
     } catch (error) {
@@ -508,7 +539,7 @@ function AdminAnalytics() {
             </div>
             <h4 className="text-sm font-bold text-white uppercase tracking-widest">Avg. Trade</h4>
           </div>
-          <div className="text-2xl font-bold text-white">₹42.5k</div>
+          <div className="text-2xl font-bold text-white">₹{stats.avgTrade.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
           <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">Per P2P Order</p>
         </div>
         <div className="card p-6">
@@ -518,7 +549,7 @@ function AdminAnalytics() {
             </div>
             <h4 className="text-sm font-bold text-white uppercase tracking-widest">Merchants</h4>
           </div>
-          <div className="text-2xl font-bold text-white">124</div>
+          <div className="text-2xl font-bold text-white">{stats.merchants}</div>
           <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">Verified & Active</p>
         </div>
         <div className="card p-6">
@@ -528,7 +559,7 @@ function AdminAnalytics() {
             </div>
             <h4 className="text-sm font-bold text-white uppercase tracking-widest">Dispute Rate</h4>
           </div>
-          <div className="text-2xl font-bold text-white">0.4%</div>
+          <div className="text-2xl font-bold text-white">{stats.disputeRate.toFixed(1)}%</div>
           <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">Last 30 Days</p>
         </div>
         <div className="card p-6">
@@ -538,7 +569,7 @@ function AdminAnalytics() {
             </div>
             <h4 className="text-sm font-bold text-white uppercase tracking-widest">Success Rate</h4>
           </div>
-          <div className="text-2xl font-bold text-white">98.2%</div>
+          <div className="text-2xl font-bold text-white">{stats.successRate.toFixed(1)}%</div>
           <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">Trade Completion</p>
         </div>
       </div>
@@ -1925,14 +1956,33 @@ function AdminSettings() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [securityLogs, setSecurityLogs] = useState<any[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   useEffect(() => {
     fetchSettings();
+    fetchSecurityLogs();
   }, []);
 
   const fetchSettings = async () => {
     const { data } = await supabase.from('app_settings').select('*').limit(1);
     if (data && data.length > 0) setSettings(data[0]);
+  };
+
+  const fetchSecurityLogs = async () => {
+    try {
+      setLogsLoading(true);
+      const { data } = await supabase
+        .from('user_security_logs')
+        .select('*, profiles(email)')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (data) setSecurityLogs(data);
+    } catch (error) {
+      console.error('Error fetching security logs:', error);
+    } finally {
+      setLogsLoading(false);
+    }
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -1947,6 +1997,9 @@ function AdminSettings() {
           buy_rate: settings.buy_rate,
           sell_rate: settings.sell_rate,
           platform_fee: settings.platform_fee,
+          kyc_level_1_limit: settings.kyc_level_1_limit,
+          kyc_level_2_limit: settings.kyc_level_2_limit,
+          kyc_level_3_limit: settings.kyc_level_3_limit,
           admin_wallet_address: settings.admin_wallet_address,
           support_contact: settings.support_contact,
           homepage_headline: settings.homepage_headline,
@@ -2042,6 +2095,42 @@ function AdminSettings() {
                 className="input-field"
               />
             </div>
+          </div>
+
+          <div className="pt-6 border-t border-white/5">
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6">KYC Trade Limits (USD)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Level 1 Limit ($)</label>
+                <input
+                  type="number"
+                  value={settings?.kyc_level_1_limit || 0}
+                  onChange={(e) => setSettings(s => s ? { ...s, kyc_level_1_limit: parseFloat(e.target.value) } : null)}
+                  className="input-field"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Level 2 Limit ($)</label>
+                <input
+                  type="number"
+                  value={settings?.kyc_level_2_limit || 0}
+                  onChange={(e) => setSettings(s => s ? { ...s, kyc_level_2_limit: parseFloat(e.target.value) } : null)}
+                  className="input-field"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Level 3 Limit ($)</label>
+                <input
+                  type="number"
+                  value={settings?.kyc_level_3_limit || 0}
+                  onChange={(e) => setSettings(s => s ? { ...s, kyc_level_3_limit: parseFloat(e.target.value) } : null)}
+                  className="input-field"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-white/5">
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Support Contact (Email/Telegram)</label>
               <input
@@ -2122,6 +2211,73 @@ function AdminSettings() {
               {refreshing ? 'Syncing...' : 'Run Global Sync'}
             </button>
           </div>
+        </div>
+      </div>
+
+      <div className="card p-8 max-w-4xl">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-display font-bold text-white">User Security Audit Logs</h3>
+            <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-bold">Recent security events across the platform.</p>
+          </div>
+          <button 
+            onClick={fetchSecurityLogs}
+            className="p-2 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-all"
+          >
+            <RefreshCw className={cn("w-4 h-4", logsLoading && "animate-spin")} />
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-white/5 border-b border-white/5">
+              <tr>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">User</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">Event</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">IP / Device</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Time</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {logsLoading && securityLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-brand mx-auto" />
+                  </td>
+                </tr>
+              ) : securityLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-gray-500 text-xs">No security logs found.</td>
+                </tr>
+              ) : (
+                securityLogs.map((log) => (
+                  <tr key={log.id} className="hover:bg-white/5 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="text-xs font-bold text-white">{log.profiles?.email}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest",
+                        log.event_type === 'login' ? "bg-blue-500/10 text-blue-500" :
+                        log.event_type === '2fa_enable' ? "bg-green-500/10 text-green-500" :
+                        log.event_type === 'password_change' ? "bg-amber-500/10 text-amber-500" :
+                        "bg-gray-500/10 text-gray-400"
+                      )}>
+                        {log.event_type.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-[10px] text-gray-400">{log.ip_address}</div>
+                      <div className="text-[8px] text-gray-600 truncate max-w-[150px]">{log.user_agent}</div>
+                    </td>
+                    <td className="px-4 py-3 text-[10px] text-gray-500 text-right">
+                      {new Date(log.created_at).toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -2677,7 +2833,7 @@ function AdminKYC() {
     setLoading(false);
   };
 
-  const handleReview = async (id: string, userId: string, status: 'approved' | 'rejected') => {
+  const handleReview = async (id: string, userId: string, status: 'approved' | 'rejected', level: number) => {
     try {
       const { error } = await supabase
         .from('kyc_submissions')
@@ -2686,7 +2842,12 @@ function AdminKYC() {
       
       if (error) throw error;
 
-      const { error: profileError } = await supabase.from('profiles').update({ kyc_status: status }).eq('id', userId);
+      const updateData: any = { kyc_status: status };
+      if (status === 'approved') {
+        updateData.kyc_level = level;
+      }
+
+      const { error: profileError } = await supabase.from('profiles').update(updateData).eq('id', userId);
       if (profileError) throw profileError;
 
       // Log action
@@ -2720,6 +2881,7 @@ function AdminKYC() {
             <thead className="bg-white/5 border-b border-white/5">
               <tr>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">User / Type</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Level</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Date</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Actions</th>
@@ -2731,6 +2893,9 @@ function AdminKYC() {
                   <td className="px-6 py-4">
                     <div className="font-bold text-sm text-white">{sub.user_email}</div>
                     <div className="text-[9px] font-bold uppercase tracking-widest text-brand">{sub.document_type.replace('_', ' ')}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-xs font-bold text-white">Level {sub.kyc_level}</div>
                   </td>
                   <td className="px-6 py-4">
                     <span className={cn(
@@ -2793,16 +2958,22 @@ function AdminKYC() {
 
               <div className="flex gap-4">
                 <button
-                  onClick={() => handleReview(selectedDoc, submissions.find(s => s.id === selectedDoc)!.user_id, 'rejected')}
+                  onClick={() => {
+                    const sub = submissions.find(s => s.id === selectedDoc);
+                    if (sub) handleReview(sub.id, sub.user_id, 'rejected', sub.kyc_level);
+                  }}
                   className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-white transition-all shadow-lg shadow-red-600/20"
                 >
                   Reject
                 </button>
                 <button
-                  onClick={() => handleReview(selectedDoc, submissions.find(s => s.id === selectedDoc)!.user_id, 'approved')}
+                  onClick={() => {
+                    const sub = submissions.find(s => s.id === selectedDoc);
+                    if (sub) handleReview(sub.id, sub.user_id, 'approved', sub.kyc_level);
+                  }}
                   className="flex-1 py-3 bg-green-600 hover:bg-green-700 rounded-xl font-bold text-white transition-all shadow-lg shadow-green-600/20"
                 >
-                  Approve
+                  Approve Level {submissions.find(s => s.id === selectedDoc)?.kyc_level}
                 </button>
               </div>
             </div>

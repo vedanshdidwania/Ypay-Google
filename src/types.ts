@@ -11,6 +11,7 @@ export interface UserProfile {
   is_admin: boolean;
   is_disabled: boolean;
   kyc_status: KYCStatus;
+  kyc_level: number;
   balance_usdt: number;
   escrow_balance_usdt: number;
   is_verified_merchant: boolean;
@@ -23,6 +24,11 @@ export interface UserProfile {
   referred_by_l2?: string;
   referral_earnings_l1: number;
   referral_earnings_l2: number;
+  last_login_at?: string;
+  rating_sum: number;
+  rating_count: number;
+  speed_rating: number;
+  comm_rating: number;
   created_at: string;
 }
 
@@ -70,6 +76,8 @@ export interface Order {
   payment_screenshot_url?: string;
   transaction_hash?: string;
   admin_feedback?: string;
+  buyer_typing?: boolean;
+  seller_typing?: boolean;
   expires_at?: string;
   is_reviewed?: boolean;
   created_at: string;
@@ -86,6 +94,7 @@ export interface Review {
   rating: number; // 1-5
   comment?: string;
   is_positive: boolean;
+  tags?: string[];
   created_at: string;
 }
 
@@ -116,6 +125,7 @@ export interface KYCSubmission {
   document_type: string;
   document_front_url: string;
   document_back_url?: string;
+  kyc_level: number;
   status: KYCStatus;
   admin_feedback?: string;
   created_at: string;
@@ -127,6 +137,9 @@ export interface AppSettings {
   buy_rate: number;
   sell_rate: number;
   platform_fee: number;
+  kyc_level_1_limit: number;
+  kyc_level_2_limit: number;
+  kyc_level_3_limit: number;
   admin_wallet_address: string;
   support_contact: string;
   homepage_headline: string;

@@ -67,6 +67,8 @@ interface Message {
   sender_id: string;
   message: string;
   image_url?: string;
+  attachment_url?: string;
+  attachment_type?: 'text' | 'image' | 'file';
   created_at: string;
 }
 
@@ -87,7 +89,12 @@ export default function P2POrder() {
   const [raisingDispute, setRaisingDispute] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const availableTags = ['Fast Payer', 'Reliable', 'Good Communication', 'Professional', 'Patient'];
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   const [showConfirmPaid, setShowConfirmPaid] = useState(false);
   const [showConfirmRelease, setShowConfirmRelease] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
@@ -230,7 +237,8 @@ export default function P2POrder() {
       const { error } = await supabase.from('chat_messages').insert({
         order_id: id,
         sender_id: user.id,
-        message: newMessage
+        message: newMessage,
+        attachment_type: 'text'
       });
 
       if (error) throw error;
@@ -280,7 +288,9 @@ export default function P2POrder() {
         order_id: id,
         sender_id: user.id,
         message: 'Sent an image',
-        image_url: publicUrl
+        image_url: publicUrl,
+        attachment_url: publicUrl,
+        attachment_type: 'image'
       });
 
       // Notify other party about new image
@@ -371,7 +381,8 @@ export default function P2POrder() {
         reviewer_id: user.id,
         reviewee_id: revieweeId,
         rating,
-        comment
+        comment,
+        tags: selectedTags
       });
 
       if (error) throw error;
@@ -494,6 +505,28 @@ export default function P2POrder() {
   const isBuyer = user?.id === buyerId;
   const isSeller = user?.id === sellerId;
   const otherParty = user?.id === order.user_id ? order.ad?.ad_profile : order.user_profile;
+
+  const quickReplies = isBuyer 
+    ? ['I have made the payment', 'Please release the funds', 'Checking the details', 'Thank you!']
+    : ['Checking the payment', 'Funds released', 'Please provide a screenshot', 'Thank you!'];
+
+  const handleTyping = async () => {
+    if (!order || !user) return;
+    
+    if (!isTyping) {
+      setIsTyping(true);
+      const updateField = isBuyer ? { buyer_typing: true } : { seller_typing: true };
+      await supabase.from('orders').update(updateField).eq('id', id);
+    }
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    
+    typingTimeoutRef.current = setTimeout(async () => {
+      setIsTyping(false);
+      const updateField = isBuyer ? { buyer_typing: false } : { seller_typing: false };
+      await supabase.from('orders').update(updateField).eq('id', id);
+    }, 3000);
+  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -765,13 +798,24 @@ export default function P2POrder() {
                   )}
                 >
                   <div className={cn(
-                    "p-4 sm:p-5 rounded-2xl sm:rounded-3xl text-sm sm:text-lg leading-relaxed",
+                    "p-4 sm:p-5 rounded-2xl sm:rounded-3xl text-sm sm:text-lg leading-relaxed backdrop-blur-md border",
                     msg.sender_id === user?.id 
-                      ? "bg-brand text-white rounded-tr-none shadow-lg shadow-brand/10" 
-                      : "bg-white/5 text-white rounded-tl-none border border-white/10"
+                      ? "bg-brand/80 text-white rounded-tr-none shadow-lg shadow-brand/20 border-brand/30" 
+                      : "bg-white/10 text-white rounded-tl-none border-white/20 shadow-xl"
                   )}>
-                    {msg.image_url && (
-                      <img src={msg.image_url} className="max-w-full rounded-2xl mb-4" />
+                    {msg.attachment_type === 'image' && msg.attachment_url && (
+                      <img src={msg.attachment_url} className="max-w-full rounded-2xl mb-4 cursor-pointer" onClick={() => window.open(msg.attachment_url, '_blank')} />
+                    )}
+                    {msg.attachment_type === 'file' && msg.attachment_url && (
+                      <a href={msg.attachment_url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-black/20 rounded-xl mb-4 hover:bg-black/30 transition-all">
+                        <div className="w-10 h-10 bg-brand/20 rounded-lg flex items-center justify-center text-brand">
+                          <AlertCircle className="w-6 h-6" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-white truncate">Attachment</p>
+                          <p className="text-xs text-gray-400">Click to view</p>
+                        </div>
+                      </a>
                     )}
                     {msg.message}
                   </div>
@@ -781,6 +825,31 @@ export default function P2POrder() {
                 </div>
               ))}
               <div ref={chatEndRef} />
+              
+              {(isBuyer ? order.seller_typing : order.buyer_typing) && (
+                <div className="flex items-center gap-2 text-gray-500 text-xs sm:text-sm animate-pulse">
+                  <div className="flex gap-1">
+                    <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                  {otherParty?.full_name || 'Other party'} is typing...
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-4 border-t border-white/5 bg-white/5 overflow-x-auto flex items-center gap-3 no-scrollbar">
+              {quickReplies.map((reply) => (
+                <button
+                  key={reply}
+                  onClick={() => {
+                    setNewMessage(reply);
+                  }}
+                  className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-xs sm:text-sm text-gray-400 hover:text-white transition-all whitespace-nowrap"
+                >
+                  {reply}
+                </button>
+              ))}
             </div>
 
             <form onSubmit={handleSendMessage} className="p-4 sm:p-8 border-t border-white/5 bg-white/5 flex items-end gap-3 sm:gap-6">
@@ -791,7 +860,10 @@ export default function P2POrder() {
               <div className="flex-1 relative">
                 <textarea
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={(e) => {
+                    setNewMessage(e.target.value);
+                    handleTyping();
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -918,8 +990,30 @@ export default function P2POrder() {
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Write a short review (optional)..."
-                className="w-full bg-white/5 border border-white/10 rounded-3xl sm:rounded-[2rem] px-6 py-5 text-white text-base sm:text-lg focus:outline-none focus:border-brand mb-10 sm:mb-12 min-h-[140px] resize-none"
+                className="w-full bg-white/5 border border-white/10 rounded-3xl sm:rounded-[2rem] px-6 py-5 text-white text-base sm:text-lg focus:outline-none focus:border-brand mb-6 min-h-[140px] resize-none"
               />
+
+              <div className="mb-10 sm:mb-12">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Select Tags</p>
+                <div className="flex flex-wrap gap-2">
+                  {availableTags.map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => setSelectedTags(prev => 
+                        prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+                      )}
+                      className={cn(
+                        "px-4 py-2 rounded-full text-xs font-bold transition-all border",
+                        selectedTags.includes(tag) 
+                          ? "bg-brand text-white border-brand shadow-lg shadow-brand/20" 
+                          : "bg-white/5 text-gray-500 border-white/5 hover:border-white/10"
+                      )}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div className="flex gap-5 sm:gap-6">
                 <button

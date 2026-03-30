@@ -79,12 +79,21 @@ export default function P2P() {
   const [selectedAsset, setSelectedAsset] = useState('USDT');
   const [searchAmount, setSearchAmount] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('All');
+  const [sortBy, setSortBy] = useState<'price' | 'rating' | 'completion'>('price');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [marketPrices, setMarketPrices] = useState<any>({});
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [adToDelete, setAdToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const clearFilters = () => {
+    setSearchAmount('');
+    setSelectedPaymentMethod('All');
+    setSortBy('price');
+    setVerifiedOnly(false);
+  };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [adLimitType, setAdLimitType] = useState<'quantity' | 'amount'>('quantity');
@@ -134,7 +143,7 @@ export default function P2P() {
       // Remove the param from URL without refreshing
       window.history.replaceState({}, '', '/p2p');
     }
-  }, [filterType, selectedAsset, selectedPaymentMethod, user, location.search]);
+  }, [filterType, selectedAsset, selectedPaymentMethod, sortBy, verifiedOnly, user, location.search]);
 
   const fetchMarketPrices = async () => {
     try {
@@ -199,18 +208,37 @@ export default function P2P() {
         query = query.contains('payment_methods', [selectedPaymentMethod]);
       }
 
-      const { data, error } = await query.order('price', { ascending: filterType === 'buy' });
+      const { data, error } = await query;
 
       if (error) throw error;
       
       // Filter by amount locally if searchAmount is set
       let filteredAds = data || [];
+
+      if (verifiedOnly) {
+        filteredAds = filteredAds.filter(ad => ad.user_profile?.is_verified_merchant);
+      }
+
       if (searchAmount) {
         const amount = parseFloat(searchAmount);
         if (!isNaN(amount)) {
           filteredAds = filteredAds.filter(ad => amount >= ad.min_limit && amount <= ad.max_limit);
         }
       }
+
+      // Sort ads locally
+      filteredAds.sort((a, b) => {
+        if (sortBy === 'price') {
+          return filterType === 'buy' ? a.price - b.price : b.price - a.price;
+        } else if (sortBy === 'rating') {
+          const ratingA = a.user_profile?.rating_count ? (a.user_profile.rating_sum / a.user_profile.rating_count) : 0;
+          const ratingB = b.user_profile?.rating_count ? (b.user_profile.rating_sum / b.user_profile.rating_count) : 0;
+          return ratingB - ratingA;
+        } else if (sortBy === 'completion') {
+          return (b.user_profile?.completion_rate || 0) - (a.user_profile?.completion_rate || 0);
+        }
+        return 0;
+      });
 
       setAds(filteredAds);
     } catch (error) {
@@ -373,35 +401,70 @@ export default function P2P() {
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-6 w-full lg:w-auto">
-            <div className="relative w-full sm:flex-1 sm:min-w-[300px]">
-              <Search className="absolute left-6 sm:left-6 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-6 sm:h-6 text-gray-500" />
-              <input 
-                type="number" 
-                value={searchAmount}
-                onChange={(e) => setSearchAmount(e.target.value)}
-                placeholder="Enter amount (INR)..." 
-                className="w-full bg-[#050505] border border-white/10 rounded-2xl sm:rounded-3xl pl-16 sm:pl-16 pr-6 py-5 sm:py-5 text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-white"
-              />
-            </div>
-            
-            <div className="flex items-center gap-5 w-full sm:w-auto">
-              <select 
-                value={selectedPaymentMethod}
-                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                className="flex-1 sm:flex-none bg-[#050505] border border-white/10 rounded-2xl sm:rounded-3xl px-6 sm:px-8 py-5 sm:py-5 text-base sm:text-lg text-white focus:outline-none focus:border-brand appearance-none"
-              >
-                <option value="All">All Payments</option>
-                {PAYMENT_METHODS.map(pm => (
-                  <option key={pm} value={pm}>{pm}</option>
-                ))}
-              </select>
+            <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-6 w-full lg:w-auto">
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                <button
+                  onClick={() => setVerifiedOnly(!verifiedOnly)}
+                  className={cn(
+                    "flex items-center gap-2 px-6 py-4 rounded-2xl sm:rounded-3xl border transition-all text-sm font-bold uppercase tracking-widest whitespace-nowrap",
+                    verifiedOnly 
+                      ? "bg-brand/10 border-brand text-brand shadow-lg shadow-brand/10" 
+                      : "bg-white/5 border-white/10 text-gray-400 hover:border-white/20"
+                  )}
+                >
+                  <ShieldCheck className={cn("w-5 h-5", verifiedOnly ? "text-brand" : "text-gray-500")} />
+                  Verified Only
+                </button>
+              </div>
 
-              <button className="p-5 sm:p-5 bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl text-gray-400 hover:bg-white/10 transition-all">
-                <Filter className="w-6 h-6 sm:w-7 sm:h-7" />
-              </button>
+              <div className="relative w-full sm:flex-1 sm:min-w-[250px]">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-500" />
+                <input 
+                  type="number" 
+                  value={searchAmount}
+                  onChange={(e) => setSearchAmount(e.target.value)}
+                  placeholder="Enter amount (INR)..." 
+                  className="w-full bg-[#050505] border border-white/10 rounded-2xl sm:rounded-3xl pl-16 pr-6 py-5 text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-white"
+                />
+              </div>
+              
+              <div className="flex items-center gap-5 w-full sm:w-auto">
+                <div className="relative flex-1 sm:flex-none">
+                  <select 
+                    value={selectedPaymentMethod}
+                    onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                    className="w-full bg-[#050505] border border-white/10 rounded-2xl sm:rounded-3xl pl-6 pr-12 py-5 text-base sm:text-lg text-white focus:outline-none focus:border-brand appearance-none"
+                  >
+                    <option value="All">All Payments</option>
+                    {PAYMENT_METHODS.map(pm => (
+                      <option key={pm} value={pm}>{pm}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
+                </div>
+
+                <div className="relative flex-1 sm:flex-none">
+                  <select 
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="w-full bg-[#050505] border border-white/10 rounded-2xl sm:rounded-3xl pl-6 pr-12 py-5 text-base sm:text-lg text-white focus:outline-none focus:border-brand appearance-none"
+                  >
+                    <option value="price">Sort by Price</option>
+                    <option value="rating">Sort by Rating</option>
+                    <option value="completion">Sort by Completion</option>
+                  </select>
+                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
+                </div>
+
+                <button 
+                  onClick={clearFilters}
+                  className="p-5 bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl text-gray-400 hover:bg-white/10 transition-all"
+                  title="Clear Filters"
+                >
+                  <X className="w-6 h-6 sm:w-7 sm:h-7" />
+                </button>
+              </div>
             </div>
-          </div>
         </div>
 
         {/* Ads List */}

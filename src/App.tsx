@@ -27,6 +27,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Support from './components/Support';
 import CustomCursor from './components/CustomCursor';
+import { NotificationListener } from './components/NotificationListener';
 import { AlertTriangle } from 'lucide-react';
 
 import ErrorBoundary from './components/ErrorBoundary';
@@ -69,6 +70,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
+        <NotificationListener />
         <Router>
           <div className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 relative">
             <CustomCursor />
