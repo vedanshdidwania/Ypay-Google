@@ -12,14 +12,16 @@ export default function Auth() {
   const referralCode = searchParams.get('ref');
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => sessionStorage.getItem('pending_verification_email') || '');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [otpCode, setOtpCode] = useState('');
-  const [showOtpStep, setShowOtpStep] = useState(false);
+  const [showOtpStep, setShowOtpStep] = useState(() => !!sessionStorage.getItem('pending_verification_email'));
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [show2FA, setShow2FA] = useState(false);
+  const [resetMode, setResetMode] = useState(false);
   const [tempUserId, setTempUserId] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -70,9 +72,11 @@ export default function Auth() {
         if (error) throw error;
         
         if (data.user && !data.session) {
+          sessionStorage.setItem('pending_verification_email', email);
           setShowOtpStep(true);
           setSuccess('A 6-digit verification code has been sent to your email.');
         } else if (data.session) {
+          sessionStorage.removeItem('pending_verification_email');
           navigate('/dashboard');
         }
       }
@@ -86,22 +90,38 @@ export default function Auth() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!otpCode || otpCode.length !== 6) {
+      setError('Please enter a valid 6-digit code.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otpCode,
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: otpCode.trim(),
         type: 'signup',
       });
-      if (error) throw error;
+
+      if (verifyError) throw verifyError;
+
+      sessionStorage.removeItem('pending_verification_email');
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to verify code.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleChangeEmail = () => {
+    sessionStorage.removeItem('pending_verification_email');
+    setShowOtpStep(false);
+    setOtpCode('');
+    setError(null);
+    setSuccess(null);
   };
 
   const handleResendOtp = async () => {
@@ -121,9 +141,6 @@ export default function Auth() {
       setLoading(false);
     }
   };
-
-  const [success, setSuccess] = useState<string | null>(null);
-  const [resetMode, setResetMode] = useState(false);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,7 +182,17 @@ export default function Auth() {
             </h2>
             <p className="text-gray-500">
               {showOtpStep 
-                ? `Enter the code sent to ${email}`
+                ? (
+                  <>
+                    Enter the code sent to <span className="text-blue-400 font-medium">{email}</span>
+                    <button
+                      onClick={handleChangeEmail}
+                      className="block mx-auto text-xs text-blue-500 hover:text-blue-400 mt-2 font-medium"
+                    >
+                      Change email
+                    </button>
+                  </>
+                )
                 : (resetMode 
                   ? 'Enter your email to receive a password reset link' 
                   : (isLogin ? 'Enter your credentials to access your account' : 'Join Ypay and start trading USDT instantly'))}
@@ -199,6 +226,12 @@ export default function Auth() {
               {error && (
                 <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
                   {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
+                  {success}
                 </div>
               )}
 
@@ -319,6 +352,12 @@ export default function Auth() {
             {error && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
                 {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
+                {success}
               </div>
             )}
 
