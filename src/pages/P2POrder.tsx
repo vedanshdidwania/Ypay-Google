@@ -99,6 +99,7 @@ export default function P2POrder() {
   const [showConfirmRelease, setShowConfirmRelease] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
   const [processingAction, setProcessingAction] = useState(false);
+  const [paymentProofUrl, setPaymentProofUrl] = useState<string | null>(null);
   const [sellerPaymentMethods, setSellerPaymentMethods] = useState<any[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -310,13 +311,58 @@ export default function P2POrder() {
     }
   };
 
+  const handlePaymentProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      setProcessingAction(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `proofs/${id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('p2p_chat_images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('p2p_chat_images')
+        .getPublicUrl(fileName);
+
+      setPaymentProofUrl(publicUrl);
+      
+      // Also send it to chat automatically
+      await supabase.from('chat_messages').insert({
+        order_id: id,
+        sender_id: user.id,
+        message: 'Sent payment proof',
+        image_url: publicUrl,
+        attachment_url: publicUrl,
+        attachment_type: 'image'
+      });
+
+      toast.success('Payment proof uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading proof:', error);
+      toast.error('Failed to upload proof');
+    } finally {
+      setProcessingAction(false);
+    }
+  };
+
   const handleMarkAsPaid = async () => {
     if (!order) return;
+    if (!paymentProofUrl) {
+      toast.error('Please upload a payment proof first');
+      return;
+    }
 
     try {
       setProcessingAction(true);
       const { error } = await supabase.rpc('mark_p2p_order_as_paid', {
-        p_order_id: id
+        p_order_id: id,
+        p_screenshot_url: paymentProofUrl
       });
 
       if (error) throw error;
@@ -528,10 +574,71 @@ export default function P2POrder() {
     }, 3000);
   };
 
-  const formatTime = (seconds: number) => {
+const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const EscrowProgress = () => {
+    const steps = [
+      { id: 'pending', label: 'Order Created', icon: Clock },
+      { id: 'paid', label: 'Payment Sent', icon: Send },
+      { id: 'completed', label: 'Funds Released', icon: ShieldCheck },
+    ];
+
+    const currentStepIndex = steps.findIndex(s => {
+      if (order?.status === 'completed') return s.id === 'completed';
+      if (order?.status === 'paid') return s.id === 'paid';
+      if (order?.status === 'pending') return s.id === 'pending';
+      return false;
+    });
+
+    return (
+      <div className="mb-12">
+        <div className="relative flex justify-between">
+          {/* Progress Line */}
+          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white/5 -translate-y-1/2 z-0" />
+          <motion.div 
+            className="absolute top-1/2 left-0 h-0.5 bg-brand -translate-y-1/2 z-0"
+            initial={{ width: 0 }}
+            animate={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+          />
+
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            const isActive = index <= currentStepIndex;
+            const isCurrent = index === currentStepIndex;
+
+            return (
+              <div key={step.id} className="relative z-10 flex flex-col items-center">
+                <motion.div
+                  initial={false}
+                  animate={{
+                    backgroundColor: isActive ? 'var(--brand)' : 'rgba(255, 255, 255, 0.05)',
+                    scale: isCurrent ? 1.2 : 1,
+                    boxShadow: isCurrent ? '0 0 20px rgba(var(--brand-rgb), 0.4)' : 'none'
+                  }}
+                  className={cn(
+                    "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-colors border border-white/10",
+                    isActive ? "text-[#050505]" : "text-gray-500"
+                  )}
+                >
+                  <Icon className="w-5 h-5 sm:w-7 sm:h-7" />
+                </motion.div>
+                <p className={cn(
+                  "mt-4 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-center",
+                  isActive ? "text-brand" : "text-gray-500"
+                )}>
+                  {step.label}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -573,6 +680,8 @@ export default function P2POrder() {
             </div>
           </div>
         </div>
+
+        <EscrowProgress />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-10">
           {/* Order Details */}
@@ -708,6 +817,67 @@ export default function P2POrder() {
                     )}
                   </div>
 
+                  {/* Payment Proof Section */}
+                  <div className="mt-10 pt-10 border-t border-white/5">
+                    <h4 className="text-sm sm:text-lg font-bold text-white uppercase tracking-widest mb-6">Payment Proof</h4>
+                    
+                    {order.status === 'pending' ? (
+                      <div className="space-y-6">
+                        {!paymentProofUrl ? (
+                          <label className="flex flex-col items-center justify-center w-full h-40 sm:h-48 border-2 border-dashed border-white/10 rounded-3xl cursor-pointer hover:bg-white/5 transition-all group">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <ImageIcon className="w-8 h-8 sm:w-10 sm:h-10 text-gray-500 group-hover:text-brand transition-colors mb-4" />
+                              <p className="text-xs sm:text-sm text-gray-500 group-hover:text-white transition-colors font-bold uppercase tracking-widest">Upload Payment Screenshot</p>
+                              <p className="text-[10px] sm:text-xs text-gray-600 mt-2">PNG, JPG up to 5MB</p>
+                            </div>
+                            <input type="file" className="hidden" accept="image/*" onChange={handlePaymentProofUpload} disabled={processingAction} />
+                          </label>
+                        ) : (
+                          <div className="relative group rounded-3xl overflow-hidden border border-white/10 aspect-video sm:aspect-auto sm:h-64">
+                            <img src={paymentProofUrl} alt="Payment Proof" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                              <button 
+                                onClick={() => setPaymentProofUrl(null)}
+                                className="p-3 bg-red-500/20 text-red-500 rounded-xl hover:bg-red-500/30 transition-colors"
+                              >
+                                <XCircle className="w-6 h-6" />
+                              </button>
+                              <a 
+                                href={paymentProofUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="p-3 bg-brand/20 text-brand rounded-xl hover:bg-brand/30 transition-colors"
+                              >
+                                <ExternalLink className="w-6 h-6" />
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      (order.payment_screenshot_url || paymentProofUrl) ? (
+                        <div className="relative group rounded-3xl overflow-hidden border border-white/10 aspect-video sm:aspect-auto sm:h-64">
+                          <img src={order.payment_screenshot_url || paymentProofUrl || ''} alt="Payment Proof" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <a 
+                              href={order.payment_screenshot_url || paymentProofUrl || ''} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 px-6 py-3 bg-brand text-[#050505] rounded-2xl font-bold uppercase tracking-widest text-xs"
+                            >
+                              <ExternalLink className="w-5 h-5" />
+                              View Full Size
+                            </a>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-10 bg-white/5 border border-dashed border-white/10 rounded-3xl text-center">
+                          <p className="text-xs sm:text-sm text-gray-500 uppercase tracking-widest font-bold">No proof uploaded yet</p>
+                        </div>
+                      )
+                    )}
+                  </div>
+
                   {order.status === 'pending' && (
                     <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 pt-6 sm:pt-8">
                       <button 
@@ -717,10 +887,27 @@ export default function P2POrder() {
                         Cancel Order
                       </button>
                       <button 
-                        onClick={() => setShowConfirmPaid(true)}
+                        onClick={() => {
+                          if (!paymentProofUrl) {
+                            toast.error('Please upload a payment proof first');
+                            return;
+                          }
+                          setShowConfirmPaid(true);
+                        }}
                         className="w-full sm:flex-1 py-5 sm:py-6 btn-primary rounded-2xl sm:rounded-3xl text-base sm:text-xl font-bold shadow-lg shadow-brand/20"
                       >
                         I Have Paid
+                      </button>
+                    </div>
+                  )}
+
+                  {order.status === 'paid' && (
+                    <div className="pt-6 sm:pt-8">
+                      <button 
+                        onClick={() => setShowDisputeModal(true)}
+                        className="w-full py-4 sm:py-5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-2xl sm:rounded-3xl text-base sm:text-lg font-bold transition-all border border-red-500/20"
+                      >
+                        Raise Dispute
                       </button>
                     </div>
                   )}
@@ -730,8 +917,10 @@ export default function P2POrder() {
                   <div className="p-5 sm:p-6 bg-brand/5 border border-brand/10 rounded-2xl sm:rounded-3xl flex items-start gap-4 sm:gap-5">
                     <ShieldCheck className="w-5 h-5 sm:w-7 sm:h-7 text-brand shrink-0 mt-0.5" />
                     <p className="text-xs sm:text-base text-gray-400 leading-relaxed">
-                      Wait for the buyer to mark the order as paid. Once they do, verify the payment in your account 
-                      before releasing the USDT.
+                      {order.status === 'paid' 
+                        ? "The buyer has marked the order as paid and uploaded proof. Please verify the payment in your account and check the proof below before releasing the funds."
+                        : "Wait for the buyer to mark the order as paid. Once they do, verify the payment in your account before releasing the USDT."
+                      }
                     </p>
                   </div>
 
