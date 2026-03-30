@@ -12,12 +12,20 @@ export default function Auth() {
   const referralCode = searchParams.get('ref');
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState(() => sessionStorage.getItem('pending_verification_email') || '');
+  const [email, setEmail] = useState(() => {
+    const pending = sessionStorage.getItem('pending_verification_email');
+    console.log('Initial email from session:', pending);
+    return pending || '';
+  });
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [otpCode, setOtpCode] = useState('');
-  const [showOtpStep, setShowOtpStep] = useState(() => !!sessionStorage.getItem('pending_verification_email'));
+  const [showOtpStep, setShowOtpStep] = useState(() => {
+    const pending = !!sessionStorage.getItem('pending_verification_email');
+    console.log('Initial showOtpStep from session:', pending);
+    return pending;
+  });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [show2FA, setShow2FA] = useState(false);
@@ -58,6 +66,7 @@ export default function Auth() {
           }
         }
       } else {
+        console.log('Attempting sign up for:', email);
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -69,15 +78,25 @@ export default function Auth() {
             },
           },
         });
+        
+        console.log('Sign up response:', { user: data.user, session: data.session, error });
+        
         if (error) throw error;
         
         if (data.user && !data.session) {
+          console.log('Setting OTP step to true');
           sessionStorage.setItem('pending_verification_email', email);
           setShowOtpStep(true);
           setSuccess('A 6-digit verification code has been sent to your email.');
         } else if (data.session) {
+          console.log('Session present, navigating to dashboard');
           sessionStorage.removeItem('pending_verification_email');
           navigate('/dashboard');
+        } else if (data.user) {
+          // Fallback for some Supabase configurations
+          console.log('User present but no session, forcing OTP step');
+          sessionStorage.setItem('pending_verification_email', email);
+          setShowOtpStep(true);
         }
       }
       if (isLogin && !show2FA) navigate('/dashboard');
@@ -358,6 +377,19 @@ export default function Auth() {
             {success && (
               <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
                 {success}
+              </div>
+            )}
+
+            {!isLogin && !resetMode && sessionStorage.getItem('pending_verification_email') && (
+              <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center space-y-2">
+                <p className="text-sm text-blue-400">You have a pending verification for {sessionStorage.getItem('pending_verification_email')}</p>
+                <button
+                  type="button"
+                  onClick={() => setShowOtpStep(true)}
+                  className="text-sm text-blue-500 hover:text-blue-400 font-bold underline"
+                >
+                  Go to OTP Verification
+                </button>
               </div>
             )}
 
