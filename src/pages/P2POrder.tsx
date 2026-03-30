@@ -68,7 +68,7 @@ interface Message {
   message: string;
   image_url?: string;
   attachment_url?: string;
-  attachment_type?: 'text' | 'image' | 'file';
+  attachment_type?: 'text' | 'image' | 'file' | 'system';
   created_at: string;
 }
 
@@ -101,6 +101,7 @@ export default function P2POrder() {
   const [processingAction, setProcessingAction] = useState(false);
   const [paymentProofUrl, setPaymentProofUrl] = useState<string | null>(null);
   const [sellerPaymentMethods, setSellerPaymentMethods] = useState<any[]>([]);
+  const [hasVerifiedPayment, setHasVerifiedPayment] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -366,6 +367,15 @@ export default function P2POrder() {
       });
 
       if (error) throw error;
+      setNewMessage('');
+
+      // Add system message for payment
+      await supabase.from('chat_messages').insert({
+        order_id: id,
+        sender_id: user.id,
+        message: 'Buyer has marked the order as paid.',
+        attachment_type: 'system'
+      });
 
       // Notify seller
       await supabase.from('notifications').insert({
@@ -395,6 +405,14 @@ export default function P2POrder() {
 
       if (error) throw error;
       
+      // Add system message for release
+      await supabase.from('chat_messages').insert({
+        order_id: id,
+        sender_id: user.id,
+        message: 'Seller has released the funds. Trade completed.',
+        attachment_type: 'system'
+      });
+
       // Notify buyer
       await supabase.from('notifications').insert({
         user_id: buyerId,
@@ -452,6 +470,14 @@ export default function P2POrder() {
 
       if (error) throw error;
 
+      // Add system message for cancellation
+      await supabase.from('chat_messages').insert({
+        order_id: id,
+        sender_id: user.id,
+        message: 'Order has been cancelled.',
+        attachment_type: 'system'
+      });
+
       // Notify other party
       const otherPartyId = user?.id === buyerId ? sellerId : buyerId;
       await supabase.from('notifications').insert({
@@ -507,6 +533,14 @@ export default function P2POrder() {
       });
 
       if (disputeError) throw disputeError;
+
+      // Add system message for dispute
+      await supabase.from('chat_messages').insert({
+        order_id: id,
+        sender_id: user.id,
+        message: 'A dispute has been raised. Admin intervention requested.',
+        attachment_type: 'system'
+      });
 
       // Notify other party
       const otherPartyId = user?.id === buyerId ? sellerId : buyerId;
@@ -682,6 +716,62 @@ const formatTime = (seconds: number) => {
         </div>
 
         <EscrowProgress />
+
+        {order.status === 'completed' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-10 sm:mb-12"
+          >
+            <div className="card p-8 sm:p-12 bg-green-500/5 border-green-500/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-10">
+                <CheckCircle2 className="w-32 h-32 text-green-500" />
+              </div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center text-[#050505]">
+                    <ShieldCheck className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">Trade Completed</h2>
+                    <p className="text-gray-400 mt-1">The escrow has been successfully released.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-8 border-t border-white/5">
+                  <div>
+                    <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Total Amount Paid</p>
+                    <p className="text-xl sm:text-2xl font-display font-bold text-white">₹{order.amount_inr.toLocaleString('en-IN')}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Assets Received</p>
+                    <p className="text-xl sm:text-2xl font-display font-bold text-brand">
+                      {isBuyer 
+                        ? (order.amount_usdt - (order.platform_fee_amount || 0)).toFixed(8)
+                        : order.amount_usdt.toFixed(8)
+                      } {order.asset}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Platform Fee</p>
+                    <p className="text-xl sm:text-2xl font-display font-bold text-white">
+                      {order.platform_fee_amount?.toFixed(8) || '0.00000000'} {order.asset}
+                    </p>
+                  </div>
+                </div>
+
+                {isBuyer && (
+                  <div className="mt-10 p-6 bg-white/5 rounded-3xl border border-white/10">
+                    <p className="text-sm text-gray-400 leading-relaxed">
+                      The assets have been transferred to your P2P wallet. You can now transfer them to your spot wallet or use them for other services.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-10">
           {/* Order Details */}
@@ -924,20 +1014,46 @@ const formatTime = (seconds: number) => {
                     </p>
                   </div>
 
-                  {order.status === 'paid' && (
-                    <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 pt-6 sm:pt-8">
-                      <button 
-                        onClick={() => setShowDisputeModal(true)}
-                        className="w-full sm:flex-1 py-5 sm:py-6 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-2xl sm:rounded-3xl text-base sm:text-xl font-bold transition-all border border-red-500/20"
-                      >
-                        Dispute
-                      </button>
-                      <button 
-                        onClick={() => setShowConfirmRelease(true)}
-                        className="w-full sm:flex-1 py-5 sm:py-6 bg-green-600 hover:bg-green-700 text-white rounded-2xl sm:rounded-3xl text-base sm:text-xl font-bold transition-all shadow-lg shadow-green-600/20"
-                      >
-                        Release {order.asset}
-                      </button>
+                  {order.status === 'paid' && isSeller && (
+                    <div className="space-y-6 pt-6 sm:pt-8">
+                      <div className="p-6 bg-brand/5 border border-brand/10 rounded-3xl">
+                        <div className="flex items-start gap-4">
+                          <AlertCircle className="w-6 h-6 text-brand shrink-0 mt-1" />
+                          <div>
+                            <p className="text-sm font-bold text-white mb-2">Verification Required</p>
+                            <p className="text-xs text-gray-400 leading-relaxed">
+                              Please check your bank account or wallet for the payment of <span className="text-white font-bold">₹{order.amount_inr.toLocaleString('en-IN')}</span>. 
+                              Do not rely solely on the buyer's screenshot.
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <label className="flex items-center gap-4 mt-6 p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                          <input 
+                            type="checkbox" 
+                            checked={hasVerifiedPayment}
+                            onChange={(e) => setHasVerifiedPayment(e.target.checked)}
+                            className="w-5 h-5 rounded border-white/10 bg-black text-brand focus:ring-brand"
+                          />
+                          <span className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-widest">I have verified the payment in my account</span>
+                        </label>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-5 sm:gap-6">
+                        <button 
+                          onClick={() => setShowDisputeModal(true)}
+                          className="w-full sm:flex-1 py-5 sm:py-6 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-2xl sm:rounded-3xl text-base sm:text-xl font-bold transition-all border border-red-500/20"
+                        >
+                          Dispute
+                        </button>
+                        <button 
+                          onClick={() => setShowConfirmRelease(true)}
+                          disabled={!hasVerifiedPayment}
+                          className="w-full sm:flex-1 py-5 sm:py-6 bg-green-600 hover:bg-green-700 text-white rounded-2xl sm:rounded-3xl text-base sm:text-xl font-bold transition-all shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:grayscale"
+                        >
+                          Release {order.asset}
+                        </button>
+                      </div>
                     </div>
                   )}
                   {order.status === 'pending' && (
@@ -978,41 +1094,53 @@ const formatTime = (seconds: number) => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 sm:space-y-8">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex flex-col max-w-[90%] sm:max-w-[80%]",
-                    msg.sender_id === user?.id ? "ml-auto items-end" : "mr-auto items-start"
-                  )}
-                >
-                  <div className={cn(
-                    "p-4 sm:p-5 rounded-2xl sm:rounded-3xl text-sm sm:text-lg leading-relaxed backdrop-blur-md border",
-                    msg.sender_id === user?.id 
-                      ? "bg-brand/80 text-white rounded-tr-none shadow-lg shadow-brand/20 border-brand/30" 
-                      : "bg-white/10 text-white rounded-tl-none border-white/20 shadow-xl"
-                  )}>
-                    {msg.attachment_type === 'image' && msg.attachment_url && (
-                      <img src={msg.attachment_url} className="max-w-full rounded-2xl mb-4 cursor-pointer" onClick={() => window.open(msg.attachment_url, '_blank')} />
+              {messages.map((msg) => {
+                if (msg.attachment_type === 'system') {
+                  return (
+                    <div key={msg.id} className="flex justify-center my-4">
+                      <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">
+                        {msg.message}
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "flex flex-col max-w-[90%] sm:max-w-[80%]",
+                      msg.sender_id === user?.id ? "ml-auto items-end" : "mr-auto items-start"
                     )}
-                    {msg.attachment_type === 'file' && msg.attachment_url && (
-                      <a href={msg.attachment_url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-black/20 rounded-xl mb-4 hover:bg-black/30 transition-all">
-                        <div className="w-10 h-10 bg-brand/20 rounded-lg flex items-center justify-center text-brand">
-                          <AlertCircle className="w-6 h-6" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-white truncate">Attachment</p>
-                          <p className="text-xs text-gray-400">Click to view</p>
-                        </div>
-                      </a>
-                    )}
-                    {msg.message}
+                  >
+                    <div className={cn(
+                      "p-4 sm:p-5 rounded-2xl sm:rounded-3xl text-sm sm:text-lg leading-relaxed backdrop-blur-md border",
+                      msg.sender_id === user?.id 
+                        ? "bg-brand/80 text-white rounded-tr-none shadow-lg shadow-brand/20 border-brand/30" 
+                        : "bg-white/10 text-white rounded-tl-none border-white/20 shadow-xl"
+                    )}>
+                      {msg.attachment_type === 'image' && msg.attachment_url && (
+                        <img src={msg.attachment_url} className="max-w-full rounded-2xl mb-4 cursor-pointer" onClick={() => window.open(msg.attachment_url, '_blank')} />
+                      )}
+                      {msg.attachment_type === 'file' && msg.attachment_url && (
+                        <a href={msg.attachment_url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-black/20 rounded-xl mb-4 hover:bg-black/30 transition-all">
+                          <div className="w-10 h-10 bg-brand/20 rounded-lg flex items-center justify-center text-brand">
+                            <AlertCircle className="w-6 h-6" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-white truncate">Attachment</p>
+                            <p className="text-xs text-gray-400">Click to view</p>
+                          </div>
+                        </a>
+                      )}
+                      {msg.message}
+                    </div>
+                    <span className="text-[10px] sm:text-xs text-gray-500 mt-2 px-2">
+                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
-                  <span className="text-[10px] sm:text-xs text-gray-500 mt-2 px-2">
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
               <div ref={chatEndRef} />
               
               {(isBuyer ? order.seller_typing : order.buyer_typing) && (
