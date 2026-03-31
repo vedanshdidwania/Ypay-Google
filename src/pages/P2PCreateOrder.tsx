@@ -524,7 +524,7 @@ export default function P2PCreateOrder() {
 
                 <button 
                   type="submit" 
-                  disabled={isTrading || !fiatAmount}
+                  disabled={isTrading}
                   className={cn(
                     "w-full py-5 sm:py-8 rounded-xl sm:rounded-[2.5rem] font-display font-bold text-white shadow-2xl transition-all flex items-center justify-center gap-4 sm:gap-5 text-base sm:text-xl",
                     ad.type === 'buy' ? "bg-red-600 hover:bg-red-700 shadow-red-600/20" : "bg-green-600 hover:bg-green-700 shadow-green-600/20",

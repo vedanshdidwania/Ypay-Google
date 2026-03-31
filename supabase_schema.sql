@@ -1141,11 +1141,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION public.mark_p2p_order_as_paid(p_order_id UUID)
+CREATE OR REPLACE FUNCTION public.mark_p2p_order_as_paid(p_order_id UUID, p_screenshot_url TEXT)
 RETURNS void AS $$
 BEGIN
   UPDATE public.orders 
-  SET status = 'paid' 
+  SET status = 'paid',
+      payment_screenshot_url = p_screenshot_url
   WHERE id = p_order_id 
   AND (
     -- Only the buyer can mark as paid

@@ -28,7 +28,7 @@ import { useAuth } from '../lib/useAuth';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { cn, formatCurrency, formatUSDT } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import axios from 'axios';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -201,8 +201,11 @@ export default function P2P() {
         `)
         .eq('status', 'active')
         .eq('type', filterType === 'buy' ? 'sell' : 'buy')
-        .eq('asset', selectedAsset)
-        .neq('user_id', user?.id);
+        .eq('asset', selectedAsset);
+
+      if (user) {
+        query = query.neq('user_id', user.id);
+      }
 
       if (selectedPaymentMethod !== 'All') {
         query = query.contains('payment_methods', [selectedPaymentMethod]);
@@ -614,17 +617,17 @@ export default function P2P() {
                     </div>
 
                     {/* Action */}
-                    <button 
-                      onClick={() => navigate(`/p2p/create/${ad.id}`)}
+                    <Link 
+                      to={`/p2p/create/${ad.id}`}
                       className={cn(
-                        "w-full py-5 sm:py-6 rounded-2xl sm:rounded-[2.5rem] font-bold text-base sm:text-lg transition-all shadow-lg",
+                        "w-full py-5 sm:py-6 rounded-2xl sm:rounded-[2.5rem] font-bold text-base sm:text-lg transition-all shadow-lg flex items-center justify-center",
                         filterType === 'buy' 
                           ? "bg-green-600 hover:bg-green-700 text-white shadow-green-900/20" 
                           : "bg-red-600 hover:bg-red-700 text-white shadow-red-900/20"
                       )}
                     >
                       {filterType === 'buy' ? 'Buy ' : 'Sell '}{selectedAsset}
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </motion.div>

@@ -23,11 +23,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let profileSubscription: { unsubscribe: () => void } | null = null;
+
+    const setupProfile = async (userId: string) => {
+      await fetchProfile(userId);
+      
+      // Cleanup existing subscription if any
+      if (profileSubscription) {
+        profileSubscription.unsubscribe();
+      }
+
+      // Subscribe to profile changes
+      const channel = supabase
+        .channel(`profile:${userId}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${userId}`
+        }, (payload) => {
+          setProfile(payload.new as UserProfile);
+        })
+        .subscribe();
+
+      profileSubscription = {
+        unsubscribe: () => {
+          supabase.removeChannel(channel);
+        }
+      };
+    };
+
     // Check active sessions and subscribe to auth changes
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        setupProfile(session.user.id);
       } else {
         setLoading(false);
       }
@@ -36,14 +66,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        setupProfile(session.user.id);
       } else {
         setProfile(null);
+        if (profileSubscription) {
+          profileSubscription.unsubscribe();
+          profileSubscription = null;
+        }
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (profileSubscription) {
+        profileSubscription.unsubscribe();
+      }
+    };
   }, []);
 
   const fetchProfile = async (userId: string) => {
