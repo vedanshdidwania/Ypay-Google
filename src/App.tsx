@@ -29,6 +29,7 @@ import CustomCursor from './components/CustomCursor';
 import { NotificationListener } from './components/NotificationListener';
 import { AlertTriangle } from 'lucide-react';
 
+import { Toaster } from 'sonner';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const ConfigWarning = () => (
@@ -68,6 +69,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <Toaster position="top-right" richColors />
       <AuthProvider>
         <NotificationListener />
         <Router>
