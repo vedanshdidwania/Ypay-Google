@@ -56,6 +56,8 @@ export default function Dashboard() {
     const tab = searchParams.get('tab') as 'orders' | 'settings';
     if (tab && (tab === 'orders' || tab === 'settings')) {
       setActiveTab(tab);
+    } else if (!tab) {
+      setActiveTab('orders');
     }
   }, [searchParams]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -351,7 +353,11 @@ export default function Dashboard() {
           {/* Main Content */}
           <div className="lg:col-span-8">
             {activeTab === 'orders' ? (
-              <div className="space-y-6">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                   <div className="flex items-center gap-6">
                     <h2 className="text-2xl font-bold text-white">Recent Activity</h2>
@@ -460,9 +466,13 @@ export default function Dashboard() {
                     })}
                   </div>
                 )}
-              </div>
+              </motion.div>
             ) : (
-              <div className="space-y-8">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+              >
                 <div className="card p-5 md:p-8">
                   <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 mb-6 md:mb-8 text-center sm:text-left">
                     <div className="relative group">
@@ -488,10 +498,12 @@ export default function Dashboard() {
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 md:gap-3 mt-1.5 md:mt-1">
                         <div className="flex items-center gap-1 text-yellow-500">
                           <Star className="w-3 h-3 md:w-3.5 md:h-3.5 fill-current" />
-                          <span className="text-[10px] md:text-xs font-bold">{profile?.trust_score || '5.0'}</span>
+                          <span className="text-[10px] md:text-xs font-bold">
+                            {profile?.rating_count ? (profile.rating_sum / profile.rating_count).toFixed(1) : '5.0'}
+                          </span>
                         </div>
                         <span className="text-gray-700 hidden sm:inline">•</span>
-                        <span className="text-[9px] md:text-xs text-gray-500 font-bold uppercase tracking-widest">{profile?.total_trades || 0} Trades</span>
+                        <span className="text-[9px] md:text-xs text-gray-500 font-bold uppercase tracking-widest">{profile?.trades_completed || 0} Trades</span>
                         <span className="text-gray-700 hidden sm:inline">•</span>
                         <span className="text-[9px] md:text-xs text-green-500 font-bold uppercase tracking-widest">{profile?.completion_rate || 100}% Completion</span>
                       </div>
@@ -751,7 +763,7 @@ export default function Dashboard() {
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
         </div>

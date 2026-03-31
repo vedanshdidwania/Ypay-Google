@@ -20,6 +20,7 @@ export interface UserProfile {
   two_factor_enabled: boolean;
   two_factor_secret?: string;
   preferred_currency: string;
+  trc20_address?: string;
   referred_by?: string;
   referred_by_l2?: string;
   referral_earnings_l1: number;
@@ -125,6 +126,7 @@ export interface KYCSubmission {
   document_type: string;
   document_front_url: string;
   document_back_url?: string;
+  video_url?: string;
   kyc_level: number;
   status: KYCStatus;
   admin_feedback?: string;

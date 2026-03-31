@@ -265,6 +265,13 @@ export default function P2P() {
       return;
     }
 
+    if (newAd.type === 'sell' && profile) {
+      if (newAd.total_amount > profile.balance_usdt) {
+        toast.error(`Insufficient balance. You only have ${profile.balance_usdt.toFixed(2)} USDT available.`);
+        return;
+      }
+    }
+
     try {
       setIsSubmitting(true);
       
@@ -488,6 +495,14 @@ export default function P2P() {
                 key={ad.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
+                whileHover={{ 
+                  scale: 1.01,
+                  rotateX: 1,
+                  rotateY: 1,
+                  transition: { duration: 0.2 }
+                }}
+                whileTap={{ scale: 0.99 }}
+                style={{ perspective: 1000 }}
                 className="card p-6 sm:p-10 hover:border-brand/30 transition-all group relative overflow-hidden"
               >
                 {ad.user_profile?.has_verification_badge && (

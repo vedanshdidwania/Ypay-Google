@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/useAuth';
-import { ShieldCheck, Upload, CheckCircle2, AlertCircle, Loader2, FileText, Info } from 'lucide-react';
+import { ShieldCheck, Upload, CheckCircle2, AlertCircle, Loader2, FileText, Info, Video } from 'lucide-react';
 import { cn } from '../lib/utils';
 import type { KYCSubmission } from '../types';
 
@@ -17,8 +17,10 @@ export default function KYC() {
   const [docType, setDocType] = useState('passport');
   const [frontImage, setFrontImage] = useState<File | null>(null);
   const [backImage, setBackImage] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [frontPreview, setFrontPreview] = useState<string | null>(null);
   const [backPreview, setBackPreview] = useState<string | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -39,7 +41,7 @@ export default function KYC() {
     setLoading(false);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back' | 'video') => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (side === 'front') {
@@ -47,11 +49,14 @@ export default function KYC() {
         const reader = new FileReader();
         reader.onloadend = () => setFrontPreview(reader.result as string);
         reader.readAsDataURL(file);
-      } else {
+      } else if (side === 'back') {
         setBackImage(file);
         const reader = new FileReader();
         reader.onloadend = () => setBackPreview(reader.result as string);
         reader.readAsDataURL(file);
+      } else {
+        setVideoFile(file);
+        setVideoPreview(URL.createObjectURL(file));
       }
     }
   };
@@ -59,12 +64,16 @@ export default function KYC() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile || !frontImage) return;
+    if (selectedLevel === 3 && !videoFile) {
+      setError('Please upload the verification video for Level 3');
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Upload images to Supabase Storage
-      const uploadImage = async (file: File, prefix: string) => {
+      // Upload files to Supabase Storage
+      const uploadFile = async (file: File, prefix: string) => {
         const fileExt = file.name.split('.').pop();
         const fileName = `${profile.id}-${prefix}-${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
@@ -76,10 +85,15 @@ export default function KYC() {
         return publicUrl;
       };
 
-      const frontUrl = await uploadImage(frontImage, 'front');
+      const frontUrl = await uploadFile(frontImage, 'front');
       let backUrl = '';
       if (backImage) {
-        backUrl = await uploadImage(backImage, 'back');
+        backUrl = await uploadFile(backImage, 'back');
+      }
+
+      let videoUrl = '';
+      if (selectedLevel === 3 && videoFile) {
+        videoUrl = await uploadFile(videoFile, 'video');
       }
 
       const { error: submitError } = await supabase.from('kyc_submissions').insert({
@@ -87,6 +101,7 @@ export default function KYC() {
         document_type: docType,
         document_front_url: frontUrl,
         document_back_url: backUrl,
+        video_url: videoUrl,
         kyc_level: selectedLevel,
         status: 'pending'
       });
@@ -294,12 +309,61 @@ export default function KYC() {
                 </div>
               </div>
 
-              <div className="p-6 bg-brand/5 border border-brand/10 rounded-2xl flex items-start gap-4">
-                <Info className="w-6 h-6 text-brand mt-0.5 shrink-0" />
-                <p className="text-sm text-brand/80 leading-relaxed">
-                  Make sure the document is clearly visible, all four corners are in the frame, and the information is legible. Blurred or cropped images will be rejected.
-                </p>
+              <div className="p-6 bg-brand/5 border border-brand/10 rounded-2xl flex flex-col gap-4">
+                <div className="flex items-start gap-4">
+                  <Info className="w-6 h-6 text-brand mt-0.5 shrink-0" />
+                  <p className="text-sm text-brand/80 leading-relaxed">
+                    Make sure the document is clearly visible, all four corners are in the frame, and the information is legible. Blurred or cropped images will be rejected.
+                  </p>
+                </div>
+                {selectedLevel === 3 && (
+                  <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Level 3 Video Script</p>
+                    <p className="text-sm text-white italic leading-relaxed">
+                      "My name is [Your Name], my document number is [Your ID Number], I want to complete my level 3 verification on Ypay."
+                    </p>
+                    <p className="text-[10px] text-gray-500 mt-2">Please record a short video of yourself holding your ID and saying the script above.</p>
+                  </div>
+                )}
               </div>
+
+              {selectedLevel === 3 && (
+                <div className="space-y-5">
+                  <label className="block text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wider">Verification Video</label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => handleImageChange(e, 'video')}
+                      className="hidden"
+                      id="video-upload"
+                    />
+                    <label
+                      htmlFor="video-upload"
+                      className={cn(
+                        "flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-2xl cursor-pointer transition-all",
+                        videoPreview ? "bg-brand/5 border-brand/20" : "bg-white/5 border-white/10 hover:border-white/20"
+                      )}
+                    >
+                      {videoPreview ? (
+                        <div className="w-full aspect-video rounded-xl overflow-hidden bg-black flex items-center justify-center">
+                          <video src={videoPreview} controls className="max-h-full" />
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mb-4">
+                            <Video className="w-8 h-8 text-brand" />
+                          </div>
+                          <p className="text-sm font-bold text-white mb-2">Upload Verification Video</p>
+                          <p className="text-xs text-gray-500 text-center max-w-xs">
+                            Record a video saying the script above clearly while holding your ID.
+                          </p>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                </div>
+              )}
 
               <button
                 disabled={isSubmitting || !frontImage}

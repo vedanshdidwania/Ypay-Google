@@ -134,6 +134,7 @@ CREATE TABLE IF NOT EXISTS kyc_submissions (
   document_type TEXT NOT NULL,
   document_front_url TEXT NOT NULL,
   document_back_url TEXT,
+  video_url TEXT,
   kyc_level INTEGER DEFAULT 1,
   status TEXT DEFAULT 'pending', -- pending, approved, rejected
   admin_feedback TEXT,
@@ -277,8 +278,14 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='two_factor_secret') THEN
         ALTER TABLE profiles ADD COLUMN two_factor_secret TEXT;
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='is_2fa_enabled') THEN
-        ALTER TABLE profiles ADD COLUMN is_2fa_enabled BOOLEAN DEFAULT FALSE;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='two_factor_enabled') THEN
+        ALTER TABLE profiles ADD COLUMN two_factor_enabled BOOLEAN DEFAULT FALSE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='trc20_address') THEN
+        ALTER TABLE profiles ADD COLUMN trc20_address TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='preferred_currency') THEN
+        ALTER TABLE profiles ADD COLUMN preferred_currency TEXT DEFAULT 'USD';
     END IF;
     -- Reputation
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='speed_rating') THEN

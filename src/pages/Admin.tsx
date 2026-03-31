@@ -27,7 +27,8 @@ import {
   DollarSign,
   ArrowUpRight,
   ArrowDownRight,
-  RefreshCw
+  RefreshCw,
+  ChevronRight
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -137,6 +138,9 @@ function AdminDashboard() {
     pendingOrders: 0,
     totalUsers: 0,
     totalVolume: 0,
+    pendingKYC: 0,
+    openDisputes: 0,
+    pendingWithdrawals: 0,
     volumeChange: 12.5,
     userChange: 8.2
   });
@@ -172,10 +176,13 @@ function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      const [ordersRes, usersRes, recentRes] = await Promise.all([
+      const [ordersRes, usersRes, recentRes, kycRes, disputesRes, withdrawalsRes] = await Promise.all([
         supabase.from('orders').select('*'),
         supabase.from('profiles').select('*', { count: 'exact' }),
-        supabase.from('orders').select('*, profiles(email)').order('created_at', { ascending: false }).limit(5)
+        supabase.from('orders').select('*, profiles(email)').order('created_at', { ascending: false }).limit(5),
+        supabase.from('kyc_submissions').select('*', { count: 'exact' }).eq('status', 'pending'),
+        supabase.from('p2p_disputes').select('*', { count: 'exact' }).eq('status', 'open'),
+        supabase.from('withdrawals').select('*', { count: 'exact' }).eq('status', 'pending')
       ]);
 
       if (ordersRes.data) {
@@ -186,7 +193,10 @@ function AdminDashboard() {
           totalOrders: ordersRes.data.length,
           pendingOrders: pending,
           totalUsers: usersRes.count || 0,
-          totalVolume: volume
+          totalVolume: volume,
+          pendingKYC: kycRes.count || 0,
+          openDisputes: disputesRes.count || 0,
+          pendingWithdrawals: withdrawalsRes.count || 0
         }));
       }
 
@@ -233,9 +243,11 @@ function AdminDashboard() {
             <div className="p-2 bg-white/5 rounded-lg text-gray-400 group-hover:text-amber-500 transition-colors">
               <Clock className="w-5 h-5" />
             </div>
-            <div className="px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[8px] font-bold uppercase tracking-widest rounded-md">
-              Action Required
-            </div>
+            {stats.pendingOrders > 0 && (
+              <div className="px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[8px] font-bold uppercase tracking-widest rounded-md">
+                Action Required
+              </div>
+            )}
           </div>
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pending Orders</div>
           <div className="text-2xl font-bold text-white">{stats.pendingOrders}</div>
@@ -267,6 +279,48 @@ function AdminDashboard() {
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Platform Revenue</div>
           <div className="text-2xl font-bold text-white">₹{(stats.totalVolume * 0.01).toLocaleString()}</div>
         </div>
+      </div>
+
+      {/* System Health Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Link to="/admin/kyc" className="card p-6 flex items-center justify-between hover:bg-white/5 transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pending KYC</p>
+              <p className="text-xl font-bold text-white">{stats.pendingKYC}</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-600" />
+        </Link>
+
+        <Link to="/admin/disputes" className="card p-6 flex items-center justify-between hover:bg-white/5 transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Open Disputes</p>
+              <p className="text-xl font-bold text-white">{stats.openDisputes}</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-600" />
+        </Link>
+
+        <Link to="/admin/withdrawals" className="card p-6 flex items-center justify-between hover:bg-white/5 transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+              <ArrowUpRight className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pending Withdrawals</p>
+              <p className="text-xl font-bold text-white">{stats.pendingWithdrawals}</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-600" />
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -430,6 +484,7 @@ function AdminDashboard() {
 function AdminAnalytics() {
   const [data, setData] = useState<any[]>([]);
   const [pieData, setPieData] = useState<any[]>([]);
+  const [topMerchants, setTopMerchants] = useState<any[]>([]);
   const [stats, setStats] = useState({
     avgTrade: 0,
     merchants: 0,
@@ -446,11 +501,17 @@ function AdminAnalytics() {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const [ordersRes, merchantsRes] = await Promise.all([
+      const [ordersRes, merchantsRes, merchantsCountRes] = await Promise.all([
         supabase
           .from('orders')
           .select('*')
           .gte('created_at', thirtyDaysAgo.toISOString()),
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('is_verified_merchant', true)
+          .order('trades_completed', { ascending: false })
+          .limit(5),
         supabase
           .from('profiles')
           .select('id', { count: 'exact' })
@@ -458,6 +519,7 @@ function AdminAnalytics() {
       ]);
 
       const orders = ordersRes.data;
+      if (merchantsRes.data) setTopMerchants(merchantsRes.data);
 
       if (orders) {
         // Group by date
@@ -491,7 +553,7 @@ function AdminAnalytics() {
 
         setStats({
           avgTrade,
-          merchants: merchantsRes.count || 0,
+          merchants: merchantsCountRes.count || 0,
           disputeRate,
           successRate
         });
@@ -711,6 +773,43 @@ function AdminAnalytics() {
               />
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="card overflow-hidden">
+        <div className="p-6 border-b border-white/5">
+          <h3 className="text-lg font-display font-bold text-white">Top Merchants by Volume</h3>
+          <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-bold">Based on last 30 days of completed trades.</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-white/5">
+              <tr>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Merchant</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Trades</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Volume</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Revenue Contribution</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {topMerchants.map((m: any) => (
+                <tr key={m.id} className="hover:bg-white/5 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-bold text-white">{m.email}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-white">{m.trades_completed}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-bold text-brand">₹{(m.trades_completed * stats.avgTrade).toLocaleString()}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-400">₹{(m.trades_completed * stats.avgTrade * 0.01).toLocaleString()}</div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -2945,6 +3044,17 @@ function AdminKYC() {
                   </div>
                 )}
               </div>
+
+              {submissions.find(s => s.id === selectedDoc)?.video_url && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Video Verification</p>
+                  <video 
+                    src={submissions.find(s => s.id === selectedDoc)?.video_url} 
+                    controls 
+                    className="w-full rounded-xl border border-white/10 shadow-sm aspect-video bg-black"
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Admin Feedback (Optional)</label>

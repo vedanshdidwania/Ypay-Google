@@ -45,7 +45,7 @@ interface Ad {
 export default function P2PCreateOrder() {
   const { adId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
   const [fiatAmount, setFiatAmount] = useState('');
@@ -54,7 +54,6 @@ export default function P2PCreateOrder() {
   const [paymentWindow, setPaymentWindow] = useState(15);
   const [isTrading, setIsTrading] = useState(false);
   const [platformFee, setPlatformFee] = useState(0);
-  const [kycLimits, setKycLimits] = useState({ level1: 2000, level2: 5000, level3: 1000000 });
 
   useEffect(() => {
     if (adId) {
@@ -97,14 +96,9 @@ export default function P2PCreateOrder() {
 
   const fetchSettings = async () => {
     try {
-      const { data } = await supabase.from('app_settings').select('platform_fee, kyc_level_1_limit, kyc_level_2_limit, kyc_level_3_limit').limit(1);
-      if (data && data.length > 0) {
-        setPlatformFee(data[0].platform_fee);
-        setKycLimits({
-          level1: data[0].kyc_level_1_limit,
-          level2: data[0].kyc_level_2_limit,
-          level3: data[0].kyc_level_3_limit
-        });
+      const { data } = await supabase.from('app_settings').select('platform_fee').limit(1).single();
+      if (data) {
+        setPlatformFee(data.platform_fee || 0);
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -195,12 +189,12 @@ export default function P2PCreateOrder() {
       }
 
       // Check KYC Limits (Limits are in USD/USDT)
-      const userKycLevel = (user as any)?.kyc_level || 0;
+      const userKycLevel = profile?.kyc_level || 0;
       let currentLimit = 0;
       if (userKycLevel === 0) currentLimit = 0;
-      else if (userKycLevel === 1) currentLimit = kycLimits.level1;
-      else if (userKycLevel === 2) currentLimit = kycLimits.level2;
-      else if (userKycLevel === 3) currentLimit = kycLimits.level3;
+      else if (userKycLevel === 1) currentLimit = 2000;
+      else if (userKycLevel === 2) currentLimit = 10000;
+      else if (userKycLevel === 3) currentLimit = Infinity;
 
       if (userKycLevel < 3 && finalCrypto > currentLimit) {
         if (userKycLevel === 0) {
