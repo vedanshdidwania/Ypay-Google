@@ -754,6 +754,11 @@ BEGIN
     v_seller_id := v_order.user_id;
   END IF;
 
+  -- Security check: Only the seller or an admin can release funds
+  IF auth.uid() != v_seller_id AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Only the seller or an admin can release funds';
+  END IF;
+
   -- Update order status and record fee
   UPDATE public.orders 
   SET status = 'completed', 
@@ -820,11 +825,133 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Securely complete order (called from server)
+CREATE OR REPLACE FUNCTION public.complete_order_secure(
+  p_order_id UUID,
+  p_user_id UUID
+)
+RETURNS JSON AS $$
+DECLARE
+  v_order RECORD;
+BEGIN
+  -- Get order details
+  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
+  
+  IF v_order IS NULL THEN
+    RAISE EXCEPTION 'Order not found';
+  END IF;
+
+  -- Check if order is already completed
+  IF v_order.status = 'completed' THEN
+    RETURN row_to_json(v_order);
+  END IF;
+
+  -- Release funds (this function handles the logic)
+  -- Note: Since this is called from server with service role, 
+  -- we might need to bypass the auth.uid() check in release_p2p_order
+  -- or handle it here.
+  
+  -- Update order status and record fee
+  -- (Logic copied from release_p2p_order but without auth check)
+  PERFORM public.release_p2p_order_internal(p_order_id);
+
+  -- Get updated order
+  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
+  
+  RETURN row_to_json(v_order);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Internal function for releasing funds without auth check
+CREATE OR REPLACE FUNCTION public.release_p2p_order_internal(p_order_id UUID)
+RETURNS void AS $$
+DECLARE
+  v_order RECORD;
+  v_buyer_id UUID;
+  v_seller_id UUID;
+  v_platform_fee_pct NUMERIC;
+  v_referral_pct NUMERIC;
+  v_referral_l2_pct NUMERIC;
+  v_platform_fee_amount NUMERIC;
+  v_referral_amount NUMERIC;
+  v_net_amount NUMERIC;
+  v_referrer_id UUID;
+  v_referrer_l2_id UUID;
+BEGIN
+  -- Get order details
+  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
+  
+  IF v_order IS NULL THEN
+    RAISE EXCEPTION 'Order not found';
+  END IF;
+
+  IF v_order.status != 'paid' THEN
+    RAISE EXCEPTION 'Order must be in paid status to release funds';
+  END IF;
+
+  -- Get platform settings
+  SELECT platform_fee, referral_commission_l1, referral_commission_l2 
+  INTO v_platform_fee_pct, v_referral_pct, v_referral_l2_pct 
+  FROM public.app_settings LIMIT 1;
+
+  -- Calculate fees
+  v_platform_fee_amount := (v_order.amount_usdt * v_platform_fee_pct) / 100.0;
+  v_net_amount := v_order.amount_usdt - v_platform_fee_amount;
+
+  -- Determine buyer and seller
+  IF v_order.type = 'buy' THEN
+    v_buyer_id := v_order.user_id;
+    v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+  ELSE
+    v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+    v_seller_id := v_order.user_id;
+  END IF;
+
+  -- Update order status and record fee
+  UPDATE public.orders 
+  SET status = 'completed', 
+      escrow_released_at = NOW(),
+      platform_fee_amount = v_platform_fee_amount
+  WHERE id = p_order_id;
+
+  -- Update balances
+  UPDATE public.profiles SET balance_usdt = balance_usdt + v_net_amount WHERE id = v_buyer_id;
+  UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
+
+  -- Handle Referral Commission (L1)
+  SELECT referred_by, referred_by_l2 INTO v_referrer_id, v_referrer_l2_id 
+  FROM public.profiles WHERE id = v_buyer_id;
+  
+  IF v_referrer_id IS NOT NULL THEN
+    v_referral_amount := (v_platform_fee_amount * v_referral_pct) / 100.0;
+    IF v_referral_amount > 0 THEN
+      UPDATE public.profiles SET balance_usdt = balance_usdt + v_referral_amount, referral_earnings_l1 = referral_earnings_l1 + v_referral_amount WHERE id = v_referrer_id;
+      INSERT INTO public.referral_earnings (referrer_id, referee_id, order_id, amount) VALUES (v_referrer_id, v_buyer_id, p_order_id, v_referral_amount);
+      INSERT INTO public.notifications (user_id, title, message, type) VALUES (v_referrer_id, 'Referral Commission', 'You earned $' || v_referral_amount || ' from a referral trade!', 'success');
+    END IF;
+  END IF;
+
+  -- Handle Referral Commission (L2)
+  IF v_referrer_l2_id IS NOT NULL THEN
+    v_referral_amount := (v_platform_fee_amount * v_referral_l2_pct) / 100.0;
+    IF v_referral_amount > 0 THEN
+      UPDATE public.profiles SET balance_usdt = balance_usdt + v_referral_amount, referral_earnings_l2 = referral_earnings_l2 + v_referral_amount WHERE id = v_referrer_l2_id;
+      INSERT INTO public.referral_earnings (referrer_id, referee_id, order_id, amount) VALUES (v_referrer_l2_id, v_buyer_id, p_order_id, v_referral_amount);
+      INSERT INTO public.notifications (user_id, title, message, type) VALUES (v_referrer_l2_id, 'Indirect Referral Commission', 'You earned $' || v_referral_amount || ' from an indirect referral trade!', 'success');
+    END IF;
+  END IF;
+
+  -- Update seller stats
+  UPDATE public.profiles SET trades_completed = trades_completed + 1, total_trades = total_trades + 1 WHERE id = v_seller_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 CREATE OR REPLACE FUNCTION public.cancel_p2p_order(p_order_id UUID)
 RETURNS void AS $$
 DECLARE
   v_order RECORD;
   v_seller_id UUID;
+  v_buyer_id UUID;
 BEGIN
   -- Get order details
   SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
@@ -837,13 +964,18 @@ BEGIN
     RAISE EXCEPTION 'Order cannot be cancelled in current status';
   END IF;
 
-  -- Determine seller to return funds to
+  -- Determine seller and buyer
   IF v_order.type = 'sell' THEN
-    -- Order creator was seller
     v_seller_id := v_order.user_id;
+    v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
   ELSE
-    -- Ad creator was seller
     v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
+    v_buyer_id := v_order.user_id;
+  END IF;
+
+  -- Security check: Only the buyer, seller, or an admin can cancel
+  IF auth.uid() != v_buyer_id AND auth.uid() != v_seller_id AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Only the buyer, seller, or an admin can cancel this order';
   END IF;
 
   -- Update order status
@@ -880,6 +1012,30 @@ BEGIN
   IF v_ad IS NULL THEN
     RAISE EXCEPTION 'Ad not found';
   END IF;
+
+  -- Check KYC limits
+  DECLARE
+    v_kyc_level INTEGER;
+    v_kyc_limit NUMERIC;
+    v_settings RECORD;
+  BEGIN
+    SELECT kyc_level INTO v_kyc_level FROM public.profiles WHERE id = auth.uid();
+    SELECT * INTO v_settings FROM public.app_settings LIMIT 1;
+    
+    IF v_kyc_level = 0 THEN
+      RAISE EXCEPTION 'Please complete KYC verification to start trading';
+    ELSIF v_kyc_level = 1 THEN
+      v_kyc_limit := v_settings.kyc_level_1_limit;
+    ELSIF v_kyc_level = 2 THEN
+      v_kyc_limit := v_settings.kyc_level_2_limit;
+    ELSE
+      v_kyc_limit := v_settings.kyc_level_3_limit;
+    END IF;
+
+    IF p_amount_usdt > v_kyc_limit THEN
+      RAISE EXCEPTION 'Amount exceeds your KYC level limit of $%', v_kyc_limit;
+    END IF;
+  END;
 
   IF v_ad.user_id = auth.uid() THEN
     RAISE EXCEPTION 'You cannot trade with your own advertisement';

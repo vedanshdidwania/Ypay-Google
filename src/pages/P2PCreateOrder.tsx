@@ -47,6 +47,7 @@ export default function P2PCreateOrder() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [ad, setAd] = useState<Ad | null>(null);
+  const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [fiatAmount, setFiatAmount] = useState('');
   const [cryptoAmount, setCryptoAmount] = useState('');
@@ -96,8 +97,9 @@ export default function P2PCreateOrder() {
 
   const fetchSettings = async () => {
     try {
-      const { data } = await supabase.from('app_settings').select('platform_fee').limit(1).single();
+      const { data } = await supabase.from('app_settings').select('*').limit(1).single();
       if (data) {
+        setSettings(data);
         setPlatformFee(data.platform_fee || 0);
       }
     } catch (error) {
@@ -192,9 +194,9 @@ export default function P2PCreateOrder() {
       const userKycLevel = profile?.kyc_level || 0;
       let currentLimit = 0;
       if (userKycLevel === 0) currentLimit = 0;
-      else if (userKycLevel === 1) currentLimit = 2000;
-      else if (userKycLevel === 2) currentLimit = 10000;
-      else if (userKycLevel === 3) currentLimit = Infinity;
+      else if (userKycLevel === 1) currentLimit = settings?.kyc_level_1_limit || 2000;
+      else if (userKycLevel === 2) currentLimit = settings?.kyc_level_2_limit || 5000;
+      else if (userKycLevel === 3) currentLimit = settings?.kyc_level_3_limit || 1000000;
 
       if (userKycLevel < 3 && finalCrypto > currentLimit) {
         if (userKycLevel === 0) {
@@ -426,7 +428,7 @@ export default function P2PCreateOrder() {
                             max={ad.max_limit}
                             value={fiatAmount}
                             onChange={(e) => handleFiatChange(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-[2.5rem] px-6 sm:px-10 py-5 sm:py-8 text-2xl sm:text-5xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-gray-800" 
+                            className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-[2.5rem] px-6 sm:px-10 py-5 sm:py-8 text-2xl sm:text-5xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-white/10" 
                             placeholder={`${ad.min_limit.toLocaleString()} - ${ad.max_limit.toLocaleString()}`}
                           />
                         ) : (
@@ -436,7 +438,7 @@ export default function P2PCreateOrder() {
                             step="0.00000001"
                             value={cryptoAmount}
                             onChange={(e) => handleCryptoChange(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-[2.5rem] px-6 sm:px-10 py-5 sm:py-8 text-2xl sm:text-5xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-gray-800" 
+                            className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-[2.5rem] px-6 sm:px-10 py-5 sm:py-8 text-2xl sm:text-5xl font-display font-bold focus:outline-none focus:border-brand/50 transition-all text-white placeholder:text-white/10" 
                             placeholder="0.00"
                           />
                         )}
@@ -471,7 +473,9 @@ export default function P2PCreateOrder() {
                       <div className="flex items-baseline gap-2 sm:gap-3">
                         {inputMode === 'fiat' ? (
                           <>
-                            <p className="text-2xl sm:text-4xl font-display font-bold text-brand">{parseFloat(cryptoAmount || '0').toFixed(8)}</p>
+                            <p className="text-2xl sm:text-4xl font-display font-bold text-brand">
+                              {cryptoAmount ? parseFloat(cryptoAmount).toFixed(8) : '0.00'}
+                            </p>
                             <p className="text-xs sm:text-base font-bold text-gray-500">{ad.asset}</p>
                           </>
                         ) : (
@@ -482,17 +486,17 @@ export default function P2PCreateOrder() {
                         )}
                       </div>
                     </div>
-                    <div className="p-6 sm:p-8 bg-white/5 rounded-xl sm:rounded-[2.5rem] border border-white/5 flex flex-col justify-center">
-                      <div className="flex justify-between items-center mb-2 sm:mb-3">
-                        <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Platform Fee</span>
-                        <span className="text-[11px] sm:text-sm font-bold text-white">{cryptoFeeAmount.toFixed(8)} {ad.asset} ({platformFee}%)</span>
+                    <div className="p-6 sm:p-8 bg-white/5 rounded-xl sm:rounded-[2.5rem] border border-white/5 flex flex-col justify-center space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                        <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Platform Fee ({platformFee}%)</span>
+                        <span className="text-[11px] sm:text-sm font-bold text-white">{cryptoFeeAmount > 0 ? cryptoFeeAmount.toFixed(8) : '0.00'} {ad.asset}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Net {ad.type === 'buy' ? 'INR' : ad.asset}</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                        <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Net Amount</span>
                         <span className="text-[11px] sm:text-sm font-bold text-brand">
                           {ad.type === 'buy' 
                             ? `₹${parseFloat(fiatAmount || '0').toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                            : `${netCryptoAmount.toFixed(8)} ${ad.asset}`
+                            : `${netCryptoAmount > 0 ? netCryptoAmount.toFixed(8) : '0.00'} ${ad.asset}`
                           }
                         </span>
                       </div>

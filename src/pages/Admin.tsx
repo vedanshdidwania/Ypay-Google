@@ -846,6 +846,14 @@ function AdminOrders() {
         // Direct deposit approval
         const { error } = await supabase.rpc('approve_direct_deposit', { p_order_id: id });
         if (error) throw error;
+      } else if (status === 'rejected' && order.ad_id) {
+        // P2P Order cancellation (Admin intervention)
+        const { error } = await supabase.rpc('cancel_p2p_order', { p_order_id: id });
+        if (error) throw error;
+      } else if (status === 'completed' && order.ad_id) {
+        // P2P Order release (Admin intervention)
+        const { error } = await supabase.rpc('release_p2p_order', { p_order_id: id });
+        if (error) throw error;
       } else {
         const { error } = await supabase
           .from('orders')
@@ -1080,6 +1088,14 @@ function AdminOrders() {
                   className="w-full py-3 bg-brand hover:bg-brand/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand/20"
                 >
                   Mark as Paid
+                </button>
+              )}
+              {selectedOrder.ad_id && (selectedOrder.status === 'paid' || selectedOrder.status === 'disputed') && (
+                <button
+                  onClick={() => updateStatus(selectedOrder.id, 'completed')}
+                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-600/20"
+                >
+                  Release Funds (Admin)
                 </button>
               )}
             </div>
@@ -1349,7 +1365,15 @@ function AdminUsers() {
 
   const handleManageUser = (user: UserProfile) => {
     setSelectedUser(user);
-    setEditForm(user);
+    setEditForm({
+      full_name: user.full_name,
+      balance_usdt: user.balance_usdt,
+      is_admin: user.is_admin,
+      is_verified_merchant: user.is_verified_merchant,
+      is_disabled: user.is_disabled,
+      kyc_status: user.kyc_status,
+      kyc_level: user.kyc_level
+    });
     fetchUserPaymentMethods(user.id);
     setIsEditing(true);
   };
@@ -1368,7 +1392,8 @@ function AdminUsers() {
           is_admin: editForm.is_admin,
           is_verified_merchant: editForm.is_verified_merchant,
           is_disabled: editForm.is_disabled,
-          kyc_status: editForm.kyc_status
+          kyc_status: editForm.kyc_status,
+          kyc_level: editForm.kyc_level
         })
         .eq('id', selectedUser.id);
 
@@ -1505,6 +1530,19 @@ function AdminUsers() {
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">KYC Level</label>
+                  <select
+                    value={editForm.kyc_level || 0}
+                    onChange={(e) => setEditForm({ ...editForm, kyc_level: parseInt(e.target.value) })}
+                    className="input-field"
+                  >
+                    <option value={0}>Level 0 (No Trade)</option>
+                    <option value={1}>Level 1</option>
+                    <option value={2}>Level 2</option>
+                    <option value={3}>Level 3</option>
                   </select>
                 </div>
                 <div className="flex flex-col gap-4 pt-4">
