@@ -49,6 +49,23 @@ CREATE TABLE IF NOT EXISTS ads (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
+-- Trigger to prevent posting a sell ad if balance is insufficient
+CREATE OR REPLACE FUNCTION public.check_ad_balance()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.type = 'sell' AND NEW.status = 'active' THEN
+    IF (SELECT balance_usdt FROM public.profiles WHERE id = NEW.user_id) < NEW.total_amount THEN
+      RAISE EXCEPTION 'Insufficient balance to post this sell advertisement. You need at least % USDT.', NEW.total_amount;
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER trg_check_ad_balance
+BEFORE INSERT OR UPDATE ON public.ads
+FOR EACH ROW EXECUTE FUNCTION public.check_ad_balance();
+
 -- Create orders table
 CREATE TABLE IF NOT EXISTS orders (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -1013,30 +1030,6 @@ BEGIN
     RAISE EXCEPTION 'Ad not found';
   END IF;
 
-  -- Check KYC limits
-  DECLARE
-    v_kyc_level INTEGER;
-    v_kyc_limit NUMERIC;
-    v_settings RECORD;
-  BEGIN
-    SELECT kyc_level INTO v_kyc_level FROM public.profiles WHERE id = auth.uid();
-    SELECT * INTO v_settings FROM public.app_settings LIMIT 1;
-    
-    IF v_kyc_level = 0 THEN
-      RAISE EXCEPTION 'Please complete KYC verification to start trading';
-    ELSIF v_kyc_level = 1 THEN
-      v_kyc_limit := v_settings.kyc_level_1_limit;
-    ELSIF v_kyc_level = 2 THEN
-      v_kyc_limit := v_settings.kyc_level_2_limit;
-    ELSE
-      v_kyc_limit := v_settings.kyc_level_3_limit;
-    END IF;
-
-    IF p_amount_usdt > v_kyc_limit THEN
-      RAISE EXCEPTION 'Amount exceeds your KYC level limit of $%', v_kyc_limit;
-    END IF;
-  END;
-
   IF v_ad.user_id = auth.uid() THEN
     RAISE EXCEPTION 'You cannot trade with your own advertisement';
   END IF;
@@ -1067,7 +1060,7 @@ BEGIN
 
   -- Check seller balance
   IF (SELECT balance_usdt FROM public.profiles WHERE id = v_seller_id) < p_amount_usdt THEN
-    RAISE EXCEPTION 'Seller has insufficient balance';
+    RAISE EXCEPTION 'Insufficient funds: Seller does not have enough USDT for this trade';
   END IF;
 
   -- Get platform fee from settings

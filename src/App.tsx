@@ -20,9 +20,8 @@ import MyAds from './pages/MyAds';
 import Wallet from './pages/Wallet';
 import Orders from './pages/Orders';
 import Transactions from './pages/Transactions';
-import KYC from './pages/KYC';
-import Info from './pages/Info';
 import Referrals from './pages/Referrals';
+import Info from './pages/Info';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Support from './components/Support';
@@ -87,7 +86,6 @@ export default function App() {
               <Route path="/transactions" element={<PrivateRoute><Transactions /></PrivateRoute>} />
               <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
               <Route path="/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />
-              <Route path="/kyc" element={<PrivateRoute><KYC /></PrivateRoute>} />
               <Route path="/referrals" element={<PrivateRoute><Referrals /></PrivateRoute>} />
               <Route path="/buy" element={<PrivateRoute><Buy /></PrivateRoute>} />
               <Route path="/sell" element={<PrivateRoute><Sell /></PrivateRoute>} />

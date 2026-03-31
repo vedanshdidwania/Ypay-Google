@@ -62,7 +62,6 @@ export default function Admin() {
   const menuItems = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, path: '/admin' },
     { id: 'orders', label: 'Orders', icon: ShoppingBag, path: '/admin/orders' },
-    { id: 'kyc', label: 'KYC Review', icon: ShieldCheck, path: '/admin/kyc' },
     { id: 'disputes', label: 'Disputes', icon: AlertTriangle, path: '/admin/disputes' },
     { id: 'withdrawals', label: 'Withdrawals', icon: CreditCard, path: '/admin/withdrawals' },
     { id: 'merchants', label: 'Merchants', icon: ShieldCheck, path: '/admin/merchants' },
@@ -112,7 +111,6 @@ export default function Admin() {
           <Routes>
             <Route index element={<AdminDashboard />} />
             <Route path="orders" element={<AdminOrders />} />
-            <Route path="kyc" element={<AdminKYC />} />
             <Route path="disputes" element={<AdminDisputes />} />
             <Route path="withdrawals" element={<AdminWithdrawals />} />
             <Route path="merchants" element={<AdminMerchants />} />
@@ -176,11 +174,10 @@ function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      const [ordersRes, usersRes, recentRes, kycRes, disputesRes, withdrawalsRes] = await Promise.all([
+      const [ordersRes, usersRes, recentRes, disputesRes, withdrawalsRes] = await Promise.all([
         supabase.from('orders').select('*'),
         supabase.from('profiles').select('*', { count: 'exact' }),
         supabase.from('orders').select('*, profiles(email)').order('created_at', { ascending: false }).limit(5),
-        supabase.from('kyc_submissions').select('*', { count: 'exact' }).eq('status', 'pending'),
         supabase.from('p2p_disputes').select('*', { count: 'exact' }).eq('status', 'open'),
         supabase.from('withdrawals').select('*', { count: 'exact' }).eq('status', 'pending')
       ]);
@@ -194,7 +191,6 @@ function AdminDashboard() {
           pendingOrders: pending,
           totalUsers: usersRes.count || 0,
           totalVolume: volume,
-          pendingKYC: kycRes.count || 0,
           openDisputes: disputesRes.count || 0,
           pendingWithdrawals: withdrawalsRes.count || 0
         }));

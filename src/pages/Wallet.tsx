@@ -185,12 +185,12 @@ export default function Wallet() {
                 </div>
               </div>
               <div className="p-5 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-blue-500/30 transition-colors">
-                <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">KYC Level</div>
+                <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Merchant Status</div>
                 <div className={cn(
                   "text-sm sm:text-base font-bold uppercase tracking-wider",
-                  profile?.kyc_status === 'approved' ? "text-green-400" : "text-yellow-400"
+                  profile?.is_verified_merchant ? "text-green-400" : "text-gray-400"
                 )}>
-                  {profile?.kyc_status || 'Unverified'}
+                  {profile?.is_verified_merchant ? 'Verified' : 'Standard'}
                 </div>
               </div>
             </div>

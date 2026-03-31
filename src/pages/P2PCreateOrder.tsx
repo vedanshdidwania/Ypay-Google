@@ -190,24 +190,6 @@ export default function P2PCreateOrder() {
         return;
       }
 
-      // Check KYC Limits (Limits are in USD/USDT)
-      const userKycLevel = profile?.kyc_level || 0;
-      let currentLimit = 0;
-      if (userKycLevel === 0) currentLimit = 0;
-      else if (userKycLevel === 1) currentLimit = settings?.kyc_level_1_limit || 2000;
-      else if (userKycLevel === 2) currentLimit = settings?.kyc_level_2_limit || 5000;
-      else if (userKycLevel === 3) currentLimit = settings?.kyc_level_3_limit || 1000000;
-
-      if (userKycLevel < 3 && finalCrypto > currentLimit) {
-        if (userKycLevel === 0) {
-          toast.error('Please complete KYC verification to start trading');
-          navigate('/kyc');
-        } else {
-          toast.error(`Your current KYC level (${userKycLevel}) limit is $${currentLimit.toLocaleString()}. Please upgrade your KYC for higher limits.`);
-        }
-        return;
-      }
-
       console.log('Starting P2P trade with params:', {
         p_ad_id: ad.id,
         p_amount_usdt: finalCrypto,
