@@ -93,12 +93,12 @@ export default function Orders() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] pt-24 pb-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-10 sm:mb-14">
+    <div className="min-h-screen bg-background page-padding">
+      <div className="responsive-container">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12 sm:mb-16">
           <div className="text-center lg:text-left">
-            <h1 className="text-3xl sm:text-5xl font-bold text-white mb-3">My Orders</h1>
-            <p className="text-gray-500 uppercase tracking-widest text-xs sm:text-sm font-bold">Track your P2P trade status</p>
+            <h1 className="heading-xl mb-3">My Orders</h1>
+            <p className="label-xs">Track your P2P trade status</p>
           </div>
 
           <div className="flex items-center justify-center gap-2 p-2 bg-white/5 border border-white/10 rounded-xl overflow-x-auto no-scrollbar">
@@ -106,7 +106,7 @@ export default function Orders() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 sm:px-8 py-3 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+                className={`px-6 sm:px-8 py-3 rounded-lg label-xs transition-all whitespace-nowrap ${
                   activeTab === tab ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-gray-500 hover:text-white'
                 }`}
               >
@@ -122,7 +122,7 @@ export default function Orders() {
               key={order.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="card p-6 sm:p-8 hover:border-white/20 transition-all group"
+              className="card card-padding hover:border-white/20 transition-all group"
             >
               <Link to={`/p2p/order/${order.id}`} className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
                 <div className="flex items-center gap-6 sm:gap-8">
@@ -134,7 +134,7 @@ export default function Orders() {
                   
                   <div className="min-w-0">
                     <div className="flex items-center gap-3 sm:gap-4 mb-2">
-                      <span className={`text-xs sm:text-base font-bold uppercase tracking-widest ${
+                      <span className={`label-xs ${
                         order.type === 'buy' ? 'text-green-500' : 'text-red-500'
                       }`}>
                         {order.type} USDT
@@ -153,7 +153,7 @@ export default function Orders() {
                 <div className="flex flex-row items-center justify-between lg:justify-end gap-6 sm:gap-10 pt-6 lg:pt-0 border-t lg:border-none border-white/5">
                   <div className="flex items-center gap-6 sm:gap-10">
                     <div className="text-left lg:text-right">
-                      <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Status</p>
+                      <p className="label-xs mb-1.5">Status</p>
                       <div className="flex items-center gap-2 sm:gap-3 lg:justify-end">
                         {order.status === 'completed' ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" /> : 
                          order.status === 'cancelled' ? <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" /> : 
@@ -169,7 +169,7 @@ export default function Orders() {
                     </div>
 
                     <div className="text-right">
-                      <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Date</p>
+                      <p className="label-xs mb-1.5">Date</p>
                       <p className="text-sm sm:text-base font-bold text-white">{new Date(order.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>

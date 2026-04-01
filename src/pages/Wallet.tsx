@@ -25,6 +25,7 @@ export default function Wallet() {
   const [showWithdrawSuccess, setShowWithdrawSuccess] = useState(false);
   const [withdrawTxHash, setWithdrawTxHash] = useState('');
   const [depositData, setDepositData] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [copied, setCopied] = useState(false);
 
   const NETWORK_FEE = 1.00;
@@ -147,47 +148,47 @@ export default function Wallet() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="cyber-card p-6 sm:p-8 group relative overflow-hidden"
+            className="cyber-card p-5 sm:p-8 group relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 animate-gradient-x" />
             
-            <div className="flex justify-between items-start mb-8 sm:mb-10">
-              <div className="space-y-2">
-                <h2 className="text-xs sm:text-sm font-bold text-gray-500 tracking-[0.4em] uppercase">Liquidity Reserve</h2>
-                <p className="text-[10px] sm:text-xs font-mono text-blue-400/60 uppercase">Network: TRON (TRC20)</p>
+            <div className="flex justify-between items-start mb-6 sm:mb-10">
+              <div className="space-y-1.5">
+                <h2 className="text-[10px] sm:text-sm font-bold text-gray-500 tracking-[0.4em] uppercase">Liquidity Reserve</h2>
+                <p className="text-[9px] sm:text-xs font-mono text-blue-400/60 uppercase">Network: TRON (TRC20)</p>
               </div>
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 shadow-lg shadow-blue-500/10">
-                <WalletIcon className="w-6 h-6 sm:w-7 sm:h-7" />
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 shadow-lg shadow-blue-500/10">
+                <WalletIcon className="w-5 h-5 sm:w-7 sm:h-7" />
               </div>
             </div>
 
-            <div className="space-y-3 mb-8 sm:mb-10">
-              <div className="text-4xl sm:text-6xl font-display text-white tracking-tighter leading-none">
+            <div className="space-y-2 mb-6 sm:mb-10">
+              <div className="text-3xl sm:text-6xl font-display text-white tracking-tighter leading-none">
                 {profile?.balance_usdt?.toFixed(2) || '0.00'}
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-xl sm:text-2xl font-display text-blue-500 font-bold">USDT</span>
+              <div className="flex items-center gap-2.5">
+                <span className="text-lg sm:text-2xl font-display text-blue-500 font-bold">USDT</span>
                 <div className="h-px flex-1 bg-white/[0.08]" />
                 <button 
                   onClick={handleDemoBalance}
-                  className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest rounded-lg border border-blue-500/20 transition-all shadow-lg shadow-blue-500/5 active:scale-95"
+                  className="px-2.5 py-1 sm:px-4 sm:py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[9px] sm:text-xs font-bold uppercase tracking-widest rounded-lg border border-blue-500/20 transition-all shadow-lg shadow-blue-500/5 active:scale-95"
                 >
                   Demo +1000
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 sm:gap-8">
-              <div className="p-5 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-blue-500/30 transition-colors">
-                <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Escrow Balance</div>
-                <div className="text-sm sm:text-base font-bold text-amber-400 uppercase tracking-wider font-mono">
+            <div className="grid grid-cols-2 gap-4 sm:gap-8">
+              <div className="p-4 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-blue-500/30 transition-colors">
+                <div className="text-[9px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 sm:mb-3">Escrow Balance</div>
+                <div className="text-xs sm:text-base font-bold text-amber-400 uppercase tracking-wider font-mono">
                   {profile?.escrow_balance_usdt?.toFixed(2) || '0.00'} USDT
                 </div>
               </div>
-              <div className="p-5 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-blue-500/30 transition-colors">
-                <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Merchant Status</div>
+              <div className="p-4 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-blue-500/30 transition-colors">
+                <div className="text-[9px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 sm:mb-3">Merchant Status</div>
                 <div className={cn(
-                  "text-sm sm:text-base font-bold uppercase tracking-wider",
+                  "text-xs sm:text-base font-bold uppercase tracking-wider",
                   profile?.is_verified_merchant ? "text-green-400" : "text-gray-400"
                 )}>
                   {profile?.is_verified_merchant ? 'Verified' : 'Standard'}
@@ -203,16 +204,39 @@ export default function Wallet() {
 
           {/* Action Module */}
           <div className="cyber-card p-5 sm:p-8">
-            <div className="flex items-center gap-3 mb-6 sm:mb-8">
-              <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
-              <h3 className="text-base sm:text-lg font-display uppercase tracking-widest text-white">Transfer Protocol</h3>
+            <div className="flex items-center justify-between mb-6 sm:mb-8">
+              <div className="flex items-center gap-3">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
+                <h3 className="text-base sm:text-lg font-display uppercase tracking-widest text-white">Transfer Protocol</h3>
+              </div>
+              {/* Mobile Tab Switcher */}
+              <div className="flex lg:hidden bg-white/[0.03] p-1 rounded-xl border border-white/[0.08]">
+                <button
+                  onClick={() => setActiveTab('deposit')}
+                  className={cn(
+                    "px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all",
+                    activeTab === 'deposit' ? "bg-white text-black" : "text-gray-500"
+                  )}
+                >
+                  In
+                </button>
+                <button
+                  onClick={() => setActiveTab('withdraw')}
+                  className={cn(
+                    "px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all",
+                    activeTab === 'withdraw' ? "bg-white text-black" : "text-gray-500"
+                  )}
+                >
+                  Out
+                </button>
+              </div>
             </div>
 
             {error && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="mb-8 sm:mb-10 p-4 sm:p-5 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-4 text-red-400 text-xs sm:text-sm font-medium"
+                className="mb-6 sm:mb-10 p-4 sm:p-5 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-4 text-red-400 text-xs sm:text-sm font-medium"
               >
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <span>{error}</span>
@@ -221,10 +245,10 @@ export default function Wallet() {
 
             <div className="space-y-12 sm:space-y-16">
               {/* Deposit Section */}
-              <div className="space-y-8">
+              <div className={cn("space-y-8", activeTab === 'deposit' ? "block" : "hidden lg:block")}>
                 <div className="flex justify-between items-end">
-                  <label className="text-xs sm:text-sm font-bold text-gray-500 tracking-[0.3em] uppercase">Inbound Capital</label>
-                  <span className="text-[10px] sm:text-xs font-mono text-green-400/60">GATEWAY: NOWPAYMENTS</span>
+                  <label className="text-[10px] sm:text-sm font-bold text-gray-500 tracking-[0.3em] uppercase">Inbound Capital</label>
+                  <span className="text-[9px] sm:text-xs font-mono text-green-400/60">GATEWAY: NOWPAYMENTS</span>
                 </div>
                 <form onSubmit={handleDeposit} className="space-y-6">
                   <div className="relative">
@@ -251,15 +275,15 @@ export default function Wallet() {
                 </form>
               </div>
 
-              <div className="h-px bg-white/[0.08] relative">
+              <div className="hidden lg:block h-px bg-white/[0.08] relative">
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-8 sm:px-10 bg-[#0a0a0a] text-[11px] sm:text-xs font-bold text-gray-700 uppercase tracking-[0.4em] whitespace-nowrap">SECURE GATEWAY</div>
               </div>
 
               {/* Withdraw Section */}
-              <div className="space-y-8">
+              <div className={cn("space-y-8", activeTab === 'withdraw' ? "block" : "hidden lg:block")}>
                 <div className="flex justify-between items-end">
-                  <label className="text-xs sm:text-sm font-bold text-gray-500 tracking-[0.3em] uppercase">Outbound Settlement</label>
-                  <span className="text-[10px] sm:text-xs font-mono text-red-400/60">NETWORK: TRC20</span>
+                  <label className="text-[10px] sm:text-sm font-bold text-gray-500 tracking-[0.3em] uppercase">Outbound Settlement</label>
+                  <span className="text-[9px] sm:text-xs font-mono text-red-400/60">NETWORK: TRC20</span>
                 </div>
                 <form onSubmit={handleWithdraw} className="space-y-6">
                   <div className="relative">
@@ -272,7 +296,7 @@ export default function Wallet() {
                     />
                     <div className="absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 font-display text-lg sm:text-xl text-gray-700">USDT</div>
                   </div>
-                  <div className="flex justify-between text-[10px] sm:text-xs font-bold uppercase tracking-widest px-2 text-gray-600">
+                  <div className="flex justify-between text-[9px] sm:text-xs font-bold uppercase tracking-widest px-2 text-gray-600">
                     <span>Min: 10.00</span>
                     <span>Fee: 1.00</span>
                   </div>

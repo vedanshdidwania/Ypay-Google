@@ -86,30 +86,30 @@ export default function Transactions() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-brand animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] pt-24 pb-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 sm:mb-14">
+    <div className="min-h-screen bg-background page-padding">
+      <div className="responsive-container">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 sm:mb-16">
           <div className="text-center md:text-left">
-            <h1 className="text-3xl sm:text-5xl font-bold text-white mb-3">Transaction History</h1>
-            <p className="text-gray-500 uppercase tracking-widest text-xs sm:text-sm font-bold">Monitor your financial activity</p>
+            <h1 className="heading-xl mb-3">Transaction History</h1>
+            <p className="label-xs">Monitor your financial activity</p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="flex items-center gap-4 w-full sm:w-auto">
               <button 
                 onClick={handleExport}
-                className="flex-1 sm:flex-none p-4 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-3"
+                className="flex-1 sm:flex-none px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-3"
                 title="Export to CSV"
               >
                 <Download className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-xs sm:text-sm font-bold uppercase tracking-widest">Export</span>
+                <span className="label-xs">Export</span>
               </button>
               <button className="sm:hidden p-4 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors">
                 <Filter className="w-5 h-5" />
@@ -126,7 +126,7 @@ export default function Transactions() {
               />
             </div>
             <button className="hidden sm:block p-4 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors">
-              <Filter className="w-6 h-6" />
+              <Filter className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
@@ -136,12 +136,12 @@ export default function Transactions() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-bottom border-white/5">
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Type</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Amount</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Hash</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Date</th>
+                <tr className="border-b border-white/5">
+                  <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-widest">Type</th>
+                  <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-widest">Amount</th>
+                  <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                  <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-widest">Hash</th>
+                  <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-widest">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -152,7 +152,7 @@ export default function Transactions() {
                     animate={{ opacity: 1 }}
                     className="hover:bg-white/[0.02] transition-colors"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                           tx.type === 'deposit' ? 'bg-green-500/10 text-green-500' : 
@@ -164,11 +164,11 @@ export default function Transactions() {
                         <span className="text-sm font-bold text-white capitalize">{tx.type.replace('_', ' ')}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <span className="text-sm font-bold text-white">{formatUSDT(tx.amount)}</span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                    <td className="px-6 py-5">
+                      <span className={`px-2.5 py-1 rounded-md label-xs ${
                         tx.status === 'completed' ? 'bg-green-500/10 text-green-500' : 
                         tx.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
                         'bg-red-500/10 text-red-500'
@@ -176,13 +176,13 @@ export default function Transactions() {
                         {tx.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <div className="flex items-center gap-2 text-xs text-gray-500 font-mono">
                         {tx.tx_hash?.substring(0, 12)}...
                         <ExternalLink className="w-3 h-3" />
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <Clock className="w-3 h-3" />
                         {new Date(tx.created_at).toLocaleDateString()}
@@ -214,12 +214,12 @@ export default function Transactions() {
                     </div>
                     <div>
                       <p className="text-base font-bold text-white capitalize">{tx.type.replace('_', ' ')}</p>
-                      <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{new Date(tx.created_at).toLocaleDateString()}</p>
+                      <p className="label-xs">{new Date(tx.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-bold text-white">{formatUSDT(tx.amount)}</p>
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                    <span className={`px-3 py-1 rounded-full label-xs ${
                       tx.status === 'completed' ? 'bg-green-500/10 text-green-500' : 
                       tx.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
                       'bg-red-500/10 text-red-500'
@@ -230,7 +230,7 @@ export default function Transactions() {
                 </div>
                 {tx.tx_hash && (
                   <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">TX Hash</span>
+                    <span className="label-xs">TX Hash</span>
                     <div className="flex items-center gap-2 text-xs text-brand font-mono">
                       {tx.tx_hash.substring(0, 16)}...
                       <ExternalLink className="w-4 h-4" />

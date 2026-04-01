@@ -148,7 +148,7 @@ export default function MyAds() {
 
   return (
     <div className="min-h-screen bg-[#050505] pt-20 sm:pt-24 pb-8 sm:pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="responsive-container page-padding">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 mb-10 sm:mb-14">
           <div className="flex items-center gap-4 sm:gap-6">
             <button 
@@ -158,8 +158,8 @@ export default function MyAds() {
               <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             <div>
-              <h1 className="text-2xl sm:text-4xl font-display font-bold text-white">My Advertisements</h1>
-              <p className="text-xs sm:text-base text-gray-400 mt-1 sm:mt-2">Manage your active P2P listings and trade terms.</p>
+              <h1 className="heading-xl mb-1">My Advertisements</h1>
+              <p className="text-sm text-gray-500">Manage your active P2P listings and trade terms.</p>
             </div>
           </div>
           
@@ -175,7 +175,7 @@ export default function MyAds() {
         {loading ? (
           <div className="card p-12 sm:p-20 flex flex-col items-center justify-center">
             <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin text-brand mb-3 sm:mb-4" />
-            <p className="text-[10px] sm:text-sm text-gray-500">Loading your ads...</p>
+            <p className="label-xs">Loading your ads...</p>
           </div>
         ) : ads.length === 0 ? (
           <div className="card p-12 sm:p-20 text-center">
@@ -183,10 +183,10 @@ export default function MyAds() {
               <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 text-gray-600" />
             </div>
             <h3 className="text-lg sm:text-xl font-bold text-white mb-1.5 sm:mb-2">No Ads Found</h3>
-            <p className="text-[10px] sm:text-sm text-gray-500 mb-6 sm:mb-8">You haven't posted any advertisements yet.</p>
+            <p className="text-sm text-gray-500 mb-6 sm:mb-8">You haven't posted any advertisements yet.</p>
             <button 
               onClick={() => navigate('/p2p')}
-              className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-brand text-white font-bold rounded-lg sm:rounded-xl hover:bg-brand/90 transition-all text-xs sm:text-sm"
+              className="btn-primary w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3"
             >
               Post Your First Ad
             </button>
@@ -198,7 +198,7 @@ export default function MyAds() {
                 key={ad.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="card p-6 sm:p-8 hover:border-white/20 transition-all group"
+                className="card card-padding hover:border-white/20 transition-all group"
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 sm:gap-8">
                   <div className="flex items-center gap-6 sm:gap-8">
@@ -218,7 +218,7 @@ export default function MyAds() {
                           {ad.status}
                         </span>
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">
+                      <div className="label-xs flex flex-wrap items-center gap-x-4 gap-y-2">
                         <span>Limit: {formatCurrency(ad.min_limit)} - {formatCurrency(ad.max_limit)}</span>
                         <span className="hidden sm:inline">•</span>
                         <span className="truncate max-w-[200px] sm:max-w-none">{ad.payment_methods.join(', ')}</span>
@@ -238,7 +238,7 @@ export default function MyAds() {
                       title={ad.status === 'active' ? 'Pause Ad' : 'Resume Ad'}
                     >
                       {ad.status === 'active' ? <Pause className="w-5 h-5 sm:w-6 sm:h-6" /> : <Play className="w-5 h-5 sm:w-6 sm:h-6" />}
-                      <span className="sm:hidden ml-2 text-xs font-bold uppercase tracking-widest">
+                      <span className="sm:hidden ml-2 label-xs">
                         {ad.status === 'active' ? 'Pause' : 'Resume'}
                       </span>
                     </button>
@@ -253,7 +253,7 @@ export default function MyAds() {
                       title="Delete Ad"
                     >
                       <Trash2 className="w-5 h-5 sm:w-6 sm:h-6" />
-                      <span className="sm:hidden ml-2 text-xs font-bold uppercase tracking-widest">Delete</span>
+                      <span className="sm:hidden ml-2 label-xs">Delete</span>
                     </button>
                   </div>
                 </div>
@@ -267,8 +267,8 @@ export default function MyAds() {
             <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-xs sm:text-sm font-bold text-white">Important Note</p>
-            <p className="text-[10px] sm:text-xs text-gray-400">Ensure your payment methods are up to date. Inactive ads will not be visible in the marketplace.</p>
+            <p className="text-sm font-bold text-white">Important Note</p>
+            <p className="label-xs">Ensure your payment methods are up to date. Inactive ads will not be visible in the marketplace.</p>
           </div>
         </div>
       </div>

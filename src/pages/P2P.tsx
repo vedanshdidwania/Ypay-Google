@@ -340,13 +340,13 @@ export default function P2P() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] pt-20 sm:pt-24 pb-8 sm:pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background page-padding">
+      <div className="responsive-container">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 sm:mb-10 md:mb-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 sm:mb-12">
           <div className="text-center md:text-left">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-white tracking-tight">P2P Marketplace</h1>
-            <p className="text-sm sm:text-base md:text-lg text-gray-400 mt-3 sm:mt-4 flex items-center justify-center md:justify-start gap-2 sm:gap-3">
+            <h1 className="heading-xl">P2P Marketplace</h1>
+            <p className="text-sm sm:text-base md:text-lg text-gray-400 mt-4 flex items-center justify-center md:justify-start gap-3">
               <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
               Direct fiat-to-crypto settlements with verified merchants.
             </p>
@@ -389,12 +389,12 @@ export default function P2P() {
         </div>
 
         {/* Filters Bar */}
-        <div className="card p-4 sm:p-6 mb-8 md:mb-10 flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
+        <div className="card card-padding mb-8 md:mb-10 flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
           <div className="flex items-center gap-2 p-1.5 bg-white/5 border border-white/10 rounded-2xl w-full lg:w-auto">
             <button
               onClick={() => setFilterType('buy')}
               className={cn(
-                "flex-1 lg:flex-none px-6 sm:px-12 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-bold transition-all",
+                "flex-1 lg:flex-none px-6 sm:px-12 py-3.5 rounded-xl text-sm sm:text-base font-bold transition-all",
                 filterType === 'buy' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -403,7 +403,7 @@ export default function P2P() {
             <button
               onClick={() => setFilterType('sell')}
               className={cn(
-                "flex-1 lg:flex-none px-6 sm:px-12 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-bold transition-all",
+                "flex-1 lg:flex-none px-6 sm:px-12 py-3.5 rounded-xl text-sm sm:text-base font-bold transition-all",
                 filterType === 'sell' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -506,10 +506,10 @@ export default function P2P() {
                 }}
                 whileTap={{ scale: 0.99 }}
                 style={{ perspective: 1000 }}
-                className="card p-6 sm:p-10 hover:border-brand/30 transition-all group relative overflow-hidden"
+                className="card card-padding hover:border-brand/30 transition-all group relative overflow-hidden"
               >
                 {ad.user_profile?.has_verification_badge && (
-                  <div className="absolute top-0 right-0 bg-brand/10 text-brand px-5 sm:px-8 py-2 rounded-bl-xl sm:rounded-bl-[2rem] text-[11px] sm:text-[13px] font-bold uppercase tracking-widest border-l border-b border-brand/20 flex items-center gap-2 sm:gap-2.5">
+                  <div className="absolute top-0 right-0 bg-brand/10 text-brand px-5 sm:px-8 py-2 rounded-bl-xl sm:rounded-bl-[2rem] label-xs border-l border-b border-brand/20 flex items-center gap-2 sm:gap-2.5">
                     <Award className="w-4 h-4 sm:w-5 sm:h-5" />
                     Top Merchant
                   </div>
@@ -545,11 +545,11 @@ export default function P2P() {
                           </button>
                         </div>
                         <div className="flex items-center gap-2 md:gap-3 mt-1">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                          <span className="label-xs text-gray-500">
                             {ad.user_profile?.trades_completed || 0} Trades
                           </span>
                           <span className="w-0.5 h-0.5 bg-gray-700 rounded-full" />
-                          <span className="text-[9px] sm:text-[10px] font-bold text-brand uppercase tracking-widest">
+                          <span className="label-xs text-brand">
                             {ad.user_profile?.completion_rate || 0}% Success
                           </span>
                         </div>
@@ -558,13 +558,13 @@ export default function P2P() {
 
                     {/* Price Info */}
                     <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start border-t md:border-none border-white/5 pt-3 md:pt-0">
-                      <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Price per {selectedAsset}</p>
+                      <p className="label-xs mb-1">Price per {selectedAsset}</p>
                       <div className="flex flex-col items-end">
                         <p className="text-xl sm:text-2xl font-display font-bold text-white leading-none">
                           ₹{ad.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </p>
                         {ad.pricing_type === 'dynamic' && (
-                          <span className="text-[9px] sm:text-[10px] font-bold text-green-500 uppercase tracking-widest mt-1 flex items-center gap-1">
+                          <span className="label-xs text-green-500 mt-1 flex items-center gap-1">
                             <Activity className="w-2.5 h-2.5 sm:w-3 h-3" />
                             Market +{ad.margin}%
                           </span>
@@ -577,23 +577,23 @@ export default function P2P() {
                     {/* Limits & Payment */}
                     <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
                       <div>
-                        <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Available</p>
+                        <p className="label-xs mb-1">Available</p>
                         <p className="text-sm sm:text-base font-bold text-brand">
                           {ad.total_amount?.toFixed(2) || '0.00'} {ad.asset}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Limits</p>
+                        <p className="label-xs mb-1">Limits</p>
                         <p className="text-sm sm:text-base font-bold text-white">
                           {formatCurrency(ad.min_limit)} - {formatCurrency(ad.max_limit)}
                         </p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Payment Methods</p>
+                      <p className="label-xs mb-2">Payment Methods</p>
                       <div className="flex flex-wrap gap-1.5">
                         {ad.payment_methods.map((pm, i) => (
-                          <span key={i} className="px-2.5 py-1 bg-white/5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest rounded-lg border border-white/10">
+                          <span key={i} className="px-2.5 py-1 bg-white/5 label-xs text-gray-400 rounded-lg border border-white/10">
                             {pm}
                           </span>
                         ))}
@@ -604,13 +604,13 @@ export default function P2P() {
                     <div className="flex items-center gap-4 md:justify-center">
                       <div className="flex items-center gap-2">
                         <Zap className="w-4 h-4 text-brand" />
-                        <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        <span className="label-xs text-gray-500">
                           {ad.user_profile?.speed_rating || 5.0} Speed
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MessageSquare className="w-4 h-4 text-brand" />
-                        <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        <span className="label-xs text-gray-500">
                           {ad.user_profile?.comm_rating || 5.0} Comm
                         </span>
                       </div>
@@ -636,7 +636,7 @@ export default function P2P() {
         </div>
 
         {/* Trust Banner */}
-        <div className="mt-12 sm:mt-16 p-8 sm:p-10 bg-gradient-to-r from-brand/10 to-transparent border border-brand/20 rounded-3xl sm:rounded-[2.5rem] flex flex-col md:flex-row items-center gap-8 sm:gap-10">
+        <div className="mt-12 sm:mt-16 p-8 sm:p-12 bg-gradient-to-r from-brand/10 to-transparent border border-brand/20 rounded-3xl sm:rounded-[3rem] flex flex-col md:flex-row items-center gap-8 sm:gap-12">
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand/20 rounded-2xl sm:rounded-3xl flex items-center justify-center text-brand shadow-xl border border-brand/30 shrink-0">
             <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
@@ -644,7 +644,7 @@ export default function P2P() {
             <h4 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Institutional-Grade Escrow Protection</h4>
             <p className="text-sm sm:text-base text-gray-400 leading-relaxed">Our automated settlement protocol locks funds the moment a trade starts. Your crypto is released only when payment is confirmed by both parties.</p>
           </div>
-          <button className="w-full md:w-auto px-10 py-5 sm:py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl sm:rounded-3xl text-base sm:text-lg font-bold text-white transition-all">
+          <button className="w-full md:w-auto px-10 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl sm:rounded-3xl text-base sm:text-lg font-bold text-white transition-all">
             Learn More
           </button>
         </div>

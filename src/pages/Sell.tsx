@@ -66,7 +66,7 @@ export default function Sell() {
 
   return (
     <div className="min-h-screen bg-[#050505] pt-24 pb-12">
-      <div className="max-w-3xl mx-auto px-4 py-12">
+      <div className="responsive-container page-padding max-w-3xl">
         {/* Progress Bar */}
         <div className="flex items-center justify-between mb-12 relative">
           <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white/5 -translate-y-1/2 -z-10" />
@@ -83,7 +83,7 @@ export default function Sell() {
           ))}
         </div>
 
-        <div className="card p-8">
+        <div className="card card-padding">
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
               {error}
@@ -91,10 +91,10 @@ export default function Sell() {
           )}
           {step === 1 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-              <h2 className="text-2xl font-bold mb-6 text-white">Enter USDT Amount</h2>
+              <h2 className="heading-lg mb-6 text-white">Enter USDT Amount</h2>
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">You Sell (USDT)</label>
+                  <label className="label-xs mb-2 block">You Sell (USDT)</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -116,7 +116,7 @@ export default function Sell() {
                       {formatCurrency((parseFloat(usdtAmount || '0') * (settings?.sell_rate || 1)) * (1 - (settings?.platform_fee || 0) / 100))}
                     </div>
                     {settings?.platform_fee && (
-                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">
+                      <div className="label-xs mt-1">
                         Incl. {settings.platform_fee}% Protocol Fee
                       </div>
                     )}
@@ -125,7 +125,7 @@ export default function Sell() {
                 <button
                   disabled={!usdtAmount || parseFloat(usdtAmount) <= 0}
                   onClick={() => setStep(2)}
-                  className="w-full py-4 bg-brand hover:bg-brand/90 disabled:bg-brand/50 text-white font-bold rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg shadow-brand/20"
+                  className="btn-primary w-full py-4 flex items-center justify-center space-x-2"
                 >
                   <span>Continue</span>
                   <ArrowRight className="w-5 h-5" />
@@ -136,8 +136,8 @@ export default function Sell() {
 
           {step === 2 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-              <h2 className="text-2xl font-bold mb-2 text-white">Transfer USDT</h2>
-              <p className="text-gray-400 mb-8">Send USDT (TRC20) to the wallet address below.</p>
+              <h2 className="heading-lg mb-2 text-white">Transfer USDT</h2>
+              <p className="text-sm text-gray-500 mb-8">Send USDT (TRC20) to the wallet address below.</p>
 
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8 space-y-6">
                 <div className="flex justify-between items-center pb-4 border-b border-white/5">
@@ -146,7 +146,7 @@ export default function Sell() {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Our USDT Wallet (TRC20)</label>
+                  <label className="label-xs block">Our USDT Wallet (TRC20)</label>
                   <div className="flex items-center space-x-2">
                     <div className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-mono text-sm truncate text-white">
                       {settings?.admin_wallet_address || 'Loading...'}
@@ -170,7 +170,7 @@ export default function Sell() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-400">Transaction Hash (TXID)</label>
+                  <label className="label-xs block">Transaction Hash (TXID)</label>
                   <input
                     type="text"
                     value={txHash}
@@ -185,7 +185,7 @@ export default function Sell() {
                   <button
                     disabled={!txHash || loading}
                     onClick={handleSubmitOrder}
-                    className="flex-[2] py-4 bg-brand hover:bg-brand/90 disabled:bg-brand/50 text-white font-bold rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg shadow-brand/20"
+                    className="btn-primary flex-[2] py-4 flex items-center justify-center space-x-2"
                   >
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Submit Order</span>}
                   </button>
@@ -199,13 +199,13 @@ export default function Sell() {
               <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-10 h-10 text-green-400" />
               </div>
-              <h2 className="text-3xl font-bold mb-4 text-white">Order Submitted!</h2>
-              <p className="text-gray-400 mb-8 max-w-sm mx-auto">
+              <h2 className="heading-xl mb-4 text-white">Order Submitted!</h2>
+              <p className="text-sm text-gray-500 mb-8 max-w-sm mx-auto">
                 Your sell order has been received. Once the transaction is confirmed on the blockchain, we will process your payment.
               </p>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="px-8 py-4 bg-brand hover:bg-brand/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand/20"
+                className="btn-primary px-8 py-4"
               >
                 Go to Dashboard
               </button>

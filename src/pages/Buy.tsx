@@ -91,7 +91,7 @@ export default function Buy() {
 
   return (
     <div className="min-h-screen bg-[#050505] pt-24 pb-12">
-      <div className="max-w-3xl mx-auto px-4 py-12">
+      <div className="responsive-container page-padding max-w-3xl">
         {/* Progress Bar */}
         <div className="flex items-center justify-between mb-12 relative">
           <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white/5 -translate-y-1/2 -z-10" />
@@ -108,7 +108,7 @@ export default function Buy() {
           ))}
         </div>
 
-        <div className="card p-8">
+        <div className="card card-padding">
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
               {error}
@@ -116,10 +116,10 @@ export default function Buy() {
           )}
           {step === 1 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-              <h2 className="text-2xl font-bold mb-6 text-white">Enter Amount</h2>
+              <h2 className="heading-lg mb-6 text-white">Enter Amount</h2>
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">You Pay (INR)</label>
+                  <label className="label-xs mb-2 block">You Pay (INR)</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -141,7 +141,7 @@ export default function Buy() {
                       {formatUSDT((parseFloat(inrAmount || '0') / (settings?.buy_rate || 1)) * (1 - (settings?.platform_fee || 0) / 100))}
                     </div>
                     {settings?.platform_fee && (
-                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">
+                      <div className="label-xs mt-1">
                         Incl. {settings.platform_fee}% Protocol Fee
                       </div>
                     )}
@@ -150,7 +150,7 @@ export default function Buy() {
                 <button
                   disabled={!inrAmount || parseFloat(inrAmount) <= 0}
                   onClick={() => setStep(2)}
-                  className="w-full py-4 bg-brand hover:bg-brand/90 disabled:bg-brand/50 text-white font-bold rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg shadow-brand/20"
+                  className="btn-primary w-full py-4 flex items-center justify-center space-x-2"
                 >
                   <span>Continue</span>
                   <ArrowRight className="w-5 h-5" />
@@ -161,7 +161,7 @@ export default function Buy() {
 
           {step === 2 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-              <h2 className="text-2xl font-bold mb-6 text-white">Select Payment Method</h2>
+              <h2 className="heading-lg mb-6 text-white">Select Payment Method</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                 {paymentMethods.map((method) => (
                   <button
@@ -188,7 +188,7 @@ export default function Buy() {
                 <button
                   disabled={!selectedMethod}
                   onClick={() => setStep(3)}
-                  className="flex-[2] py-4 bg-brand hover:bg-brand/90 disabled:bg-brand/50 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand/20"
+                  className="btn-primary flex-[2] py-4"
                 >
                   Continue
                 </button>
@@ -198,8 +198,8 @@ export default function Buy() {
 
           {step === 3 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-              <h2 className="text-2xl font-bold mb-2 text-white">Make Payment</h2>
-              <p className="text-gray-400 mb-8">Please pay the exact amount to the details below.</p>
+              <h2 className="heading-lg mb-2 text-white">Make Payment</h2>
+              <p className="text-sm text-gray-500 mb-8">Please pay the exact amount to the details below.</p>
 
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8 space-y-4">
                 <div className="flex justify-between items-center pb-4 border-b border-white/5">
@@ -231,14 +231,14 @@ export default function Buy() {
                 )}
                 {selectedMethod?.qr_image_url && (
                   <div className="flex flex-col items-center pt-4">
-                    <img src={selectedMethod.qr_image_url} alt="QR Code" className="w-48 h-48 rounded-xl mb-2 border border-white/10" />
-                    <span className="text-xs text-gray-500">Scan to Pay</span>
+                    <img src={selectedMethod.qr_image_url} alt="QR Code" className="w-48 h-48 rounded-xl mb-2 border border-white/10" referrerPolicy="no-referrer" />
+                    <span className="label-xs text-gray-500">Scan to Pay</span>
                   </div>
                 )}
               </div>
 
               <div className="space-y-4">
-                <label className="block text-sm font-medium text-gray-400">Upload Payment Screenshot</label>
+                <label className="label-xs block">Upload Payment Screenshot</label>
                 <div className="relative">
                   <input
                     type="file"
@@ -249,10 +249,10 @@ export default function Buy() {
                   />
                   <label
                     htmlFor="screenshot-upload"
-                    className="w-full h-40 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-brand/50 transition-all overflow-hidden bg-white/5"
+                    className="w-full h-48 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-brand/50 transition-all overflow-hidden bg-white/5"
                   >
                     {screenshotPreview ? (
-                      <img src={screenshotPreview} alt="Preview" className="w-full h-full object-contain" />
+                      <img src={screenshotPreview} alt="Preview" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                     ) : (
                       <>
                         <Upload className="w-8 h-8 text-gray-500 mb-2" />
@@ -267,7 +267,7 @@ export default function Buy() {
                   <button
                     disabled={!screenshot || loading}
                     onClick={handleSubmitOrder}
-                    className="flex-[2] py-4 bg-brand hover:bg-brand/90 disabled:bg-brand/50 text-white font-bold rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg shadow-brand/20"
+                    className="btn-primary flex-[2] py-4 flex items-center justify-center space-x-2"
                   >
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Submit Order</span>}
                   </button>
@@ -281,13 +281,13 @@ export default function Buy() {
               <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-10 h-10 text-green-400" />
               </div>
-              <h2 className="text-3xl font-bold mb-4 text-white">Order Submitted!</h2>
-              <p className="text-gray-400 mb-8 max-w-sm mx-auto">
+              <h2 className="heading-xl mb-4 text-white">Order Submitted!</h2>
+              <p className="text-sm text-gray-500 mb-8 max-w-sm mx-auto">
                 Your order has been received and is currently under review. You can track the status in your dashboard.
               </p>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="px-8 py-4 bg-brand hover:bg-brand/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand/20"
+                className="btn-primary px-8 py-4"
               >
                 Go to Dashboard
               </button>

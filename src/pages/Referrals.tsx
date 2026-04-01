@@ -88,15 +88,15 @@ export default function Referrals() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background page-padding">
+      <div className="responsive-container">
         {/* Hero Section */}
-        <div className="relative mb-12 md:mb-20 overflow-hidden rounded-[2.5rem] md:rounded-[3.5rem] bg-gradient-to-br from-brand/20 via-brand/5 to-transparent border border-white/10 p-8 md:p-24">
+        <div className="relative mb-12 md:mb-20 overflow-hidden rounded-3xl sm:rounded-[3.5rem] bg-gradient-to-br from-brand/20 via-brand/5 to-transparent border border-white/10 p-8 md:p-24">
           <div className="relative z-10 max-w-4xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-4 px-6 py-3 rounded-full bg-brand/10 border border-brand/20 text-brand text-xs md:text-sm font-bold uppercase tracking-[0.2em] mb-12"
+              className="inline-flex items-center gap-4 px-6 py-3 rounded-full bg-brand/10 border border-brand/20 text-brand label-xs mb-12"
             >
               <Gift className="w-5 h-5 md:w-6 md:h-6" />
               Affiliate Program
@@ -105,7 +105,7 @@ export default function Referrals() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-2xl md:text-4xl font-display font-bold text-white mb-4 leading-[1.1] md:leading-[0.9] tracking-tighter"
+              className="heading-xl mb-4 leading-[1.1] md:leading-[0.9]"
             >
               Earn While Your <br className="hidden md:block" />
               <span className="text-brand">Network Trades.</span>
@@ -114,7 +114,7 @@ export default function Referrals() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-sm md:text-base text-gray-400 mb-8 leading-relaxed max-w-xl"
+              className="text-sm md:text-lg text-gray-400 mb-8 leading-relaxed max-w-xl"
             >
               Invite your community to the most secure P2P platform and earn up to 0.1% commission on every trade they complete.
             </motion.p>
@@ -171,21 +171,21 @@ export default function Referrals() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 + (i * 0.1) }}
-                  className="card p-10 md:p-12 group hover:border-white/20 transition-all"
+                  className="card card-padding group hover:border-white/20 transition-all"
                 >
                   <div className={cn("w-16 h-16 md:w-20 md:h-20 rounded-3xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", stat.bg, stat.color)}>
                     <stat.icon className="w-8 h-8 md:w-10 md:h-10" />
                   </div>
                   <div className="text-4xl md:text-5xl font-display font-bold text-white mb-3">{stat.value}</div>
-                  <div className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-[0.2em]">{stat.label}</div>
+                  <div className="label-xs">{stat.label}</div>
                   <div className="text-xs text-gray-600 mt-3">{stat.sub}</div>
                 </motion.div>
               ))}
             </div>
 
             {/* How it works */}
-            <div className="card p-10 md:p-12">
-              <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-10 md:mb-12">Commission Structure</h3>
+            <div className="card card-padding">
+              <h3 className="heading-lg mb-10 md:mb-12">Commission Structure</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
                 <div className="space-y-10">
                   <div className="flex gap-6 md:gap-8">
@@ -203,10 +203,10 @@ export default function Referrals() {
                     </div>
                   </div>
                 </div>
-                <div className="bg-brand/5 border border-brand/10 rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-10 flex flex-col justify-center">
+                <div className="bg-brand/5 border border-brand/10 rounded-3xl sm:rounded-[2.5rem] p-8 md:p-10 flex flex-col justify-center">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-2.5 h-2.5 bg-brand rounded-full animate-pulse" />
-                    <span className="text-[11px] font-bold text-brand uppercase tracking-widest">Real-time Settlements</span>
+                    <span className="label-xs text-brand">Real-time Settlements</span>
                   </div>
                   <p className="text-sm md:text-base text-gray-300 leading-relaxed italic">
                     "Commissions are calculated on the platform fee and settled instantly into your wallet the moment a trade is completed."
@@ -218,7 +218,7 @@ export default function Referrals() {
 
           {/* Leaderboard Section */}
           <div className="space-y-10">
-            <div className="card p-10">
+            <div className="card card-padding">
               <div className="flex items-center justify-between mb-12">
                 <h3 className="text-2xl font-display font-bold text-white flex items-center gap-4">
                   <Trophy className="w-7 h-7 text-yellow-500" />
@@ -247,12 +247,12 @@ export default function Referrals() {
                       </div>
                       <div>
                         <div className="font-bold text-base text-white">{user.email}</div>
-                        <div className="text-[11px] text-gray-500 uppercase tracking-widest font-bold">Verified Partner</div>
+                        <div className="label-xs text-gray-500">Verified Partner</div>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-green-500 font-mono font-bold text-lg">${user.earnings.toFixed(2)}</div>
-                      <div className="text-[9px] text-gray-600 uppercase tracking-widest">Earned</div>
+                      <div className="label-xs text-gray-600">Earned</div>
                     </div>
                   </motion.div>
                 ))}
@@ -262,19 +262,19 @@ export default function Referrals() {
                     <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 text-gray-700">
                       <Users className="w-6 h-6" />
                     </div>
-                    <p className="text-xs text-gray-600 font-bold uppercase tracking-widest">No data available</p>
+                    <p className="label-xs text-gray-600">No data available</p>
                   </div>
                 )}
               </div>
 
-              <button className="w-full mt-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2 group">
+              <button className="w-full mt-10 py-4 bg-white/5 border border-white/10 rounded-2xl label-xs text-gray-400 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2 group">
                 Full Leaderboard
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
 
             {/* Support Card */}
-            <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-[2rem] p-8 text-white relative overflow-hidden group">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-8 text-white relative overflow-hidden group">
               <div className="relative z-10">
                 <h4 className="text-xl font-bold mb-2">Need Help?</h4>
                 <p className="text-sm text-blue-100 mb-6 opacity-80">Our affiliate managers are here to help you grow your network.</p>

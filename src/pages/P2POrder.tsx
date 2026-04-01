@@ -677,7 +677,7 @@ const formatTime = (seconds: number) => {
 
   return (
     <div className="min-h-screen bg-[#050505] pt-20 sm:pt-24 pb-8 sm:pb-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="responsive-container page-padding">
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-10 sm:mb-12">
           <div className="flex items-center gap-4 sm:gap-6">
             <button 
@@ -688,7 +688,7 @@ const formatTime = (seconds: number) => {
             </button>
             <div className="min-w-0">
               <div className="flex items-center gap-3">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white truncate">Order #{order.id.slice(0, 8)}</h1>
+                <h1 className="heading-xl truncate">Order #{order.id.slice(0, 8)}</h1>
                 <button 
                   onClick={() => { navigator.clipboard.writeText(order.id); toast.success('Order ID copied!'); }}
                   className="p-2 hover:bg-white/5 rounded-lg transition-colors text-gray-500 hover:text-white"
@@ -698,16 +698,16 @@ const formatTime = (seconds: number) => {
               </div>
               <div className="flex items-center gap-3 sm:gap-4 mt-2 sm:mt-3">
                 <span className={cn(
-                  "px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-widest",
-                  order.status === 'pending' ? "bg-yellow-500/10 text-yellow-500" :
-                  order.status === 'paid' ? "bg-blue-500/10 text-blue-500" :
-                  order.status === 'completed' ? "bg-green-500/10 text-green-500" :
-                  order.status === 'disputed' ? "bg-red-500/10 text-red-500" :
-                  "bg-gray-500/10 text-gray-500"
+                  "px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-widest border",
+                  order.status === 'pending' ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" :
+                  order.status === 'paid' ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                  order.status === 'completed' ? "bg-green-500/10 text-green-500 border-green-500/20" :
+                  order.status === 'disputed' ? "bg-red-500/10 text-red-500 border-red-500/20" :
+                  "bg-gray-500/10 text-gray-500 border-gray-500/20"
                 )}>
                   {order.status}
                 </span>
-                <span className="text-[11px] sm:text-xs text-gray-500 uppercase font-bold tracking-widest truncate">
+                <span className="label-xs truncate">
                   • {isBuyer ? 'Buying' : 'Selling'} {order.asset}
                 </span>
               </div>

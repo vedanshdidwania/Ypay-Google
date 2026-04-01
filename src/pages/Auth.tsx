@@ -181,9 +181,9 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center page-padding">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand/10 blur-[120px] rounded-full" />
       </div>
 
       <motion.div
@@ -191,22 +191,22 @@ export default function Auth() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
-          <div className="flex justify-center mb-6">
+        <div className="card card-padding shadow-2xl">
+          <div className="flex justify-center mb-8">
             <Logo showText={false} size="xl" />
           </div>
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold mb-3">
               {showOtpStep ? 'Verify Email' : (resetMode ? 'Reset Password' : (isLogin ? 'Welcome Back' : 'Create Account'))}
             </h2>
-            <p className="text-gray-500">
+            <p className="text-sm text-gray-500 leading-relaxed">
               {showOtpStep 
                 ? (
                   <>
-                    Enter the code sent to <span className="text-blue-400 font-medium">{email}</span>
+                    Enter the code sent to <span className="text-brand font-medium">{email}</span>
                     <button
                       onClick={handleChangeEmail}
-                      className="block mx-auto text-xs text-blue-500 hover:text-blue-400 mt-2 font-medium"
+                      className="block mx-auto text-xs text-brand hover:text-brand/80 mt-2 font-medium"
                     >
                       Change email
                     </button>
@@ -225,9 +225,9 @@ export default function Auth() {
           )}
 
           {showOtpStep ? (
-            <form onSubmit={handleVerifyOtp} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-500 ml-1">Verification Code</label>
+            <form onSubmit={handleVerifyOtp} className="space-y-8">
+              <div className="space-y-3">
+                <label className="label-xs ml-1">Verification Code</label>
                 <div className="relative">
                   <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
@@ -236,20 +236,20 @@ export default function Auth() {
                     maxLength={6}
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-center tracking-[1em] text-2xl font-bold"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-brand/50 transition-colors text-white text-center tracking-[1em] text-2xl font-bold"
                     placeholder="000000"
                   />
                 </div>
               </div>
 
               {error && (
-                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
                   {error}
                 </div>
               )}
 
               {success && (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
+                <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
                   {success}
                 </div>
               )}
@@ -257,7 +257,7 @@ export default function Auth() {
               <button
                 type="submit"
                 disabled={loading || otpCode.length !== 6}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center space-x-2 group"
+                className="w-full py-4 bg-brand hover:bg-brand/90 disabled:bg-brand/50 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand/20 flex items-center justify-center space-x-2 group"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -274,7 +274,7 @@ export default function Auth() {
                   type="button"
                   onClick={handleResendOtp}
                   disabled={loading}
-                  className="text-sm text-blue-500 hover:text-blue-400 font-medium"
+                  className="text-sm text-brand hover:text-brand/80 font-medium"
                 >
                   Didn't receive the code? Resend
                 </button>
@@ -291,11 +291,11 @@ export default function Auth() {
               </div>
             </form>
           ) : (
-            <form onSubmit={resetMode ? handleResetPassword : handleAuth} className="space-y-4">
+            <form onSubmit={resetMode ? handleResetPassword : handleAuth} className="space-y-6">
             {!isLogin && !resetMode && (
               <>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-500 ml-1">Full Name</label>
+                <div className="space-y-3">
+                  <label className="label-xs ml-1">Full Name</label>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                     <input
@@ -303,21 +303,21 @@ export default function Auth() {
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
+                      className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-brand/50 transition-colors text-white"
                       placeholder="John Doe"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-500 ml-1">Mobile Number (Optional)</label>
+                <div className="space-y-3">
+                  <label className="label-xs ml-1">Mobile Number (Optional)</label>
                   <div className="relative">
                     <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
+                      className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-brand/50 transition-colors text-white"
                       placeholder="+1 234 567 890"
                     />
                   </div>
@@ -325,8 +325,8 @@ export default function Auth() {
               </>
             )}
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-500 ml-1">Email Address</label>
+            <div className="space-y-3">
+              <label className="label-xs ml-1">Email Address</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <input
@@ -334,21 +334,21 @@ export default function Auth() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-brand/50 transition-colors text-white"
                   placeholder="name@example.com"
                 />
               </div>
             </div>
 
             {!resetMode && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between ml-1">
-                  <label className="text-sm font-medium text-gray-500">Password</label>
+                  <label className="label-xs">Password</label>
                   {isLogin && (
                     <button
                       type="button"
                       onClick={() => setResetMode(true)}
-                      className="text-xs text-blue-500 hover:text-blue-400 font-medium"
+                      className="text-xs text-brand hover:text-brand/80 font-medium"
                     >
                       Forgot Password?
                     </button>
@@ -361,7 +361,7 @@ export default function Auth() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-blue-500/50 transition-colors text-white"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-brand/50 transition-colors text-white"
                     placeholder="••••••••"
                   />
                 </div>
@@ -369,24 +369,24 @@ export default function Auth() {
             )}
 
             {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
+              <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
                 {success}
               </div>
             )}
 
             {!isLogin && !resetMode && sessionStorage.getItem('pending_verification_email') && (
-              <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center space-y-2">
-                <p className="text-sm text-blue-400">You have a pending verification for {sessionStorage.getItem('pending_verification_email')}</p>
+              <div className="p-5 rounded-xl bg-brand/10 border border-brand/20 text-center space-y-3">
+                <p className="text-sm text-brand">You have a pending verification for {sessionStorage.getItem('pending_verification_email')}</p>
                 <button
                   type="button"
                   onClick={() => setShowOtpStep(true)}
-                  className="text-sm text-blue-500 hover:text-blue-400 font-bold underline"
+                  className="text-sm text-brand hover:text-brand/80 font-bold underline"
                 >
                   Go to OTP Verification
                 </button>
@@ -396,7 +396,7 @@ export default function Auth() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center space-x-2 group"
+              className="w-full py-4 bg-brand hover:bg-brand/90 disabled:bg-brand/50 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand/20 flex items-center justify-center space-x-2 group"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

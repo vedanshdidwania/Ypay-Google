@@ -252,12 +252,12 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-20 md:pt-24 pb-12">
+    <div className="min-h-screen bg-background page-padding">
       <div className="responsive-container">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 sm:mb-12">
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold text-white">Account Overview</h1>
+            <h1 className="heading-lg">Account Overview</h1>
             <p className="text-sm md:text-base text-gray-400 mt-1">Welcome back, {profile?.full_name || 'User'}</p>
           </div>
           
@@ -265,7 +265,7 @@ export default function Dashboard() {
             <button
               onClick={() => setActiveTab('orders')}
               className={cn(
-                "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all",
+                "flex-1 md:flex-none px-6 py-2.5 rounded-lg label-xs transition-all",
                 activeTab === 'orders' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -274,7 +274,7 @@ export default function Dashboard() {
             <button
               onClick={() => setActiveTab('settings')}
               className={cn(
-                "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all",
+                "flex-1 md:flex-none px-6 py-2.5 rounded-lg label-xs transition-all",
                 activeTab === 'settings' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-gray-400 hover:text-white"
               )}
             >
@@ -285,15 +285,15 @@ export default function Dashboard() {
 
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Stats Sidebar */}
-          <div className="lg:col-span-4 space-y-4 md:space-y-5">
-            <div className="card p-6 md:p-8">
-              <div className="flex items-center justify-between mb-6 md:mb-8">
+          <div className="lg:col-span-4 space-y-6">
+            <div className="card card-padding">
+              <div className="flex items-center justify-between mb-8">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
                   <Wallet className="w-6 h-6 md:w-7 md:h-7" />
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Total Balance</p>
-                  <p className="text-lg md:text-2xl font-bold text-white">
+                  <p className="label-xs">Total Balance</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">
                     {formatCurrency((profile?.balance_usdt || 0) * 89)}
                   </p>
                 </div>
@@ -318,30 +318,30 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="card p-6 md:p-8">
-              <h3 className="text-xs md:text-sm font-bold text-white mb-6 uppercase tracking-widest">Network Status</h3>
-              <div className="space-y-4 md:space-y-5">
+            <div className="card card-padding">
+              <h3 className="label-xs text-white mb-6">Network Status</h3>
+              <div className="space-y-5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 md:gap-4">
+                  <div className="flex items-center gap-4">
                     <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-500" />
                     <span className="text-sm md:text-base text-gray-400">TRON Network</span>
                   </div>
-                  <span className="text-[10px] md:text-xs font-bold text-green-500">ONLINE</span>
+                  <span className="label-xs text-green-500">ONLINE</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 md:gap-4">
+                  <div className="flex items-center gap-4">
                     <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-500" />
                     <span className="text-sm md:text-base text-gray-400">Escrow Engine</span>
                   </div>
-                  <span className="text-[10px] md:text-xs font-bold text-green-500">ACTIVE</span>
+                  <span className="label-xs text-green-500">ACTIVE</span>
                 </div>
-                <div className="pt-4 md:pt-6">
-                  <div className="bg-white/5 rounded-xl p-4 md:p-5 border border-white/5">
-                    <div className="flex justify-between text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 md:mb-3">
+                <div className="pt-6">
+                  <div className="bg-white/5 rounded-xl p-5 border border-white/5">
+                    <div className="flex justify-between label-xs mb-3">
                       <span>Node Load</span>
                       <span>14%</span>
                     </div>
-                    <div className="w-full h-1.5 md:h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                       <div className="w-[14%] h-full bg-brand" />
                     </div>
                   </div>
@@ -360,7 +360,7 @@ export default function Dashboard() {
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                   <div className="flex items-center gap-6">
-                    <h2 className="text-2xl font-bold text-white">Recent Activity</h2>
+                    <h2 className="heading-lg">Recent Activity</h2>
                     <div className="group relative cursor-help">
                       <div className="px-3 py-1.5 bg-brand/10 border border-brand/20 rounded-lg flex items-center gap-2">
                         <Wallet className="w-4 h-4 text-brand" />
@@ -376,13 +376,13 @@ export default function Dashboard() {
                   <div className="flex items-center gap-6">
                     <button 
                       onClick={fetchDashboardData}
-                      className="text-sm font-bold text-brand uppercase tracking-widest hover:text-brand/80 transition-colors"
+                      className="label-xs text-brand hover:text-brand/80 transition-colors"
                     >
                       Refresh
                     </button>
                     <Link 
                       to="/wallet"
-                      className="text-sm font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5"
+                      className="label-xs hover:text-white transition-colors flex items-center gap-1.5"
                     >
                       View All <ExternalLink className="w-4 h-4" />
                     </Link>
@@ -415,7 +415,7 @@ export default function Dashboard() {
                           key={order.id}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="card p-6 hover:border-brand/30 transition-all group"
+                          className="card card-padding hover:border-brand/30 transition-all group"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 md:gap-8">
                             <div className="flex items-center gap-6 md:gap-8">
@@ -433,7 +433,7 @@ export default function Dashboard() {
                                     {isBuyer ? 'Buy' : 'Sell'} USDT
                                   </span>
                                   <span className={cn(
-                                    "text-xs md:text-sm font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border",
+                                    "label-xs px-3 py-1.5 rounded-full border",
                                     getStatusColor(order.status)
                                   )}>
                                     {order.status}
@@ -473,8 +473,8 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-8"
               >
-                <div className="card p-5 md:p-8">
-                  <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 mb-6 md:mb-8 text-center sm:text-left">
+                <div className="card card-padding">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 mb-8 text-center sm:text-left">
                     <div className="relative group">
                       <div className="w-20 h-20 md:w-24 md:h-24 bg-white/5 rounded-2xl flex items-center justify-center text-gray-500 border border-white/5 overflow-hidden">
                         {avatarUrl ? (
@@ -498,49 +498,49 @@ export default function Dashboard() {
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 md:gap-3 mt-1.5 md:mt-1">
                         <div className="flex items-center gap-1 text-yellow-500">
                           <Star className="w-3 h-3 md:w-3.5 md:h-3.5 fill-current" />
-                          <span className="text-[10px] md:text-xs font-bold">
+                          <span className="label-xs">
                             {profile?.rating_count ? (profile.rating_sum / profile.rating_count).toFixed(1) : '5.0'}
                           </span>
                         </div>
                         <span className="text-gray-700 hidden sm:inline">•</span>
-                        <span className="text-[9px] md:text-xs text-gray-500 font-bold uppercase tracking-widest">{profile?.trades_completed || 0} Trades</span>
+                        <span className="label-xs text-gray-500">{profile?.trades_completed || 0} Trades</span>
                         <span className="text-gray-700 hidden sm:inline">•</span>
-                        <span className="text-[9px] md:text-xs text-green-500 font-bold uppercase tracking-widest">{profile?.completion_rate || 100}% Completion</span>
+                        <span className="label-xs text-green-500">{profile?.completion_rate || 100}% Completion</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-                    <div className="space-y-2 md:space-y-3">
-                      <label className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">Full Name</label>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="label-xs">Full Name</label>
                       <input 
                         type="text" 
                         readOnly 
                         value={profile?.full_name || ''} 
-                        className="input-field bg-white/5 text-gray-400 cursor-not-allowed border-white/5 py-3.5 md:py-4 text-sm md:text-base"
+                        className="input-field bg-white/5 text-gray-400 cursor-not-allowed border-white/5 py-4 text-sm md:text-base"
                       />
                     </div>
-                    <div className="space-y-2 md:space-y-3">
-                      <label className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">Email Address</label>
+                    <div className="space-y-3">
+                      <label className="label-xs">Email Address</label>
                       <input 
                         type="text" 
                         readOnly 
                         value={profile?.email || ''} 
-                        className="input-field bg-white/5 text-gray-400 cursor-not-allowed border-white/5 py-3.5 md:py-4 text-sm md:text-base"
+                        className="input-field bg-white/5 text-gray-400 cursor-not-allowed border-white/5 py-4 text-sm md:text-base"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="card p-5 md:p-8">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 md:mb-10">
-                    <div className="flex items-center gap-4 md:gap-6">
+                <div className="card card-padding">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
+                    <div className="flex items-center gap-6">
                       <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
                         <ShoppingCart className="w-6 h-6 md:w-7 md:h-7" />
                       </div>
                       <div>
                         <h2 className="text-xl md:text-2xl font-bold text-white">My Advertisements</h2>
-                        <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Manage your active P2P ads</p>
+                        <p className="label-xs">Manage your active P2P ads</p>
                       </div>
                     </div>
                     <Link 
@@ -558,8 +558,8 @@ export default function Dashboard() {
                       </div>
                     ) : (
                       ads.map((ad) => (
-                        <div key={ad.id} className="p-4 md:p-5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between">
-                          <div className="flex items-center gap-4 md:gap-6">
+                        <div key={ad.id} className="p-5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-6">
                             <div className={cn(
                               "w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center font-bold text-xs md:text-sm",
                               ad.type === 'buy' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
@@ -568,14 +568,14 @@ export default function Dashboard() {
                             </div>
                             <div>
                               <p className="text-sm md:text-base font-bold text-white">₹{ad.rate.toFixed(2)} / USDT</p>
-                              <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">
+                              <p className="label-xs">
                                 Limit: ₹{ad.min_limit.toLocaleString()} - ₹{ad.max_limit.toLocaleString()}
                               </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <span className={cn(
-                              "text-[10px] md:text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full",
+                              "label-xs px-2.5 py-1 rounded-full",
                               ad.status === 'active' ? "bg-green-500/10 text-green-500" : "bg-gray-500/10 text-gray-500"
                             )}>
                               {ad.status}
@@ -587,15 +587,15 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="card p-5 md:p-8">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 md:mb-10">
-                    <div className="flex items-center gap-4 md:gap-6">
+                <div className="card card-padding">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
+                    <div className="flex items-center gap-6">
                       <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
                         <TrendingUp className="w-6 h-6 md:w-7 md:h-7" />
                       </div>
                       <div>
                         <h2 className="text-xl md:text-2xl font-bold text-white">Referral Program</h2>
-                        <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Earn rewards for inviting friends</p>
+                        <p className="label-xs">Earn rewards for inviting friends</p>
                       </div>
                     </div>
                     <Link 
@@ -606,13 +606,13 @@ export default function Dashboard() {
                     </Link>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-                    <div className="p-4 md:p-5 bg-white/5 border border-white/10 rounded-xl">
-                      <p className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Total Earnings</p>
+                  <div className="grid grid-cols-2 gap-6 mb-8">
+                    <div className="p-5 bg-white/5 border border-white/10 rounded-xl">
+                      <p className="label-xs mb-2">Total Earnings</p>
                       <p className="text-xl md:text-2xl font-bold text-green-500">${((profile?.referral_earnings_l1 || 0) + (profile?.referral_earnings_l2 || 0)).toFixed(2)}</p>
                     </div>
-                    <div className="p-4 md:p-5 bg-white/5 border border-white/10 rounded-xl">
-                      <p className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Referral Code</p>
+                    <div className="p-5 bg-white/5 border border-white/10 rounded-xl">
+                      <p className="label-xs mb-2">Referral Code</p>
                       <p className="text-xl md:text-2xl font-bold text-white font-mono">{profile?.referral_code || '---'}</p>
                     </div>
                   </div>
@@ -638,14 +638,14 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="card p-6 md:p-10">
-                  <div className="flex items-center gap-4 md:gap-6 mb-8 md:mb-10">
+                <div className="card card-padding">
+                  <div className="flex items-center gap-6 mb-10">
                     <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
                       <Lock className="w-6 h-6 md:w-7 md:h-7" />
                     </div>
                     <div>
                       <h2 className="text-xl md:text-2xl font-bold text-white">Security Settings</h2>
-                      <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Account protection & password</p>
+                      <p className="label-xs">Account protection & password</p>
                     </div>
                   </div>
 
@@ -716,36 +716,36 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="card p-6 md:p-10">
-                  <div className="flex items-center gap-4 md:gap-6 mb-8 md:mb-10">
+                <div className="card card-padding">
+                  <div className="flex items-center gap-6 mb-10">
                     <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-xl flex items-center justify-center text-gray-500 border border-white/5">
                       <CreditCard className="w-6 h-6 md:w-7 md:h-7" />
                     </div>
                     <div>
                       <h2 className="text-xl md:text-2xl font-bold text-white">Settlement Settings</h2>
-                      <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-bold">Automated payout configuration</p>
+                      <p className="label-xs">Automated payout configuration</p>
                     </div>
                   </div>
 
-                  <div className="space-y-6 md:space-y-8">
-                    <div className="space-y-2 md:space-y-3">
-                      <label className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">Full Name</label>
+                  <div className="space-y-8">
+                    <div className="space-y-3">
+                      <label className="label-xs">Full Name</label>
                       <input 
                         type="text" 
                         placeholder="Enter your full name"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="input-field py-3.5 md:py-4 text-sm md:text-base"
+                        className="input-field py-4 text-sm md:text-base"
                       />
                     </div>
-                    <div className="space-y-2 md:space-y-3">
-                      <label className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">TRC20 Wallet Address</label>
+                    <div className="space-y-3">
+                      <label className="label-xs">TRC20 Wallet Address</label>
                       <input 
                         type="text" 
                         placeholder="Enter TRC20 Address"
                         value={trc20Address}
                         onChange={(e) => setTrc20Address(e.target.value)}
-                        className="input-field font-mono py-3.5 md:py-4 text-sm md:text-base"
+                        className="input-field font-mono py-4 text-sm md:text-base"
                       />
                     </div>
                     <div className="flex items-start gap-4 p-4 md:p-6 bg-brand/10 rounded-xl border border-brand/20">

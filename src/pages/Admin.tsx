@@ -77,14 +77,14 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-[#050505] pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="responsive-container page-padding">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Admin Sidebar */}
           <div className="lg:w-64 flex-shrink-0">
-            <div className="card p-6 sticky top-24">
+            <div className="card card-padding sticky top-24">
               <div className="flex items-center gap-3 mb-8 px-2">
                 <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
-                <h2 className="text-sm font-bold text-white uppercase tracking-[0.2em]">Admin Terminal</h2>
+                <h2 className="label-xs text-white">Admin Terminal</h2>
               </div>
               <nav className="space-y-1">
                 {menuItems.map((item) => (
@@ -92,7 +92,7 @@ export default function Admin() {
                     key={item.id}
                     to={item.path}
                     className={cn(
-                      "w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all text-sm font-bold uppercase tracking-wider",
+                      "w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-widest",
                       (currentPath === item.id || (currentPath === 'admin' && item.id === 'dashboard'))
                         ? "bg-brand text-white shadow-lg shadow-brand/20" 
                         : "text-gray-500 hover:bg-white/5 hover:text-white"
@@ -207,34 +207,34 @@ function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-display font-bold text-white">System Overview</h2>
-          <p className="text-sm text-gray-500 mt-1">Real-time protocol metrics and network status.</p>
+          <h2 className="heading-lg mb-1">System Overview</h2>
+          <p className="text-sm text-gray-500">Real-time protocol metrics and network status.</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-brand/10 border border-brand/20 rounded-xl">
           <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
-          <span className="text-[10px] font-bold text-brand uppercase tracking-widest">Live Network</span>
+          <span className="label-xs text-brand">Live Network</span>
         </div>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card p-6 group hover:border-brand/30 transition-all">
+        <div className="card card-padding group hover:border-brand/30 transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-white/5 rounded-lg text-gray-400 group-hover:text-brand transition-colors">
               <ShoppingBag className="w-5 h-5" />
             </div>
-            <div className="flex items-center gap-1 text-green-500 text-[10px] font-bold">
+            <div className="flex items-center gap-1 text-green-500 label-xs">
               <ArrowUpRight className="w-3 h-3" />
               <span>+{stats.volumeChange}%</span>
             </div>
           </div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Volume</div>
+          <div className="label-xs mb-1">Total Volume</div>
           <div className="text-2xl font-bold text-white">₹{stats.totalVolume.toLocaleString()}</div>
         </div>
 
-        <div className="card p-6 group hover:border-amber-500/30 transition-all">
+        <div className="card card-padding group hover:border-amber-500/30 transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-white/5 rounded-lg text-gray-400 group-hover:text-amber-500 transition-colors">
               <Clock className="w-5 h-5" />
@@ -245,25 +245,25 @@ function AdminDashboard() {
               </div>
             )}
           </div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pending Orders</div>
+          <div className="label-xs mb-1">Pending Orders</div>
           <div className="text-2xl font-bold text-white">{stats.pendingOrders}</div>
         </div>
 
-        <div className="card p-6 group hover:border-brand/30 transition-all">
+        <div className="card card-padding group hover:border-brand/30 transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-white/5 rounded-lg text-gray-400 group-hover:text-brand transition-colors">
               <Users className="w-5 h-5" />
             </div>
-            <div className="flex items-center gap-1 text-green-500 text-[10px] font-bold">
+            <div className="flex items-center gap-1 text-green-500 label-xs">
               <ArrowUpRight className="w-3 h-3" />
               <span>+{stats.userChange}%</span>
             </div>
           </div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Users</div>
+          <div className="label-xs mb-1">Total Users</div>
           <div className="text-2xl font-bold text-white">{stats.totalUsers}</div>
         </div>
 
-        <div className="card p-6 group hover:border-brand/30 transition-all">
+        <div className="card card-padding group hover:border-brand/30 transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-white/5 rounded-lg text-gray-400 group-hover:text-brand transition-colors">
               <TrendingUp className="w-5 h-5" />
@@ -272,46 +272,46 @@ function AdminDashboard() {
               Protocol Fee: 1%
             </div>
           </div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Platform Revenue</div>
+          <div className="label-xs mb-1">Platform Revenue</div>
           <div className="text-2xl font-bold text-white">₹{(stats.totalVolume * 0.01).toLocaleString()}</div>
         </div>
       </div>
 
       {/* System Health Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link to="/admin/kyc" className="card p-6 flex items-center justify-between hover:bg-white/5 transition-all">
+        <Link to="/admin/kyc" className="card card-padding flex items-center justify-between hover:bg-white/5 transition-all">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pending KYC</p>
+              <p className="label-xs mb-1">Pending KYC</p>
               <p className="text-xl font-bold text-white">{stats.pendingKYC}</p>
             </div>
           </div>
           <ChevronRight className="w-5 h-5 text-gray-600" />
         </Link>
 
-        <Link to="/admin/disputes" className="card p-6 flex items-center justify-between hover:bg-white/5 transition-all">
+        <Link to="/admin/disputes" className="card card-padding flex items-center justify-between hover:bg-white/5 transition-all">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Open Disputes</p>
+              <p className="label-xs mb-1">Open Disputes</p>
               <p className="text-xl font-bold text-white">{stats.openDisputes}</p>
             </div>
           </div>
           <ChevronRight className="w-5 h-5 text-gray-600" />
         </Link>
 
-        <Link to="/admin/withdrawals" className="card p-6 flex items-center justify-between hover:bg-white/5 transition-all">
+        <Link to="/admin/withdrawals" className="card card-padding flex items-center justify-between hover:bg-white/5 transition-all">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
               <ArrowUpRight className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pending Withdrawals</p>
+              <p className="label-xs mb-1">Pending Withdrawals</p>
               <p className="text-xl font-bold text-white">{stats.pendingWithdrawals}</p>
             </div>
           </div>
@@ -320,11 +320,11 @@ function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="card p-8">
+        <div className="card card-padding">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-lg font-display font-bold text-white">Volume Analytics</h3>
-              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-1">Last 7 Days (INR)</p>
+              <h3 className="text-lg font-bold text-white">Volume Analytics</h3>
+              <p className="label-xs text-gray-500 mt-1">Last 7 Days (INR)</p>
             </div>
             <select className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none">
               <option>Last 7 Days</option>
@@ -372,16 +372,16 @@ function AdminDashboard() {
           </div>
         </div>
 
-        <div className="card p-8">
+        <div className="card card-padding">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-lg font-display font-bold text-white">User Growth</h3>
-              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-1">New Signups</p>
+              <h3 className="text-lg font-bold text-white">User Growth</h3>
+              <p className="label-xs text-gray-500 mt-1">New Signups</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-brand rounded-full" />
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active</span>
+                <span className="label-xs text-gray-400">Active</span>
               </div>
             </div>
           </div>
@@ -422,18 +422,18 @@ function AdminDashboard() {
       {/* Recent Orders Table */}
       <div className="card overflow-hidden">
         <div className="p-6 border-b border-white/5 flex justify-between items-center">
-          <h3 className="text-lg font-display font-bold text-white">Recent P2P Orders</h3>
-          <Link to="/admin/orders" className="text-[10px] font-bold text-brand uppercase tracking-widest hover:underline">View All Orders</Link>
+          <h3 className="text-lg font-bold text-white">Recent P2P Orders</h3>
+          <Link to="/admin/orders" className="label-xs text-brand hover:underline">View All Orders</Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-white/5">
               <tr>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Order ID</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">User</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Amount</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Date</th>
+                <th className="px-6 py-4 label-xs text-gray-400">Order ID</th>
+                <th className="px-6 py-4 label-xs text-gray-400">User</th>
+                <th className="px-6 py-4 label-xs text-gray-400">Amount</th>
+                <th className="px-6 py-4 label-xs text-gray-400">Status</th>
+                <th className="px-6 py-4 label-xs text-gray-400 text-right">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">

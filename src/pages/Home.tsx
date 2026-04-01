@@ -127,7 +127,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="min-h-screen bg-background text-white">
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden hero-section">
         <HeroBackground />
@@ -137,15 +137,15 @@ export default function Home() {
           <div className="absolute bottom-[10%] right-[-10%] w-[30%] h-[30%] bg-brand/5 rounded-full blur-[100px]" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative hero-parallax">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <div className="responsive-container relative hero-parallax">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               className="text-center lg:text-left"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand label-xs mb-6">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
@@ -153,7 +153,7 @@ export default function Home() {
                 Live Market Active
               </div>
               
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold text-white tracking-tight leading-[1.1] mb-6 sm:mb-8">
+              <h1 className="heading-xl mb-6 sm:mb-8">
                 The Future of <span className="text-brand">P2P Settlements</span> is Here.
               </h1>
               
@@ -174,17 +174,17 @@ export default function Home() {
               <div className="mt-12 sm:mt-14 flex flex-wrap items-center justify-center lg:justify-start gap-6 sm:gap-10 border-t border-white/5 pt-10">
                 <div>
                   <p className="text-2xl sm:text-3xl font-bold text-white">$2.4M+</p>
-                  <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">24h Volume</p>
+                  <p className="label-xs">24h Volume</p>
                 </div>
                 <div className="hidden sm:block w-px h-12 bg-white/5" />
                 <div>
                   <p className="text-2xl sm:text-3xl font-bold text-white">12k+</p>
-                  <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Active Traders</p>
+                  <p className="label-xs">Active Traders</p>
                 </div>
                 <div className="hidden sm:block w-px h-12 bg-white/5" />
                 <div>
                   <p className="text-2xl sm:text-3xl font-bold text-white">99.9%</p>
-                  <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Success Rate</p>
+                  <p className="label-xs">Success Rate</p>
                 </div>
               </div>
             </motion.div>
@@ -201,11 +201,11 @@ export default function Home() {
                 </div>
               </div>
               
-              <TiltCard className="relative z-20 lg:w-[450px]">
-                <div className="card p-6 sm:p-10 shadow-2xl shadow-brand/10">
+              <TiltCard className="relative z-20 lg:w-[480px]">
+                <div className="card card-padding shadow-2xl shadow-brand/10">
                   <div className="flex items-center justify-between mb-8 sm:mb-10">
                     <h3 className="text-lg sm:text-xl font-bold text-white">Settlement Calculator</h3>
-                    <div className="flex items-center gap-1.5 text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-green-500/20">
+                    <div className="flex items-center gap-1.5 text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg label-xs border border-green-500/20">
                       <TrendingUp className="w-4 h-4" />
                       Live Rate
                     </div>
@@ -213,13 +213,13 @@ export default function Home() {
 
                   <div className="space-y-6 sm:space-y-8">
                     <div>
-                      <label className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 sm:mb-3 block">You Pay (INR)</label>
+                      <label className="label-xs mb-2 sm:mb-3 block">You Pay (INR)</label>
                       <div className="relative">
                         <input
                           type="number"
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
-                          className="input-field text-2xl sm:text-3xl font-bold pr-16 sm:pr-20 py-3.5 sm:py-4"
+                          className="input-field text-2xl sm:text-3xl font-bold pr-16 sm:pr-20 py-4 sm:py-5"
                         />
                         <span className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-gray-500 text-base sm:text-lg">INR</span>
                       </div>
@@ -232,9 +232,9 @@ export default function Home() {
                     </div>
 
                     <div>
-                      <label className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 sm:mb-3 block">You Receive (USDT)</label>
+                      <label className="label-xs mb-2 sm:mb-3 block">You Receive (USDT)</label>
                       <div className="relative">
-                        <div className="input-field bg-white/5 text-2xl sm:text-3xl font-bold pr-16 sm:pr-20 py-3.5 sm:py-4 text-brand">
+                        <div className="input-field bg-white/5 text-2xl sm:text-3xl font-bold pr-16 sm:pr-20 py-4 sm:py-5 text-brand">
                           {usdt}
                         </div>
                         <span className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-brand text-base sm:text-lg">USDT</span>
@@ -264,11 +264,11 @@ export default function Home() {
       </section>
 
       {/* How it Works Section */}
-      <section className="py-24 border-y border-white/5 gsap-reveal">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-24">
+      <section className="section-padding border-y border-white/5 gsap-reveal">
+        <div className="responsive-container">
+          <div className="text-center max-w-3xl mx-auto mb-20">
             <h2 className="text-xs sm:text-sm font-bold text-brand uppercase tracking-[0.3em] mb-6">The Process</h2>
-            <h3 className="text-5xl sm:text-6xl font-display font-bold text-white mb-8">Simple. Secure. Seamless.</h3>
+            <h3 className="heading-lg mb-8">Simple. Secure. Seamless.</h3>
             <p className="text-lg sm:text-xl text-gray-400">Three steps to settle your digital assets with absolute confidence.</p>
           </div>
 
@@ -301,11 +301,11 @@ export default function Home() {
       </section>
 
       {/* Features Section - Bento Grid */}
-      <section className="py-24 bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-24 gsap-reveal">
+      <section className="section-padding bg-white/[0.02]">
+        <div className="responsive-container">
+          <div className="text-center max-w-3xl mx-auto mb-20 gsap-reveal">
             <h2 className="text-xs sm:text-sm font-bold text-brand uppercase tracking-[0.3em] mb-6">Core Protocol</h2>
-            <h3 className="text-5xl sm:text-6xl font-display font-bold text-white mb-8">Built for the next generation of digital finance.</h3>
+            <h3 className="heading-lg mb-8">Built for the next generation of digital finance.</h3>
             <p className="text-lg sm:text-xl text-gray-400">Our protocol combines decentralized trust with centralized efficiency to provide the ultimate settlement experience.</p>
           </div>
 
@@ -364,12 +364,12 @@ export default function Home() {
       </section>
 
       {/* Trust Section */}
-      <section className="py-24 gsap-reveal">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <section className="section-padding gsap-reveal">
+        <div className="responsive-container">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div>
               <h2 className="text-xs sm:text-sm font-bold text-brand uppercase tracking-[0.3em] mb-6">Security First</h2>
-              <h3 className="text-4xl md:text-5xl font-display font-bold text-white mb-10">Uncompromising safety for every transaction.</h3>
+              <h3 className="heading-lg mb-10">Uncompromising safety for every transaction.</h3>
               
               <div className="space-y-8">
                 {[
@@ -400,24 +400,24 @@ export default function Home() {
                 <div className="card p-6 bg-brand text-white border-none shadow-lg shadow-brand/20">
                   <Lock className="w-8 h-8 mb-4 opacity-50" />
                   <p className="text-2xl font-bold mb-1">AES-256</p>
-                  <p className="text-xs font-medium opacity-70 uppercase tracking-widest">Encryption</p>
+                  <p className="label-xs opacity-70">Encryption</p>
                 </div>
                 <div className="card p-6">
                   <Globe className="w-8 h-8 mb-4 text-brand opacity-50" />
                   <p className="text-2xl font-bold text-white mb-1">190+</p>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Countries</p>
+                  <p className="label-xs">Countries</p>
                 </div>
               </div>
               <div className="space-y-4 sm:pt-12">
                 <div className="card p-6">
                   <ShieldCheck className="w-8 h-8 mb-4 text-brand opacity-50" />
                   <p className="text-2xl font-bold text-white mb-1">SOC2</p>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Compliant</p>
+                  <p className="label-xs">Compliant</p>
                 </div>
                 <div className="card p-6 bg-white/5 text-white border-white/10">
                   <TrendingUp className="w-8 h-8 mb-4 text-brand" />
                   <p className="text-2xl font-bold mb-1">24/7</p>
-                  <p className="text-xs font-medium opacity-70 uppercase tracking-widest">Monitoring</p>
+                  <p className="label-xs opacity-70">Monitoring</p>
                 </div>
               </div>
             </div>
@@ -426,19 +426,19 @@ export default function Home() {
       </section>
 
       {/* Global Reach Section */}
-      <section className="py-24 bg-brand/5 relative overflow-hidden">
+      <section className="section-padding bg-brand/5 relative overflow-hidden">
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand/10 rounded-full blur-[120px]" />
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="responsive-container relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1">
               <div className="aspect-square max-w-[500px] mx-auto relative">
                 <div className="absolute inset-0 bg-brand/5 rounded-full blur-3xl animate-pulse" />
                 <div className="relative z-10 w-full h-full flex items-center justify-center">
                   <div className="text-center">
-                    <div className="text-8xl font-display font-bold text-brand mb-4">190+</div>
+                    <div className="text-7xl sm:text-8xl font-display font-bold text-brand mb-4">190+</div>
                     <div className="text-xl font-bold text-gray-400 uppercase tracking-widest">Countries</div>
                   </div>
                 </div>
@@ -446,18 +446,18 @@ export default function Home() {
             </div>
             <div className="order-1 lg:order-2">
               <h2 className="text-xs sm:text-sm font-bold text-brand uppercase tracking-[0.3em] mb-6">Global Reach</h2>
-              <h3 className="text-5xl sm:text-6xl font-display font-bold text-white mb-8">Settling transactions across borders.</h3>
+              <h3 className="heading-lg mb-8">Settling transactions across borders.</h3>
               <p className="text-xl text-gray-400 mb-10 leading-relaxed">
                 Ypay's protocol is designed for the global economy. We connect local fiat markets with the global crypto liquidity pool, ensuring seamless settlements in over 190 countries.
               </p>
               <div className="grid grid-cols-2 gap-8">
                 <div>
                   <p className="text-4xl font-bold text-white mb-2">190+</p>
-                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Countries Supported</p>
+                  <p className="label-xs">Countries Supported</p>
                 </div>
                 <div>
                   <p className="text-4xl font-bold text-white mb-2">50+</p>
-                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Fiat Currencies</p>
+                  <p className="label-xs">Fiat Currencies</p>
                 </div>
               </div>
             </div>
@@ -466,13 +466,13 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-brand relative overflow-hidden text-white">
+      <section className="section-padding bg-brand relative overflow-hidden text-white">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
-          <h2 className="text-5xl md:text-6xl font-display font-bold mb-10">Ready to experience the future?</h2>
+        <div className="responsive-container relative text-center">
+          <h2 className="heading-xl mb-10">Ready to experience the future?</h2>
           <p className="text-white/80 text-xl sm:text-2xl mb-14 max-w-3xl mx-auto">Join thousands of traders who have already switched to the most efficient P2P protocol in the market.</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link to="/p2p" className="w-full sm:w-auto px-14 py-6 bg-white text-brand font-bold rounded-2xl hover:bg-gray-50 transition-all shadow-xl text-lg">
