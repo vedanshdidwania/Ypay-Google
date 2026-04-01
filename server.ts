@@ -242,6 +242,21 @@ async function startServer() {
       const { amount, userId } = req.body;
       const apiKey = process.env.NOWPAYMENTS_API_KEY;
 
+      if (!apiKey || apiKey === "your-nowpayments-api-key") {
+        console.error("NOWPayments API Key is missing or invalid");
+        return res.status(500).json({ error: "Payment gateway not configured" });
+      }
+
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ error: "Invalid amount" });
+      }
+
+      const appUrl = process.env.APP_URL || "http://localhost:3000";
+      const ipnCallbackUrl = appUrl.startsWith('http') ? `${appUrl}/api/wallet/webhook` : `https://${appUrl}/api/wallet/webhook`;
+
+      console.log(`Initiating deposit for user ${userId}, amount: ${amount}`);
+      console.log(`Using IPN callback URL: ${ipnCallbackUrl}`);
+
       const response = await axios.post(
         "https://api.nowpayments.io/v1/payment",
         {
@@ -250,7 +265,7 @@ async function startServer() {
           pay_currency: "usdttrc20",
           order_id: `DEP-${Date.now()}`,
           order_description: "Wallet Deposit",
-          ipn_callback_url: `${process.env.APP_URL}/api/wallet/webhook`,
+          ipn_callback_url: ipnCallbackUrl,
         },
         {
           headers: {
@@ -260,8 +275,10 @@ async function startServer() {
         }
       );
 
+      console.log("NOWPayments response received:", response.data.payment_id);
+
       // Create a pending transaction in Supabase
-      await supabase.from("transactions").insert({
+      const { error: insertError } = await supabase.from("transactions").insert({
         user_id: userId,
         type: "deposit",
         amount: amount,
@@ -269,10 +286,24 @@ async function startServer() {
         tx_hash: response.data.payment_id,
       });
 
+      if (insertError) {
+        console.error("Supabase insert error:", insertError);
+        throw insertError;
+      }
+
       res.json(response.data);
     } catch (error: any) {
-      console.error("Deposit error:", error.response?.data || error.message);
-      res.status(500).json({ error: "Failed to create payment" });
+      const errorData = error.response?.data || error.message;
+      console.error("Deposit error details:", errorData);
+      
+      if (error.response?.status === 401) {
+        return res.status(500).json({ error: "Invalid payment gateway configuration" });
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to create payment",
+        details: process.env.NODE_ENV === 'development' ? errorData : undefined
+      });
     }
   });
 
