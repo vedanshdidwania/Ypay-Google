@@ -285,8 +285,13 @@ export default function Dashboard() {
 
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Stats Sidebar */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="card card-padding">
+          <motion.div 
+            className="lg:col-span-4 space-y-6"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="card card-padding hover-glow">
               <div className="flex items-center justify-between mb-8">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
                   <Wallet className="w-6 h-6 md:w-7 md:h-7" />
@@ -318,7 +323,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="card card-padding">
+            <div className="card card-padding hover-glow">
               <h3 className="label-xs text-white mb-6">Network Status</h3>
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
@@ -348,7 +353,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Main Content */}
           <div className="lg:col-span-8">
@@ -406,7 +411,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {orders.map((order) => {
+                    {orders.map((order, index) => {
                       const buyerId = order.type === 'buy' ? order.user_id : order.ad?.user_id;
                       const isBuyer = user?.id === buyerId;
                       
@@ -415,7 +420,8 @@ export default function Dashboard() {
                           key={order.id}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="card card-padding hover:border-brand/30 transition-all group"
+                          transition={{ delay: index * 0.05 }}
+                          className="card card-padding hover:border-brand/30 transition-all group hover-lift"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 md:gap-8">
                             <div className="flex items-center gap-6 md:gap-8">

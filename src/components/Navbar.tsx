@@ -77,34 +77,44 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-0.5">
             {navLinks.map((link) => (
               (!link.auth || user) && (
-                <Link
+                <motion.div
                   key={link.path}
-                  to={link.path}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs xl:text-sm font-medium transition-all",
-                    isActive(link.path) 
-                      ? "text-brand bg-brand/10" 
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  )}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ y: 0 }}
                 >
-                  <link.icon className="w-3.5 h-3.5" />
-                  {link.name}
-                </Link>
+                  <Link
+                    to={link.path}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs xl:text-sm font-medium transition-all",
+                      isActive(link.path) 
+                        ? "text-brand bg-brand/10" 
+                        : "text-gray-400 hover:text-white hover:bg-white/5"
+                    )}
+                  >
+                    <link.icon className="w-3.5 h-3.5" />
+                    {link.name}
+                  </Link>
+                </motion.div>
               )
             ))}
             {profile?.is_admin && (
-              <Link
-                to="/admin"
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs xl:text-sm font-medium transition-all",
-                  isActive('/admin')
-                    ? "text-brand bg-brand/10"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                )}
+              <motion.div
+                whileHover={{ y: -1 }}
+                whileTap={{ y: 0 }}
               >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                Admin
-              </Link>
+                <Link
+                  to="/admin"
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs xl:text-sm font-medium transition-all",
+                    isActive('/admin')
+                      ? "text-brand bg-brand/10"
+                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                  )}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Admin
+                </Link>
+              </motion.div>
             )}
           </div>
 
@@ -131,25 +141,33 @@ export default function Navbar() {
                     <ChevronDown className={cn("w-3 h-3 sm:w-4 sm:h-4 text-gray-500 transition-transform", isUserMenuOpen && "rotate-180")} />
                   </button>
 
-                  {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-[#111111] border border-white/10 rounded-2xl shadow-2xl py-2 z-50">
-                      <div className="px-4 py-2 border-b border-white/5 mb-2">
-                        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Account</p>
-                        <p className="text-sm font-medium text-white truncate">{user.email}</p>
-                      </div>
-                      <Link to="/dashboard?tab=settings" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
-                        <UserIcon className="w-4 h-4" />
-                        Profile Settings
-                      </Link>
-                      <button 
-                        onClick={handleSignOut}
-                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 transition-colors mt-2"
+                  <AnimatePresence>
+                    {isUserMenuOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-2 w-56 bg-[#111111] border border-white/10 rounded-2xl shadow-2xl py-2 z-50"
                       >
-                        <LogOut className="w-4 h-4" />
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
+                        <div className="px-4 py-2 border-b border-white/5 mb-2">
+                          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Account</p>
+                          <p className="text-sm font-medium text-white truncate">{user.email}</p>
+                        </div>
+                        <Link to="/dashboard?tab=settings" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
+                          <UserIcon className="w-4 h-4" />
+                          Profile Settings
+                        </Link>
+                        <button 
+                          onClick={handleSignOut}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 transition-colors mt-2"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </>
             ) : (

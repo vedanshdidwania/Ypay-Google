@@ -290,11 +290,18 @@ export default function Home() {
                 desc: "Once payment is confirmed, assets are automatically released from escrow to your wallet."
               }
             ].map((item, i) => (
-              <div key={i} className="relative">
+              <motion.div 
+                key={i} 
+                className="relative"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.2, duration: 0.6 }}
+              >
                 <div className="text-7xl sm:text-8xl font-display font-bold text-white/5 absolute -top-10 -left-6 -z-10">{item.step}</div>
                 <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">{item.title}</h4>
                 <p className="text-lg sm:text-xl text-gray-400 leading-relaxed">{item.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -312,7 +319,11 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 gsap-feature-grid">
             {/* Large Card */}
             <TiltCard className="md:col-span-2 gsap-feature-card">
-              <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group relative overflow-hidden h-full">
+              <motion.div 
+                className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group relative overflow-hidden h-full"
+                whileHover={{ scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
                 <div className="relative z-10">
                   <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
                     <ShieldCheck className="w-8 h-8" />
@@ -321,34 +332,46 @@ export default function Home() {
                   <p className="text-xl text-gray-400 leading-relaxed max-w-md">Our automated escrow protocol ensures that your assets are only released when payment is verified. Zero trust required, absolute security guaranteed.</p>
                 </div>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-3xl -mr-32 -mt-32 transition-all group-hover:bg-brand/10" />
-              </div>
+              </motion.div>
             </TiltCard>
 
             {/* Small Card */}
             <TiltCard className="gsap-feature-card">
-              <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group h-full">
+              <motion.div 
+                className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group h-full"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
                 <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
                   <Zap className="w-8 h-8" />
                 </div>
                 <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">Instant Matching</h4>
                 <p className="text-lg text-gray-400 leading-relaxed">Proprietary engine matches you with the best rates in milliseconds.</p>
-              </div>
+              </motion.div>
             </TiltCard>
 
             {/* Small Card */}
             <TiltCard className="gsap-feature-card">
-              <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group h-full">
+              <motion.div 
+                className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group h-full"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
                 <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
                   <Globe className="w-8 h-8" />
                 </div>
                 <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">Global Reach</h4>
                 <p className="text-lg text-gray-400 leading-relaxed">Access 50+ fiat currencies and 190+ countries seamlessly.</p>
-              </div>
+              </motion.div>
             </TiltCard>
 
             {/* Large Card */}
             <TiltCard className="md:col-span-2 gsap-feature-card">
-              <div className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group relative overflow-hidden h-full">
+              <motion.div 
+                className="card p-12 hover:shadow-xl hover:shadow-brand/5 transition-all group relative overflow-hidden h-full"
+                whileHover={{ scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
                 <div className="relative z-10">
                   <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110", "bg-brand/10", "text-brand")}>
                     <TrendingUp className="w-8 h-8" />
@@ -357,7 +380,7 @@ export default function Home() {
                   <p className="text-xl text-gray-400 leading-relaxed max-w-md">Track your trading performance, market trends, and settlement history with our advanced analytics suite.</p>
                 </div>
                 <div className="absolute bottom-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-3xl -mr-32 -mb-32 transition-all group-hover:bg-brand/10" />
-              </div>
+              </motion.div>
             </TiltCard>
           </div>
         </div>

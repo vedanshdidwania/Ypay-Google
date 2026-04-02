@@ -493,11 +493,12 @@ export default function P2P() {
               <p className="text-xs sm:text-sm text-gray-500 max-w-xs mx-auto">Try adjusting your filters or search amount to find available trades.</p>
             </div>
           ) : (
-            ads.map((ad) => (
+            ads.map((ad, index) => (
               <motion.div
                 key={ad.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
                 whileHover={{ 
                   scale: 1.01,
                   rotateX: 1,
@@ -506,7 +507,7 @@ export default function P2P() {
                 }}
                 whileTap={{ scale: 0.99 }}
                 style={{ perspective: 1000 }}
-                className="card card-padding hover:border-brand/30 transition-all group relative overflow-hidden"
+                className="card card-padding hover:border-brand/30 transition-all group relative overflow-hidden hover-lift"
               >
                 {ad.user_profile?.has_verification_badge && (
                   <div className="absolute top-0 right-0 bg-brand/10 text-brand px-5 sm:px-8 py-2 rounded-bl-xl sm:rounded-bl-[2rem] label-xs border-l border-b border-brand/20 flex items-center gap-2 sm:gap-2.5">
