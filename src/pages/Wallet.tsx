@@ -124,16 +124,6 @@ export default function Wallet() {
     }
   };
 
-  const handleDemoBalance = async () => {
-    try {
-      const { error } = await supabase.rpc('add_demo_balance', { p_amount: 1000 });
-      if (error) throw error;
-      toast.success('1000 USDT demo balance added!');
-      fetchTransactions();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to add demo balance');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] pt-24 pb-12">
@@ -169,12 +159,6 @@ export default function Wallet() {
               <div className="flex items-center gap-2.5">
                 <span className="text-lg sm:text-2xl font-display text-blue-500 font-bold">USDT</span>
                 <div className="h-px flex-1 bg-white/[0.08]" />
-                <button 
-                  onClick={handleDemoBalance}
-                  className="px-2.5 py-1 sm:px-4 sm:py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[9px] sm:text-xs font-bold uppercase tracking-widest rounded-lg border border-blue-500/20 transition-all shadow-lg shadow-blue-500/5 active:scale-95"
-                >
-                  Demo +1000
-                </button>
               </div>
             </div>
 

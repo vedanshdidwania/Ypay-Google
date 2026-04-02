@@ -114,7 +114,7 @@ export default function P2PCreateOrder() {
         .from('ads')
         .select(`
           *,
-          user_profile:profiles(full_name, email, trades_completed, completion_rate, rating_sum, rating_count, speed_rating, comm_rating, is_verified_merchant)
+          user_profile:profiles!ads_user_id_fkey(full_name, email, trades_completed, completion_rate, rating_sum, rating_count, speed_rating, comm_rating, is_verified_merchant)
         `)
         .eq('id', adId)
         .single();
@@ -209,14 +209,18 @@ export default function P2PCreateOrder() {
         throw error;
       }
 
-      // Send notification to ad owner
-      await supabase.from('notifications').insert({
-        user_id: ad.user_id,
-        title: 'New P2P Order',
-        message: `You have a new ${ad.type === 'buy' ? 'sell' : 'buy'} order for ${finalCrypto.toFixed(2)} ${ad.asset}`,
-        type: 'order_update',
-        is_read: false
-      });
+      // Send notification to ad owner - wrap in try-catch as RLS might prevent direct insertion
+      try {
+        await supabase.from('notifications').insert({
+          user_id: ad.user_id,
+          title: 'New P2P Order',
+          message: `You have a new ${ad.type === 'buy' ? 'sell' : 'buy'} order for ${finalCrypto.toFixed(2)} ${ad.asset}`,
+          type: 'order_update',
+          is_read: false
+        });
+      } catch (err) {
+        console.error('Failed to send notification:', err);
+      }
       
       toast.success('Order created successfully!');
       navigate(`/p2p/order/${orderId}`);

@@ -37,6 +37,7 @@ interface P2POrder {
   platform_fee_amount?: number;
   status: 'pending' | 'paid' | 'completed' | 'cancelled' | 'disputed';
   payment_window?: number;
+  expires_at?: string;
   created_at: string;
   payment_screenshot_url?: string;
   user_profile?: { 
@@ -105,13 +106,13 @@ export default function P2POrder() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (id) {
+    if (id && user) {
       fetchOrder();
       fetchMessages();
       subscribeToMessages();
       subscribeToOrder();
     }
-  }, [id]);
+  }, [id, user]);
 
   useEffect(() => {
     if (order) {
@@ -166,10 +167,10 @@ export default function P2POrder() {
         .from('orders')
         .select(`
           *,
-          user_profile:profiles(id, full_name, email, avatar_url, total_trades, completion_rate),
-          ad:ads(
+          user_profile:profiles!orders_user_id_fkey(id, full_name, email, avatar_url, total_trades, completion_rate),
+          ad:ads!orders_ad_id_fkey(
             *,
-            ad_profile:profiles(id, full_name, email, avatar_url, total_trades, completion_rate)
+            ad_profile:profiles!ads_user_id_fkey(id, full_name, email, avatar_url, total_trades, completion_rate)
           )
         `)
         .eq('id', id)
@@ -177,8 +178,9 @@ export default function P2POrder() {
 
       if (error) throw error;
       setOrder(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching order:', error);
+      toast.error(error.message || 'Failed to load order details');
     } finally {
       setLoading(false);
     }
@@ -246,15 +248,19 @@ export default function P2POrder() {
       if (error) throw error;
       setNewMessage('');
 
-      // Notify other party about new message
-      const otherPartyId = user?.id === buyerId ? sellerId : buyerId;
-      await supabase.from('notifications').insert({
-        user_id: otherPartyId,
-        title: 'New Message',
-        message: `You have a new message in order #${id?.slice(0, 8)}`,
-        type: 'order_update',
-        is_read: false
-      });
+      // Notify other party about new message - wrap in try-catch as RLS might prevent direct insertion
+      try {
+        const otherPartyId = user?.id === buyerId ? sellerId : buyerId;
+        await supabase.from('notifications').insert({
+          user_id: otherPartyId,
+          title: 'New Message',
+          message: `You have a new message in order #${id?.slice(0, 8)}`,
+          type: 'order_update',
+          is_read: false
+        });
+      } catch (err) {
+        console.error('Failed to send notification:', err);
+      }
       
       // Play notification sound
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
@@ -295,15 +301,19 @@ export default function P2POrder() {
         attachment_type: 'image'
       });
 
-      // Notify other party about new image
-      const otherPartyId = user?.id === buyerId ? sellerId : buyerId;
-      await supabase.from('notifications').insert({
-        user_id: otherPartyId,
-        title: 'New Image Message',
-        message: `You have a new image in order #${id?.slice(0, 8)}`,
-        type: 'order_update',
-        is_read: false
-      });
+      // Notify other party about new image - wrap in try-catch as RLS might prevent direct insertion
+      try {
+        const otherPartyId = user?.id === buyerId ? sellerId : buyerId;
+        await supabase.from('notifications').insert({
+          user_id: otherPartyId,
+          title: 'New Image Message',
+          message: `You have a new image in order #${id?.slice(0, 8)}`,
+          type: 'order_update',
+          is_read: false
+        });
+      } catch (err) {
+        console.error('Failed to send notification:', err);
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Failed to upload image. Please try again.');
@@ -377,14 +387,18 @@ export default function P2POrder() {
         attachment_type: 'system'
       });
 
-      // Notify seller
-      await supabase.from('notifications').insert({
-        user_id: sellerId,
-        title: 'Payment Received',
-        message: `Buyer has marked order #${id?.slice(0, 8)} as paid. Please verify and release funds.`,
-        type: 'order_update',
-        is_read: false
-      });
+      // Notify seller - wrap in try-catch as RLS might prevent direct insertion
+      try {
+        await supabase.from('notifications').insert({
+          user_id: sellerId,
+          title: 'Payment Received',
+          message: `Buyer has marked order #${id?.slice(0, 8)} as paid. Please verify and release funds.`,
+          type: 'order_update',
+          is_read: false
+        });
+      } catch (err) {
+        console.error('Failed to send notification:', err);
+      }
 
       toast.success('Order marked as paid. Waiting for seller to release funds.');
       setShowConfirmPaid(false);
@@ -413,14 +427,18 @@ export default function P2POrder() {
         attachment_type: 'system'
       });
 
-      // Notify buyer
-      await supabase.from('notifications').insert({
-        user_id: buyerId,
-        title: 'Funds Released',
-        message: `Seller has released the funds for order #${id?.slice(0, 8)}. The assets are now in your wallet.`,
-        type: 'order_update',
-        is_read: false
-      });
+      // Notify buyer - wrap in try-catch as RLS might prevent direct insertion
+      try {
+        await supabase.from('notifications').insert({
+          user_id: buyerId,
+          title: 'Funds Released',
+          message: `Seller has released the funds for order #${id?.slice(0, 8)}. The assets are now in your wallet.`,
+          type: 'order_update',
+          is_read: false
+        });
+      } catch (err) {
+        console.error('Failed to send notification:', err);
+      }
 
       toast.success('Funds released successfully! Trade completed.');
       setShowConfirmRelease(false);
@@ -478,15 +496,19 @@ export default function P2POrder() {
         attachment_type: 'system'
       });
 
-      // Notify other party
-      const otherPartyId = user?.id === buyerId ? sellerId : buyerId;
-      await supabase.from('notifications').insert({
-        user_id: otherPartyId,
-        title: 'Order Cancelled',
-        message: `Order #${id?.slice(0, 8)} has been cancelled.`,
-        type: 'order_update',
-        is_read: false
-      });
+      // Notify other party - wrap in try-catch as RLS might prevent direct insertion
+      try {
+        const otherPartyId = user?.id === buyerId ? sellerId : buyerId;
+        await supabase.from('notifications').insert({
+          user_id: otherPartyId,
+          title: 'Order Cancelled',
+          message: `Order #${id?.slice(0, 8)} has been cancelled.`,
+          type: 'order_update',
+          is_read: false
+        });
+      } catch (err) {
+        console.error('Failed to send notification:', err);
+      }
 
       toast.success('Order cancelled and funds returned to balance.');
       setShowConfirmCancel(false);
@@ -542,15 +564,19 @@ export default function P2POrder() {
         attachment_type: 'system'
       });
 
-      // Notify other party
-      const otherPartyId = user?.id === buyerId ? sellerId : buyerId;
-      await supabase.from('notifications').insert({
-        user_id: otherPartyId,
-        title: 'Dispute Raised',
-        message: `A dispute has been raised for order #${id?.slice(0, 8)}. An admin will review it.`,
-        type: 'dispute',
-        is_read: false
-      });
+      // Notify other party - wrap in try-catch as RLS might prevent direct insertion
+      try {
+        const otherPartyId = user?.id === buyerId ? sellerId : buyerId;
+        await supabase.from('notifications').insert({
+          user_id: otherPartyId,
+          title: 'Dispute Raised',
+          message: `A dispute has been raised for order #${id?.slice(0, 8)}. An admin will review it.`,
+          type: 'dispute',
+          is_read: false
+        });
+      } catch (err) {
+        console.error('Failed to send notification:', err);
+      }
 
       toast.success('Dispute raised. An admin will review the trade shortly.');
       setShowDisputeModal(false);
