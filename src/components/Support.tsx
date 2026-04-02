@@ -190,9 +190,12 @@ export default function Support() {
                 </div>
               ) : (
                 <>
-                  {messages.map((msg) => (
-                    <div
+                  {messages.map((msg, index) => (
+                    <motion.div
                       key={msg.id}
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ duration: 0.2 }}
                       className={cn(
                         "flex flex-col max-w-[85%]",
                         msg.is_admin_reply ? "mr-auto items-start" : "ml-auto items-end"
@@ -212,7 +215,7 @@ export default function Support() {
                       <span className="text-[9px] text-gray-400 mt-1 font-bold uppercase tracking-widest">
                         {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                    </div>
+                    </motion.div>
                   ))}
                   <div ref={messagesEndRef} />
                 </>

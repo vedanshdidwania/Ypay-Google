@@ -145,11 +145,12 @@ export default function Transactions() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {filteredTransactions.map((tx) => (
+                {filteredTransactions.map((tx, index) => (
                   <motion.tr 
                     key={tx.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
                     className="hover:bg-white/[0.02] transition-colors"
                   >
                     <td className="px-6 py-5">
@@ -196,12 +197,13 @@ export default function Transactions() {
 
           {/* Mobile Card View */}
           <div className="md:hidden divide-y divide-white/5">
-            {filteredTransactions.map((tx) => (
+            {filteredTransactions.map((tx, index) => (
               <motion.div
                 key={tx.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="p-6 space-y-5"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="p-6 space-y-5 hover:bg-white/[0.02] transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">

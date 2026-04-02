@@ -117,12 +117,13 @@ export default function Orders() {
         </div>
 
         <div className="grid gap-4">
-          {filteredOrders.map((order) => (
+          {filteredOrders.map((order, index) => (
             <motion.div
               key={order.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="card card-padding hover:border-white/20 transition-all group"
+              transition={{ delay: index * 0.05 }}
+              className="card card-padding hover-lift hover-glow transition-all group"
             >
               <Link to={`/p2p/order/${order.id}`} className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
                 <div className="flex items-center gap-6 sm:gap-8">
