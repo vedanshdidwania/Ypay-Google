@@ -413,13 +413,7 @@ BEGIN
   UPDATE profiles
   SET 
     rating_sum = rating_sum + NEW.rating,
-    rating_count = rating_count + 1,
-    trades_completed = trades_completed + 1,
-    total_trades = total_trades + 1,
-    completion_rate = CASE 
-      WHEN trades_completed > 0 THEN (trades_completed::numeric / (trades_completed + 1)::numeric) * 100 
-      ELSE 100 
-    END
+    rating_count = rating_count + 1
   WHERE id = NEW.reviewee_id;
   RETURN NEW;
 END;
@@ -729,16 +723,7 @@ CREATE OR REPLACE FUNCTION public.release_p2p_order(p_order_id UUID)
 RETURNS void AS $$
 DECLARE
   v_order RECORD;
-  v_buyer_id UUID;
   v_seller_id UUID;
-  v_platform_fee_pct NUMERIC;
-  v_referral_pct NUMERIC;
-  v_referral_l2_pct NUMERIC;
-  v_platform_fee_amount NUMERIC;
-  v_referral_amount NUMERIC;
-  v_net_amount NUMERIC;
-  v_referrer_id UUID;
-  v_referrer_l2_id UUID;
 BEGIN
   -- Get order details
   SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
@@ -751,23 +736,12 @@ BEGIN
     RAISE EXCEPTION 'Order must be in paid status to release funds';
   END IF;
 
-  -- Get platform settings
-  SELECT platform_fee, referral_commission_l1, referral_commission_l2 
-  INTO v_platform_fee_pct, v_referral_pct, v_referral_l2_pct 
-  FROM public.app_settings LIMIT 1;
-
-  -- Calculate fees
-  v_platform_fee_amount := (v_order.amount_usdt * v_platform_fee_pct) / 100.0;
-  v_net_amount := v_order.amount_usdt - v_platform_fee_amount;
-
-  -- Determine buyer and seller
+  -- Determine seller
   IF v_order.type = 'buy' THEN
     -- Order creator is buying, ad creator is selling
-    v_buyer_id := v_order.user_id;
     v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
   ELSE
     -- Order creator is selling, ad creator is buying
-    v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
     v_seller_id := v_order.user_id;
   END IF;
 
@@ -776,69 +750,8 @@ BEGIN
     RAISE EXCEPTION 'Only the seller or an admin can release funds';
   END IF;
 
-  -- Update order status and record fee
-  UPDATE public.orders 
-  SET status = 'completed', 
-      escrow_released_at = NOW(),
-      platform_fee_amount = v_platform_fee_amount
-  WHERE id = p_order_id;
-
-  -- Update buyer balance (deduct platform fee)
-  UPDATE public.profiles 
-  SET balance_usdt = balance_usdt + v_net_amount 
-  WHERE id = v_buyer_id;
-
-  -- Deduct from seller escrow
-  UPDATE public.profiles 
-  SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt 
-  WHERE id = v_seller_id;
-
-  -- Handle Referral Commission (L1)
-  SELECT referred_by, referred_by_l2 INTO v_referrer_id, v_referrer_l2_id 
-  FROM public.profiles WHERE id = v_buyer_id;
-  
-  IF v_referrer_id IS NOT NULL THEN
-    v_referral_amount := (v_platform_fee_amount * v_referral_pct) / 100.0;
-    
-    IF v_referral_amount > 0 THEN
-      UPDATE public.profiles 
-      SET balance_usdt = balance_usdt + v_referral_amount,
-          referral_earnings_l1 = referral_earnings_l1 + v_referral_amount
-      WHERE id = v_referrer_id;
-      
-      INSERT INTO public.referral_earnings (referrer_id, referee_id, order_id, amount)
-      VALUES (v_referrer_id, v_buyer_id, p_order_id, v_referral_amount);
-      
-      -- Notify Referrer
-      INSERT INTO public.notifications (user_id, title, message, type)
-      VALUES (v_referrer_id, 'Referral Commission', 'You earned $' || v_referral_amount || ' from a referral trade!', 'success');
-    END IF;
-  END IF;
-
-  -- Handle Referral Commission (L2)
-  IF v_referrer_l2_id IS NOT NULL THEN
-    v_referral_amount := (v_platform_fee_amount * v_referral_l2_pct) / 100.0;
-    
-    IF v_referral_amount > 0 THEN
-      UPDATE public.profiles 
-      SET balance_usdt = balance_usdt + v_referral_amount,
-          referral_earnings_l2 = referral_earnings_l2 + v_referral_amount
-      WHERE id = v_referrer_l2_id;
-      
-      INSERT INTO public.referral_earnings (referrer_id, referee_id, order_id, amount)
-      VALUES (v_referrer_l2_id, v_buyer_id, p_order_id, v_referral_amount);
-      
-      -- Notify L2 Referrer
-      INSERT INTO public.notifications (user_id, title, message, type)
-      VALUES (v_referrer_l2_id, 'Indirect Referral Commission', 'You earned $' || v_referral_amount || ' from an indirect referral trade!', 'success');
-    END IF;
-  END IF;
-
-  -- Update seller stats
-  UPDATE public.profiles 
-  SET trades_completed = trades_completed + 1,
-      total_trades = total_trades + 1
-  WHERE id = v_seller_id;
+  -- Internal function for releasing funds without auth check
+  PERFORM public.release_p2p_order_internal(p_order_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -958,8 +871,17 @@ BEGIN
     END IF;
   END IF;
 
-  -- Update seller stats
-  UPDATE public.profiles SET trades_completed = trades_completed + 1, total_trades = total_trades + 1 WHERE id = v_seller_id;
+  -- Update stats for both parties
+  UPDATE public.profiles 
+  SET trades_completed = trades_completed + 1
+  WHERE id IN (v_seller_id, v_buyer_id);
+
+  UPDATE public.profiles
+  SET completion_rate = CASE 
+    WHEN total_trades > 0 THEN (trades_completed::numeric / total_trades::numeric) * 100 
+    ELSE 100 
+  END
+  WHERE id IN (v_seller_id, v_buyer_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -1005,6 +927,14 @@ BEGIN
   SET balance_usdt = balance_usdt + v_order.amount_usdt,
       escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
   WHERE id = v_seller_id;
+
+  -- Update completion_rate for both parties
+  UPDATE public.profiles 
+  SET completion_rate = CASE 
+    WHEN total_trades > 0 THEN (trades_completed::numeric / total_trades::numeric) * 100 
+    ELSE 100 
+  END
+  WHERE id IN (v_buyer_id, v_seller_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -1092,6 +1022,17 @@ BEGIN
   )
   RETURNING id INTO v_order_id;
 
+  -- Update total_trades for both parties
+  UPDATE public.profiles SET total_trades = total_trades + 1 WHERE id IN (auth.uid(), v_ad.user_id);
+
+  -- Update completion_rate for both parties
+  UPDATE public.profiles 
+  SET completion_rate = CASE 
+    WHEN total_trades > 0 THEN (trades_completed::numeric / total_trades::numeric) * 100 
+    ELSE 100 
+  END
+  WHERE id IN (auth.uid(), v_ad.user_id);
+
   -- Lock funds in escrow
   UPDATE public.profiles 
   SET balance_usdt = balance_usdt - p_amount_usdt,
@@ -1138,6 +1079,14 @@ BEGIN
   SET balance_usdt = balance_usdt + v_order.amount_usdt,
       escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt
   WHERE id = v_seller_id;
+
+  -- Update completion_rate for both parties
+  UPDATE public.profiles 
+  SET completion_rate = CASE 
+    WHEN total_trades > 0 THEN (trades_completed::numeric / total_trades::numeric) * 100 
+    ELSE 100 
+  END
+  WHERE id IN (v_order.user_id, (SELECT user_id FROM public.ads WHERE id = v_order.ad_id));
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -1198,73 +1147,6 @@ BEGIN
   );
 
   RETURN v_tx_hash;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- RPC to resolve P2P disputes
-CREATE OR REPLACE FUNCTION public.resolve_p2p_dispute(
-  p_dispute_id UUID,
-  p_order_id UUID,
-  p_winner_id UUID,
-  p_admin_feedback TEXT
-)
-RETURNS void AS $$
-DECLARE
-  v_order RECORD;
-  v_buyer_id UUID;
-  v_seller_id UUID;
-BEGIN
-  -- Get order details
-  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
-  
-  IF v_order IS NULL THEN
-    RAISE EXCEPTION 'Order not found';
-  END IF;
-
-  -- Determine buyer and seller
-  IF v_order.type = 'buy' THEN
-    -- Order creator is buying, ad creator is selling
-    v_buyer_id := v_order.user_id;
-    v_seller_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
-  ELSE
-    -- Order creator is selling, ad creator is buying
-    v_buyer_id := (SELECT user_id FROM public.ads WHERE id = v_order.ad_id);
-    v_seller_id := v_order.user_id;
-  END IF;
-
-  -- Update dispute status
-  UPDATE public.p2p_disputes 
-  SET status = 'resolved', admin_feedback = p_admin_feedback 
-  WHERE id = p_dispute_id;
-
-  -- Handle funds based on winner
-  IF p_winner_id = v_buyer_id THEN
-    -- Buyer wins: release escrow to buyer (deduct platform fee)
-    DECLARE
-      v_platform_fee_pct NUMERIC;
-      v_platform_fee_amount NUMERIC;
-      v_net_amount NUMERIC;
-    BEGIN
-      SELECT platform_fee INTO v_platform_fee_pct FROM public.app_settings LIMIT 1;
-      v_platform_fee_amount := (v_order.amount_usdt * v_platform_fee_pct) / 100.0;
-      v_net_amount := v_order.amount_usdt - v_platform_fee_amount;
-
-      UPDATE public.orders 
-      SET status = 'completed', 
-          escrow_released_at = NOW(),
-          platform_fee_amount = v_platform_fee_amount 
-      WHERE id = p_order_id;
-
-      UPDATE public.profiles SET balance_usdt = balance_usdt + v_net_amount WHERE id = v_buyer_id;
-      UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
-      UPDATE public.profiles SET trades_completed = trades_completed + 1 WHERE id = v_seller_id;
-    END;
-  ELSE
-    -- Seller wins: return escrow to seller balance
-    UPDATE public.orders SET status = 'cancelled' WHERE id = p_order_id;
-    UPDATE public.profiles SET balance_usdt = balance_usdt + v_order.amount_usdt WHERE id = v_seller_id;
-    UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
-  END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -1359,12 +1241,28 @@ BEGIN
 
     UPDATE public.profiles SET balance_usdt = balance_usdt + v_net_amount WHERE id = v_buyer_id;
     UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
-    UPDATE public.profiles SET trades_completed = trades_completed + 1 WHERE id = v_seller_id;
+    
+    -- Update stats for both parties
+    UPDATE public.profiles SET trades_completed = trades_completed + 1 WHERE id IN (v_seller_id, v_buyer_id);
+    UPDATE public.profiles 
+    SET completion_rate = CASE 
+      WHEN total_trades > 0 THEN (trades_completed::numeric / total_trades::numeric) * 100 
+      ELSE 100 
+    END
+    WHERE id IN (v_seller_id, v_buyer_id);
   ELSE
     -- Return to seller (no fee)
     UPDATE public.orders SET status = 'cancelled', updated_at = NOW() WHERE id = p_order_id;
     UPDATE public.profiles SET balance_usdt = balance_usdt + v_order.amount_usdt WHERE id = v_seller_id;
     UPDATE public.profiles SET escrow_balance_usdt = escrow_balance_usdt - v_order.amount_usdt WHERE id = v_seller_id;
+
+    -- Update completion_rate for both parties
+    UPDATE public.profiles 
+    SET completion_rate = CASE 
+      WHEN total_trades > 0 THEN (trades_completed::numeric / total_trades::numeric) * 100 
+      ELSE 100 
+    END
+    WHERE id IN (v_seller_id, v_buyer_id);
   END IF;
 
 END;
@@ -1444,29 +1342,26 @@ BEGIN
   END IF;
 
   FOR v_user_record IN SELECT id FROM public.profiles LOOP
-    -- Calculate trades where user was seller
-    -- Seller is:
-    -- 1. Ad creator if ad.type = 'sell' AND order.type = 'buy' (order creator is buying)
-    -- 2. Order creator if ad.type = 'buy' AND order.type = 'sell' (order creator is selling)
+    -- Calculate trades where user was involved (buyer or seller)
+    -- Only count orders with an ad_id (P2P trades)
     
     -- Completed trades
     SELECT COUNT(*) INTO v_completed
     FROM public.orders o
-    JOIN public.ads a ON o.ad_id = a.id
     WHERE o.status = 'completed'
+    AND o.ad_id IS NOT NULL
     AND (
-      (a.type = 'sell' AND a.user_id = v_user_record.id) OR
-      (a.type = 'buy' AND o.user_id = v_user_record.id)
+      o.user_id = v_user_record.id OR 
+      EXISTS (SELECT 1 FROM public.ads a WHERE a.id = o.ad_id AND a.user_id = v_user_record.id)
     );
 
-    -- Total trades (completed + cancelled)
+    -- Total trades (all statuses)
     SELECT COUNT(*) INTO v_total
     FROM public.orders o
-    JOIN public.ads a ON o.ad_id = a.id
-    WHERE o.status IN ('completed', 'cancelled')
+    WHERE o.ad_id IS NOT NULL
     AND (
-      (a.type = 'sell' AND a.user_id = v_user_record.id) OR
-      (a.type = 'buy' AND o.user_id = v_user_record.id)
+      o.user_id = v_user_record.id OR 
+      EXISTS (SELECT 1 FROM public.ads a WHERE a.id = o.ad_id AND a.user_id = v_user_record.id)
     );
 
     -- Ratings

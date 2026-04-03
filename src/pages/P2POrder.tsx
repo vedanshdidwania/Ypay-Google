@@ -163,6 +163,7 @@ export default function P2POrder() {
 
   const fetchOrder = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -176,10 +177,13 @@ export default function P2POrder() {
         .eq('id', id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching order from Supabase:', error);
+        throw error;
+      }
       setOrder(data);
     } catch (error: any) {
-      console.error('Error fetching order:', error);
+      console.error('Error in fetchOrder:', error);
       toast.error(error.message || 'Failed to load order details');
     } finally {
       setLoading(false);
@@ -606,6 +610,8 @@ export default function P2POrder() {
     );
   }
 
+  const orderAsset = order.asset || order.ad?.asset || 'USDT';
+
   const buyerId = order.type === 'buy' ? order.user_id : order.ad?.user_id;
   const sellerId = order.type === 'sell' ? order.user_id : order.ad?.user_id;
   const isBuyer = user?.id === buyerId;
@@ -734,7 +740,7 @@ const formatTime = (seconds: number) => {
                   {order.status}
                 </span>
                 <span className="label-xs truncate">
-                  • {isBuyer ? 'Buying' : 'Selling'} {order.asset}
+                  • {isBuyer ? 'Buying' : 'Selling'} {orderAsset}
                 </span>
               </div>
             </div>
@@ -776,13 +782,13 @@ const formatTime = (seconds: number) => {
                       {isBuyer 
                         ? (order.amount_usdt - (order.platform_fee_amount || 0)).toFixed(8)
                         : order.amount_usdt.toFixed(8)
-                      } {order.asset}
+                      } {orderAsset}
                     </p>
                   </div>
                   <div>
                     <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Platform Fee</p>
                     <p className="text-xl sm:text-2xl font-display font-bold text-white">
-                      {order.platform_fee_amount?.toFixed(8) || '0.00000000'} {order.asset}
+                      {order.platform_fee_amount?.toFixed(8) || '0.00000000'} {orderAsset}
                     </p>
                   </div>
                 </div>
@@ -809,12 +815,12 @@ const formatTime = (seconds: number) => {
                   <p className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white">₹{order.amount_inr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">{order.asset} to {isBuyer ? 'Receive' : 'Send'}</p>
+                  <p className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">{orderAsset} to {isBuyer ? 'Receive' : 'Send'}</p>
                   <p className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-brand">
                     {order.status === 'completed' && isBuyer 
                       ? (order.amount_usdt - (order.platform_fee_amount || 0)).toFixed(8)
                       : order.amount_usdt.toFixed(8)
-                    } {order.asset}
+                    } {orderAsset}
                   </p>
                 </div>
                 <div className="space-y-2 col-span-2 sm:col-span-1 border-t sm:border-none border-white/5 pt-6 sm:pt-0">
@@ -831,7 +837,7 @@ const formatTime = (seconds: number) => {
                 {order.status === 'completed' && order.platform_fee_amount !== undefined && order.platform_fee_amount > 0 && (
                   <div className="flex items-center justify-between px-5 sm:px-6 py-3 sm:py-3.5 bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl">
                     <span className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Platform Fee</span>
-                    <span className="text-[11px] sm:text-xs font-bold text-white">{order.platform_fee_amount.toFixed(8)} {order.asset}</span>
+                    <span className="text-[11px] sm:text-xs font-bold text-white">{order.platform_fee_amount.toFixed(8)} {orderAsset}</span>
                   </div>
                 )}
               </div>
@@ -1077,7 +1083,7 @@ const formatTime = (seconds: number) => {
                           disabled={!hasVerifiedPayment}
                           className="w-full sm:flex-1 py-5 sm:py-6 bg-green-600 hover:bg-green-700 text-white rounded-2xl sm:rounded-3xl text-base sm:text-xl font-bold transition-all shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:grayscale"
                         >
-                          Release {order.asset}
+                          Release {orderAsset}
                         </button>
                       </div>
                     </div>

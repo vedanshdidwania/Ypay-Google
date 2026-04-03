@@ -1368,7 +1368,9 @@ function AdminUsers() {
       is_verified_merchant: user.is_verified_merchant,
       is_disabled: user.is_disabled,
       kyc_status: user.kyc_status,
-      kyc_level: user.kyc_level
+      kyc_level: user.kyc_level,
+      trades_completed: user.trades_completed,
+      total_trades: user.total_trades
     });
     fetchUserPaymentMethods(user.id);
     setIsEditing(true);
@@ -1389,7 +1391,12 @@ function AdminUsers() {
           is_verified_merchant: editForm.is_verified_merchant,
           is_disabled: editForm.is_disabled,
           kyc_status: editForm.kyc_status,
-          kyc_level: editForm.kyc_level
+          kyc_level: editForm.kyc_level,
+          trades_completed: editForm.trades_completed,
+          total_trades: editForm.total_trades,
+          completion_rate: editForm.total_trades && editForm.total_trades > 0 
+            ? (editForm.trades_completed || 0) / editForm.total_trades * 100 
+            : 100
         })
         .eq('id', selectedUser.id);
 
@@ -1431,6 +1438,7 @@ function AdminUsers() {
               <tr>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">User</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Balance</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Trades</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Role</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Actions</th>
@@ -1445,6 +1453,10 @@ function AdminUsers() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-bold text-white">{formatUSDT(user.balance_usdt)}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="font-bold text-white">{user.trades_completed} / {user.total_trades}</div>
+                    <div className="text-[10px] text-gray-500">{user.completion_rate}% Success</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1">
@@ -1540,6 +1552,24 @@ function AdminUsers() {
                     <option value={2}>Level 2</option>
                     <option value={3}>Level 3</option>
                   </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Trades Completed</label>
+                  <input
+                    type="number"
+                    value={editForm.trades_completed || 0}
+                    onChange={(e) => setEditForm({ ...editForm, trades_completed: parseInt(e.target.value) })}
+                    className="input-field"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Trades</label>
+                  <input
+                    type="number"
+                    value={editForm.total_trades || 0}
+                    onChange={(e) => setEditForm({ ...editForm, total_trades: parseInt(e.target.value) })}
+                    className="input-field"
+                  />
                 </div>
                 <div className="flex flex-col gap-4 pt-4">
                   <label className="flex items-center gap-3 cursor-pointer group">

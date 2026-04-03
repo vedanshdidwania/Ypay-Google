@@ -16,6 +16,7 @@ export interface UserProfile {
   escrow_balance_usdt: number;
   is_verified_merchant: boolean;
   trades_completed: number;
+  total_trades: number;
   completion_rate: number;
   two_factor_enabled: boolean;
   two_factor_secret?: string;
