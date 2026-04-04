@@ -28,8 +28,17 @@ export default function Support() {
       
       const subscription = supabase
         .channel(`chat:${chat.id}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_messages', filter: `chat_id=eq.${chat.id}` }, (payload) => {
-          setMessages(prev => [...prev, payload.new as SupportMessage]);
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'support_messages', 
+          filter: `chat_id=eq.${chat.id}` 
+        }, (payload) => {
+          const newMessage = payload.new as SupportMessage;
+          setMessages(prev => {
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
         })
         .subscribe();
       
@@ -93,15 +102,30 @@ export default function Support() {
     if (!chat || !newMessage.trim() || !user) return;
 
     setSending(true);
-    const { error } = await supabase.from('support_messages').insert({
+    const tempId = crypto.randomUUID();
+    const optimisticMessage: SupportMessage = {
+      id: tempId,
+      chat_id: chat.id,
+      sender_id: user.id,
+      content: newMessage,
+      is_admin_reply: false,
+      created_at: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, optimisticMessage]);
+    setNewMessage('');
+
+    const { data, error } = await supabase.from('support_messages').insert({
       chat_id: chat.id,
       sender_id: user.id,
       content: newMessage,
       is_admin_reply: false
-    });
+    }).select().single();
 
-    if (!error) {
-      setNewMessage('');
+    if (error) {
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+    } else if (data) {
+      setMessages(prev => prev.map(m => m.id === tempId ? data : m));
       await supabase.from('support_chats').update({
         last_message: newMessage,
         last_message_at: new Date().toISOString()
@@ -132,6 +156,28 @@ export default function Support() {
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const formatMessageDate = (date: string) => {
+    const d = new Date(date);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (d >= today) return 'Today';
+    if (d >= yesterday) return 'Yesterday';
+    return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const groupMessagesByDate = (msgs: SupportMessage[]) => {
+    const groups: { [key: string]: SupportMessage[] } = {};
+    msgs.forEach(msg => {
+      const date = new Date(msg.created_at).toDateString();
+      if (!groups[date]) groups[date] = [];
+      groups[date].push(msg);
+    });
+    return groups;
   };
 
   if (!user) return null;
@@ -176,7 +222,7 @@ export default function Support() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#050505]/50">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#050505]/50">
               {loading ? (
                 <div className="h-full flex items-center justify-center">
                   <Loader2 className="w-6 h-6 animate-spin text-brand" />
@@ -190,32 +236,44 @@ export default function Support() {
                 </div>
               ) : (
                 <>
-                  {messages.map((msg, index) => (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ duration: 0.2 }}
-                      className={cn(
-                        "flex flex-col max-w-[85%]",
-                        msg.is_admin_reply ? "mr-auto items-start" : "ml-auto items-end"
-                      )}
-                    >
-                      <div className={cn(
-                        "p-3 rounded-2xl text-sm shadow-sm",
-                        msg.is_admin_reply 
-                          ? "bg-white/5 text-white rounded-tl-none border border-white/10" 
-                          : "bg-brand text-white rounded-tr-none"
-                      )}>
-                        {msg.image_url && (
-                          <img src={msg.image_url} className="max-w-full rounded-lg mb-2" />
-                        )}
-                        {msg.content}
+                  {Object.entries(groupMessagesByDate(messages)).map(([date, dateMessages]) => (
+                    <div key={date} className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <div className="h-px flex-1 bg-white/5" />
+                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+                          {formatMessageDate(date)}
+                        </span>
+                        <div className="h-px flex-1 bg-white/5" />
                       </div>
-                      <span className="text-[9px] text-gray-400 mt-1 font-bold uppercase tracking-widest">
-                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </motion.div>
+                      
+                      {dateMessages.map((msg) => (
+                        <motion.div
+                          key={msg.id}
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          transition={{ duration: 0.2 }}
+                          className={cn(
+                            "flex flex-col max-w-[85%]",
+                            msg.is_admin_reply ? "mr-auto items-start" : "ml-auto items-end"
+                          )}
+                        >
+                          <div className={cn(
+                            "p-3 rounded-2xl text-sm shadow-sm",
+                            msg.is_admin_reply 
+                              ? "bg-white/5 text-white rounded-tl-none border border-white/10" 
+                              : "bg-brand text-white rounded-tr-none"
+                          )}>
+                            {msg.image_url && (
+                              <img src={msg.image_url} className="max-w-full rounded-lg mb-2" />
+                            )}
+                            {msg.content}
+                          </div>
+                          <span className="text-[9px] text-gray-400 mt-1 font-bold uppercase tracking-widest">
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </motion.div>
+                      ))}
+                    </div>
                   ))}
                   <div ref={messagesEndRef} />
                 </>

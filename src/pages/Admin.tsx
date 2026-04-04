@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
@@ -2454,6 +2454,15 @@ function AdminSupport() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     fetchChats();
@@ -2477,8 +2486,23 @@ function AdminSupport() {
       // Subscribe to new messages
       const subscription = supabase
         .channel(`chat:${selectedChat.id}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_messages', filter: `chat_id=eq.${selectedChat.id}` }, (payload) => {
-          setMessages(prev => [...prev, payload.new as SupportMessage]);
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'support_messages', 
+          filter: `chat_id=eq.${selectedChat.id}` 
+        }, (payload) => {
+          const newMessage = payload.new as SupportMessage;
+          setMessages(prev => {
+            // Avoid duplicates from optimistic updates
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
+          
+          // Mark as read if it's a user message
+          if (!newMessage.is_admin_reply) {
+            supabase.from('support_chats').update({ unread_count: 0 }).eq('id', selectedChat.id);
+          }
         })
         .subscribe();
       
@@ -2511,22 +2535,75 @@ function AdminSupport() {
     if (!selectedChat || !newMessage.trim()) return;
 
     setSending(true);
-    const { error } = await supabase.from('support_messages').insert({
+    const tempId = crypto.randomUUID();
+    const optimisticMessage: SupportMessage = {
+      id: tempId,
       chat_id: selectedChat.id,
-      sender_id: 'admin', // In a real app, use the admin's actual ID
+      sender_id: 'admin',
+      content: newMessage,
+      is_admin_reply: true,
+      created_at: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, optimisticMessage]);
+    setNewMessage('');
+
+    const { data, error } = await supabase.from('support_messages').insert({
+      chat_id: selectedChat.id,
+      sender_id: 'admin',
       content: newMessage,
       is_admin_reply: true
-    });
+    }).select().single();
 
-    if (!error) {
-      setNewMessage('');
-      // Update last message in chat
+    if (error) {
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      toast.error('Failed to send message');
+    } else if (data) {
+      // Replace optimistic message with real one
+      setMessages(prev => prev.map(m => m.id === tempId ? data : m));
+      
       await supabase.from('support_chats').update({
         last_message: newMessage,
-        last_message_at: new Date().toISOString()
+        last_message_at: new Date().toISOString(),
+        unread_count: 0
       }).eq('id', selectedChat.id);
     }
     setSending(false);
+  };
+
+  const formatMessageDate = (date: string) => {
+    const d = new Date(date);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (d >= today) return 'Today';
+    if (d >= yesterday) return 'Yesterday';
+    return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const groupMessagesByDate = (msgs: SupportMessage[]) => {
+    const groups: { [key: string]: SupportMessage[] } = {};
+    msgs.forEach(msg => {
+      const date = new Date(msg.created_at).toDateString();
+      if (!groups[date]) groups[date] = [];
+      groups[date].push(msg);
+    });
+    return groups;
+  };
+
+  const closeChat = async (chatId: string) => {
+    const { error } = await supabase
+      .from('support_chats')
+      .update({ status: 'closed' })
+      .eq('id', chatId);
+    
+    if (!error) {
+      toast.success('Chat closed');
+      setSelectedChat(null);
+      fetchChats();
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2554,6 +2631,14 @@ function AdminSupport() {
     reader.readAsDataURL(file);
   };
 
+  const selectChat = (chat: SupportChat) => {
+    setSelectedChat(chat);
+    if (chat.unread_count > 0) {
+      supabase.from('support_chats').update({ unread_count: 0 }).eq('id', chat.id);
+      setChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread_count: 0 } : c));
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-12rem)] flex gap-6">
       {/* Chat List */}
@@ -2571,14 +2656,19 @@ function AdminSupport() {
               {chats.map((chat) => (
                 <button
                   key={chat.id}
-                  onClick={() => setSelectedChat(chat)}
+                  onClick={() => selectChat(chat)}
                   className={cn(
-                    "w-full p-4 text-left transition-all hover:bg-white/5",
+                    "w-full p-4 text-left transition-all hover:bg-white/5 relative",
                     selectedChat?.id === chat.id && "bg-brand/10 border-l-4 border-brand"
                   )}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <span className="text-sm font-bold text-white truncate max-w-[120px]">{chat.user_email}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-white truncate max-w-[120px]">{chat.user_email}</span>
+                      {chat.unread_count > 0 && (
+                        <span className="w-2 h-2 bg-brand rounded-full animate-pulse" />
+                      )}
+                    </div>
                     <span className="text-[10px] text-gray-400">{new Date(chat.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <p className="text-xs text-gray-500 truncate">{chat.last_message || 'New conversation'}</p>
@@ -2598,33 +2688,52 @@ function AdminSupport() {
                 <h3 className="text-sm font-bold text-white">{selectedChat.user_email}</h3>
                 <p className="text-[10px] text-gray-400 uppercase tracking-widest">Active Session</p>
               </div>
+              <button
+                onClick={() => closeChat(selectedChat.id)}
+                className="px-3 py-1.5 bg-red-500/10 text-red-500 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+              >
+                Close Chat
+              </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex flex-col max-w-[80%]",
-                    msg.is_admin_reply ? "ml-auto items-end" : "mr-auto items-start"
-                  )}
-                >
-                  <div className={cn(
-                    "p-3 rounded-2xl text-sm",
-                    msg.is_admin_reply 
-                      ? "bg-brand text-white rounded-tr-none" 
-                      : "bg-white/5 text-white rounded-tl-none border border-white/10"
-                  )}>
-                    {msg.image_url && (
-                      <img src={msg.image_url} className="max-w-full rounded-lg mb-2 cursor-pointer" onClick={() => window.open(msg.image_url)} />
-                    )}
-                    {msg.content}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {Object.entries(groupMessagesByDate(messages)).map(([date, dateMessages]) => (
+                <div key={date} className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-px flex-1 bg-white/5" />
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                      {formatMessageDate(date)}
+                    </span>
+                    <div className="h-px flex-1 bg-white/5" />
                   </div>
-                  <span className="text-[10px] text-gray-400 mt-1">
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  
+                  {dateMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "flex flex-col max-w-[80%]",
+                        msg.is_admin_reply ? "ml-auto items-end" : "mr-auto items-start"
+                      )}
+                    >
+                      <div className={cn(
+                        "p-3 rounded-2xl text-sm",
+                        msg.is_admin_reply 
+                          ? "bg-brand text-white rounded-tr-none" 
+                          : "bg-white/5 text-white rounded-tl-none border border-white/10"
+                      )}>
+                        {msg.image_url && (
+                          <img src={msg.image_url} className="max-w-full rounded-lg mb-2 cursor-pointer" onClick={() => window.open(msg.image_url)} />
+                        )}
+                        {msg.content}
+                      </div>
+                      <span className="text-[10px] text-gray-400 mt-1">
+                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
 
             <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5 bg-white/5 flex gap-2">
