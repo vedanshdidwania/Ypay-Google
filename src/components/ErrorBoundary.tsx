@@ -31,6 +31,14 @@ export default class ErrorBoundary extends React.Component<any, any> {
             <p className="text-gray-400 mb-6 text-sm">
               An unexpected error occurred. We've been notified and are looking into it.
             </p>
+            
+            {process.env.NODE_ENV === 'development' && this.state.error && (
+              <div className="mb-6 p-4 bg-black/40 rounded-xl text-left overflow-auto max-h-40">
+                <p className="text-red-400 font-mono text-xs">{(this.state.error as Error).message}</p>
+                <pre className="text-[10px] text-gray-600 mt-2">{(this.state.error as Error).stack}</pre>
+              </div>
+            )}
+
             <button
               onClick={() => window.location.reload()}
               className="flex items-center gap-2 px-6 py-3 bg-brand text-white rounded-xl font-bold mx-auto hover:bg-brand/90 transition-colors"

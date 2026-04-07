@@ -111,9 +111,24 @@ export default function P2P() {
     payment_window: 15
   });
 
+  const getMarketPrice = (asset: string) => {
+    if (!marketPrices) return 0;
+    const key = asset.toLowerCase();
+    // Handle both new and old keys
+    const priceObj = marketPrices[key] || 
+                    (key === 'usdt' ? marketPrices.tether : null) ||
+                    (key === 'btc' ? marketPrices.bitcoin : null) ||
+                    (key === 'eth' ? marketPrices.ethereum : null) ||
+                    (key === 'bnb' ? marketPrices.binancecoin : null) ||
+                    (key === 'usdc' ? marketPrices['usd-coin'] : null);
+    
+    return priceObj?.inr || 0;
+  };
+
   useEffect(() => {
+    const basePrice = getMarketPrice(newAd.asset);
     const currentPrice = newAd.pricing_type === 'dynamic' 
-      ? (marketPrices[newAd.asset.toLowerCase()]?.inr || newAd.price) * (1 + newAd.margin / 100)
+      ? (basePrice || newAd.price) * (1 + newAd.margin / 100)
       : newAd.price;
 
     if (adLimitType === 'amount') {
@@ -127,7 +142,7 @@ export default function P2P() {
         setTotalINR(parseFloat(amount.toFixed(2)));
       }
     }
-  }, [adLimitType, totalINR, newAd.price, newAd.total_amount, newAd.margin, newAd.pricing_type, marketPrices]);
+  }, [adLimitType, totalINR, newAd.price, newAd.total_amount, newAd.margin, newAd.pricing_type, marketPrices, newAd.asset]);
 
   useEffect(() => {
     fetchAds();
@@ -148,11 +163,13 @@ export default function P2P() {
   const fetchMarketPrices = async () => {
     try {
       const response = await axios.get('/api/prices');
-      setMarketPrices(response.data);
-      // Update newAd price if it's 0
-      if (newAd.price === 0) {
-        const basePrice = response.data.tether?.inr || 90;
-        setNewAd(prev => ({ ...prev, price: basePrice }));
+      if (response.data) {
+        setMarketPrices(response.data);
+        // Update newAd price if it's 0
+        if (newAd.price === 0) {
+          const basePrice = response.data.usdt?.inr || response.data.tether?.inr || 90;
+          setNewAd(prev => ({ ...prev, price: basePrice }));
+        }
       }
     } catch (error) {
       console.error('Error fetching market prices:', error);
@@ -281,7 +298,7 @@ export default function P2P() {
       // Calculate final price if dynamic
       let finalPrice = newAd.price;
       if (newAd.pricing_type === 'dynamic') {
-        const marketPrice = marketPrices[selectedAsset.toLowerCase()]?.inr || newAd.price;
+        const marketPrice = getMarketPrice(selectedAsset) || newAd.price;
         finalPrice = marketPrice * (1 + newAd.margin / 100);
       }
 
@@ -806,7 +823,7 @@ export default function P2P() {
                           </div>
                           <p className="text-xs sm:text-sm text-gray-400 mt-2 font-medium flex items-center gap-2">
                             <TrendingUp className="w-3.5 h-3.5 text-brand" />
-                            Total Value: <span className="text-white font-bold">₹{(newAd.total_amount * (newAd.pricing_type === 'dynamic' ? (marketPrices[newAd.asset.toLowerCase()]?.inr || newAd.price) * (1 + newAd.margin / 100) : newAd.price)).toLocaleString('en-IN')}</span>
+                            Total Value: <span className="text-white font-bold">₹{(newAd.total_amount * (newAd.pricing_type === 'dynamic' ? (getMarketPrice(newAd.asset) || newAd.price) * (1 + newAd.margin / 100) : newAd.price)).toLocaleString('en-IN')}</span>
                           </p>
                         </div>
                       ) : (
@@ -825,7 +842,7 @@ export default function P2P() {
                           </div>
                           <p className="text-xs sm:text-sm text-gray-400 mt-2 font-medium flex items-center gap-2">
                             <Zap className="w-3.5 h-3.5 text-brand" />
-                            Equivalent: <span className="text-white font-bold">{(totalINR / (newAd.pricing_type === 'dynamic' ? (marketPrices[newAd.asset.toLowerCase()]?.inr || newAd.price) * (1 + newAd.margin / 100) : newAd.price)).toFixed(2)} {newAd.asset}</span>
+                            Equivalent: <span className="text-white font-bold">{(totalINR / (newAd.pricing_type === 'dynamic' ? (getMarketPrice(newAd.asset) || newAd.price) * (1 + newAd.margin / 100) : newAd.price)).toFixed(2)} {newAd.asset}</span>
                           </p>
                         </div>
                       )}
@@ -862,7 +879,7 @@ export default function P2P() {
                             <span className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-base sm:text-lg">%</span>
                           </div>
                           <p className="text-xs sm:text-sm text-gray-400 mt-2 font-medium">
-                            Effective Price: <span className="text-white font-bold">₹{((marketPrices[newAd.asset.toLowerCase()]?.inr || 90) * (1 + newAd.margin / 100)).toFixed(2)}</span>
+                            Effective Price: <span className="text-white font-bold">₹{((getMarketPrice(newAd.asset) || 90) * (1 + newAd.margin / 100)).toFixed(2)}</span>
                           </p>
                         </div>
                       )}

@@ -114,16 +114,16 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
-  // Live Prices from CoinGecko with Cache
+  // Live Prices with Cache and Fallback
   let priceCache: any = {
-    tether: { inr: 90, usd: 1 },
-    bitcoin: { inr: 6000000, usd: 70000 },
-    ethereum: { inr: 300000, usd: 3500 },
-    binancecoin: { inr: 50000, usd: 600 },
-    "usd-coin": { inr: 90, usd: 1 }
+    usdt: { inr: 90, usd: 1 },
+    btc: { inr: 6000000, usd: 70000 },
+    eth: { inr: 300000, usd: 3500 },
+    bnb: { inr: 50000, usd: 600 },
+    usdc: { inr: 90, usd: 1 }
   };
   let lastFetchTime = 0;
-  const CACHE_DURATION = 60000; // 1 minute
+  const CACHE_DURATION = 300000; // 5 minutes (be more conservative with free tier)
 
   app.get("/api/prices", async (req, res) => {
     try {
@@ -132,20 +132,57 @@ async function startServer() {
         return res.json(priceCache);
       }
 
-      const response = await axios.get(
-        "https://api.coingecko.com/api/v3/simple/price?ids=tether,bitcoin,ethereum,binancecoin,usd-coin&vs_currencies=inr,usd",
-        { timeout: 5000 } // Add timeout to avoid hanging
-      );
-      
-      if (response.data && response.data.tether) {
-        priceCache = response.data;
-        lastFetchTime = now;
+      // Try CoinGecko
+      try {
+        const response = await axios.get(
+          "https://api.coingecko.com/api/v3/simple/price?ids=tether,bitcoin,ethereum,binancecoin,usd-coin&vs_currencies=inr,usd",
+          { 
+            timeout: 5000,
+            headers: { 'Accept': 'application/json' }
+          }
+        );
+        
+        if (response.data && response.data.tether) {
+          // Map to simpler keys for frontend
+          priceCache = {
+            usdt: response.data.tether,
+            btc: response.data.bitcoin,
+            eth: response.data.ethereum,
+            bnb: response.data.binancecoin,
+            usdc: response.data["usd-coin"]
+          };
+          lastFetchTime = now;
+          console.log("Prices updated from CoinGecko");
+        }
+      } catch (cgError: any) {
+        console.warn("CoinGecko fetch failed:", cgError.message);
+        
+        // Fallback to CryptoCompare (often has more generous free tier)
+        try {
+          const ccResponse = await axios.get(
+            "https://min-api.cryptocompare.com/data/pricemulti?fsyms=USDT,BTC,ETH,BNB,USDC&tsyms=INR,USD",
+            { timeout: 5000 }
+          );
+          
+          if (ccResponse.data && ccResponse.data.USDT) {
+            priceCache = {
+              usdt: { inr: ccResponse.data.USDT.INR, usd: ccResponse.data.USDT.USD },
+              btc: { inr: ccResponse.data.BTC.INR, usd: ccResponse.data.BTC.USD },
+              eth: { inr: ccResponse.data.ETH.INR, usd: ccResponse.data.ETH.USD },
+              bnb: { inr: ccResponse.data.BNB.INR, usd: ccResponse.data.BNB.USD },
+              usdc: { inr: ccResponse.data.USDC.INR, usd: ccResponse.data.USDC.USD }
+            };
+            lastFetchTime = now;
+            console.log("Prices updated from CryptoCompare");
+          }
+        } catch (ccError: any) {
+          console.error("All price fetchers failed:", ccError.message);
+        }
       }
+      
       res.json(priceCache);
     } catch (error: any) {
-      console.error("Price fetch error:", error.message);
-      
-      // Always return cache (even if it's the initial fallback) on error
+      console.error("Fatal price fetch error:", error.message);
       res.json(priceCache);
     }
   });
